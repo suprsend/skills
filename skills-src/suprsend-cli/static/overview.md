@@ -1,5 +1,3 @@
-# SuprSend CLI
-
 The SuprSend CLI (`suprsend`) is a command-line tool for managing your SuprSend account and resources. It provides direct access to the SuprSend API for managing workspaces, workflows, templates, users, and more.
 
 ## Installation

@@ -6,7 +6,7 @@ description: >
 license: MIT
 metadata:
   author: suprsend
-  version: "1.0"
+  version: "1.0.0"
 
 sources:
   - type: static

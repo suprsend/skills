@@ -52,8 +52,9 @@ async function resolveRefs(
 
     logger.debug(`Resolving $ref: ${refUrl}`);
     const refSchema = await fetchJson<JsonSchema>(refUrl);
-    cache.set(refUrl, refSchema);
-    return resolveRefs(refSchema, refUrl, cache, depth + 1);
+    const resolved = await resolveRefs(refSchema, refUrl, cache, depth + 1);
+    cache.set(refUrl, resolved);
+    return resolved;
   }
 
   const result: JsonSchema = {};

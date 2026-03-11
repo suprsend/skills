@@ -15,6 +15,7 @@
 - `suprsend template list` — List all templates
 - `suprsend template get <slug>` — Get template details
 - `suprsend template push <path>` — Push a local template
+- `suprsend template validate <path>` — Validate a local template file against the schema
 
 ### Users
 

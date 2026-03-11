@@ -183,4 +183,34 @@ describe("resolveClaude", () => {
     const result = await resolveClaude(source, "Generate something", true);
     expect(result).toBe("");
   });
+
+  it("warns when response is empty", async () => {
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    mockCreate.mockResolvedValue({ content: [] });
+
+    const source: ClaudeSource = {
+      type: "claude",
+      key: "test",
+      prompt: "Generate something",
+    };
+    await resolveClaude(source, "Generate something", true);
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining("[WARN]"),
+      expect.stringContaining('empty response for key "test"'),
+    );
+    warnSpy.mockRestore();
+  });
+
+  it("propagates API errors", async () => {
+    mockCreate.mockRejectedValue(new Error("API rate limit exceeded"));
+
+    const source: ClaudeSource = {
+      type: "claude",
+      key: "test",
+      prompt: "Generate something",
+    };
+    await expect(
+      resolveClaude(source, "Generate something", true),
+    ).rejects.toThrow("API rate limit exceeded");
+  });
 });

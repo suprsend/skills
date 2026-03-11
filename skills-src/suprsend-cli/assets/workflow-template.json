@@ -1,13 +1,13 @@
 {
   "$schema": "https://schema.suprsend.com/workflow/v1/schema.json",
-  "name": "",
-  "slug": "",
+  "name": "<workflow-name>",
+  "slug": "<workflow-slug>",
   "trigger": "event",
   "steps": [
     {
       "type": "send",
       "channel": "email",
-      "template": ""
+      "template": "<template-slug>"
     }
   ]
 }

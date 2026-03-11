@@ -29,7 +29,12 @@ if (values.verbose) {
   setLogLevel("debug");
 }
 
-await build({
-  skill: values.skill,
-  noCache: values["no-cache"],
-});
+try {
+  await build({
+    skill: values.skill,
+    noCache: values["no-cache"],
+  });
+} catch (err) {
+  console.error(`[ERROR] Build failed: ${(err as Error).message}`);
+  process.exit(1);
+}

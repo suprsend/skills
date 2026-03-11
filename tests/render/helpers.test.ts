@@ -85,6 +85,16 @@ describe("Handlebars helpers", () => {
       expect(result).toContain("| data | any | No | Some data |");
     });
 
+    it("formats array type as pipe-separated", () => {
+      const schema = {
+        properties: {
+          value: { type: ["string", "null"], description: "Nullable string" },
+        },
+      };
+      const result = render("{{schema-table schema}}", { schema });
+      expect(result).toContain("| value | string | null | No | Nullable string |");
+    });
+
     it("handles missing description", () => {
       const schema = {
         properties: {
@@ -206,6 +216,38 @@ describe("Handlebars helpers", () => {
         doc: markdown,
       });
       expect(result).toBe("");
+    });
+
+    it("ignores headings inside fenced code blocks", () => {
+      const docWithCode = [
+        "## Real Section",
+        "",
+        "Some content.",
+        "",
+        "```markdown",
+        "## Fake Section",
+        "This is inside a code block.",
+        "```",
+        "",
+        "More content after code block.",
+        "",
+        "## Next Section",
+        "",
+        "Next content.",
+      ].join("\n");
+      const result = render('{{section doc "## Real Section"}}', { doc: docWithCode });
+      expect(result).toContain("## Real Section");
+      expect(result).toContain("Some content.");
+      expect(result).toContain("## Fake Section"); // included as content, not boundary
+      expect(result).toContain("More content after code block.");
+      expect(result).not.toContain("## Next Section");
+    });
+
+    it("extracts section with trailing whitespace in heading", () => {
+      const docWithSpaces = "## Section A   \n\nContent A.\n\n## Section B\n\nContent B.";
+      const result = render('{{section doc "## Section A"}}', { doc: docWithSpaces });
+      expect(result).toContain("Content A.");
+      expect(result).not.toContain("Content B.");
     });
   });
 

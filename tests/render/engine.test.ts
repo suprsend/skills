@@ -59,14 +59,14 @@ describe("generateFrontmatter", () => {
     expect(result).toContain('  version: "2.0"');
   });
 
-  it("includes allowed-tools when present", () => {
+  it("includes allowed-tools when present (quoted)", () => {
     const meta: SkillMeta = {
       name: "test",
       description: "desc",
       allowed_tools: "Bash(git:*) Read",
     };
     const result = generateFrontmatter(meta);
-    expect(result).toContain("allowed-tools: Bash(git:*) Read");
+    expect(result).toContain('allowed-tools: "Bash(git:*) Read"');
   });
 
   it("omits optional fields when not set", () => {
@@ -119,7 +119,35 @@ describe("generateFrontmatter", () => {
     expect(result).toContain("license: Apache-2.0");
     expect(result).toContain('compatibility: "Requires docker"');
     expect(result).toContain("metadata:");
-    expect(result).toContain("allowed-tools: Bash(docker:*)");
+    expect(result).toContain('allowed-tools: "Bash(docker:*)"');
+  });
+
+  it("escapes backslashes in description", () => {
+    const meta: SkillMeta = {
+      name: "test",
+      description: 'Path is C:\\Users\\file',
+    };
+    const result = generateFrontmatter(meta);
+    expect(result).toContain('description: "Path is C:\\\\Users\\\\file"');
+  });
+
+  it("escapes newlines in description", () => {
+    const meta: SkillMeta = {
+      name: "test",
+      description: "line one\nline two",
+    };
+    const result = generateFrontmatter(meta);
+    expect(result).toContain('description: "line one\\nline two"');
+  });
+
+  it("escapes special chars in metadata values", () => {
+    const meta: SkillMeta = {
+      name: "test",
+      description: "desc",
+      metadata: { note: 'See "docs": here' },
+    };
+    const result = generateFrontmatter(meta);
+    expect(result).toContain('note: "See \\"docs\\": here"');
   });
 });
 

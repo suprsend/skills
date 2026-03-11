@@ -56,4 +56,15 @@ describe("resolveStatic", () => {
     };
     await expect(resolveStatic("no-such-skill", source)).rejects.toThrow();
   });
+
+  it("throws on path traversal attempt", async () => {
+    const source: StaticSource = {
+      type: "static",
+      key: "malicious",
+      path: "../../package.json",
+    };
+    await expect(resolveStatic("valid-skill", source)).rejects.toThrow(
+      /path traversal/i,
+    );
+  });
 });

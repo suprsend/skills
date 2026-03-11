@@ -3,3 +3,7 @@ dist/
 .cache/
 .DS_Store
 *.log
+.env
+.env.*
+*.key
+*.pem

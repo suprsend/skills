@@ -1,8 +1,10 @@
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { resolveCli } from "../../src/sources/cli.js";
 import type { CliSource } from "../../src/sources/types.js";
 
-vi.spyOn(console, "log").mockImplementation(() => {});
+beforeEach(() => {
+  vi.spyOn(console, "log").mockImplementation(() => {});
+});
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -98,6 +100,19 @@ describe("resolveCli", () => {
         format: "json",
       };
       await expect(resolveCli(source)).rejects.toThrow();
+    });
+
+    it("does not execute shell metacharacters (no injection)", async () => {
+      // With execFile, shell operators like ; are passed as literal args
+      const source: CliSource = {
+        type: "cli",
+        key: "inject",
+        command: "echo 'safe; echo injected'",
+        format: "yaml",
+      };
+      const result = await resolveCli(source);
+      // Should get the literal string, not execution of the second command
+      expect(String(result)).toContain("safe;");
     });
   });
 });

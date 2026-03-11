@@ -5,7 +5,7 @@ type SchemaObj = {
   properties?: Record<
     string,
     {
-      type?: string;
+      type?: string | string[];
       description?: string;
       enum?: string[];
       [key: string]: unknown;
@@ -25,7 +25,7 @@ export function registerHelpers(hbs: typeof Handlebars): void {
     if (!schema?.properties) return "";
     const required = new Set(schema.required ?? []);
     const rows = Object.entries(schema.properties).map(([name, prop]) => {
-      const type = prop.type ?? "any";
+      const type = Array.isArray(prop.type) ? prop.type.join(" | ") : (prop.type ?? "any");
       const req = required.has(name) ? "Yes" : "No";
       const desc = (prop.description ?? "").replace(/\|/g, "\\|").replace(/\n/g, " ");
       return `| ${name} | ${type} | ${req} | ${desc} |`;

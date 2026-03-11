@@ -103,7 +103,7 @@ description: >
 license: MIT
 metadata:
   author: suprsend
-  version: "1.0"
+  version: "1.0.0"
 
 sources:
   # Human-written content
@@ -179,7 +179,7 @@ npm run build -- --skill=my-skill
 | Type | Resolves To | Description |
 |------|-------------|-------------|
 | `static` | String | Reads a `.md` file from `static/` |
-| `cli` | Object or String | Runs a shell command, parses output as JSON or YAML |
+| `cli` | Object or String | Runs a command (via `execFile`, no shell), parses output as JSON or YAML |
 | `docs` | String | Fetches markdown from a URL (Mintlify `.md` append auto-tried) |
 | `schema` | Object | Fetches JSON Schema, optionally resolves `$ref` pointers |
 | `claude` | String | Calls Claude API with a prompt (can reference other resolved keys). Responses are cached by `sha256(model + prompt)` in `.cache/claude/`. |

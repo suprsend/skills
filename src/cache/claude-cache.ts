@@ -25,9 +25,17 @@ export async function getCached(
   try {
     const raw = await readFile(filePath, "utf-8");
     const entry = JSON.parse(raw) as CacheEntry;
+    if (entry.promptHash !== key) {
+      logger.warn(`Cache integrity mismatch for ${key.slice(0, 8)}..., ignoring`);
+      return null;
+    }
     logger.info(`Cache hit for Claude (${key.slice(0, 8)}...)`);
     return entry.response;
-  } catch {
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+      return null;
+    }
+    logger.warn(`Cache read error (${key.slice(0, 8)}...): ${err}`);
     return null;
   }
 }

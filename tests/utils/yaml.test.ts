@@ -86,8 +86,11 @@ metadata:
     expect(result.metadata.author).toBe("test");
   });
 
-  it("returns null for empty string", () => {
-    const result = parseYaml<null>("");
-    expect(result).toBeNull();
+  it("throws for empty string", () => {
+    expect(() => parseYaml("")).toThrow(/YAML parsed to null/);
+  });
+
+  it("throws for malformed YAML", () => {
+    expect(() => parseYaml("key: [unbalanced")).toThrow();
   });
 });

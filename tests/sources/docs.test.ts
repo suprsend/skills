@@ -39,7 +39,7 @@ describe("resolveDocs", () => {
         urls: ["https://docs.example.com/page"],
       };
       await resolveDocs(source);
-      expect(fetch).toHaveBeenCalledWith("https://docs.example.com/page.md");
+      expect(fetch).toHaveBeenCalledWith("https://docs.example.com/page.md", expect.anything());
     });
 
     it("does not append .md if URL already ends with .md", async () => {
@@ -53,7 +53,7 @@ describe("resolveDocs", () => {
         urls: ["https://docs.example.com/page.md"],
       };
       await resolveDocs(source);
-      expect(fetch).toHaveBeenCalledWith("https://docs.example.com/page.md");
+      expect(fetch).toHaveBeenCalledWith("https://docs.example.com/page.md", expect.anything());
     });
 
     it("does not append .md if URL already ends with .mdx", async () => {
@@ -67,7 +67,7 @@ describe("resolveDocs", () => {
         urls: ["https://docs.example.com/page.mdx"],
       };
       await resolveDocs(source);
-      expect(fetch).toHaveBeenCalledWith("https://docs.example.com/page.mdx");
+      expect(fetch).toHaveBeenCalledWith("https://docs.example.com/page.mdx", expect.anything());
     });
 
     it("falls back to original URL if .md append fails", async () => {
@@ -91,10 +91,12 @@ describe("resolveDocs", () => {
       expect(fetch).toHaveBeenNthCalledWith(
         1,
         "https://docs.example.com/page.md",
+        expect.anything(),
       );
       expect(fetch).toHaveBeenNthCalledWith(
         2,
         "https://docs.example.com/page",
+        expect.anything(),
       );
     });
   });
@@ -223,6 +225,39 @@ describe("resolveDocs", () => {
       expect(result).toContain("Content A");
       expect(result).toContain("---");
       expect(result).toContain("Content B");
+    });
+  });
+
+  describe("selector on retry path", () => {
+    it("applies selector when falling back to original URL", async () => {
+      const doc = [
+        "# Title",
+        "",
+        "## Config",
+        "",
+        "Config content here.",
+        "",
+        "## Other",
+        "",
+        "Other stuff.",
+      ].join("\n");
+
+      vi.mocked(fetch)
+        .mockResolvedValueOnce(
+          new Response("Not Found", { status: 404, statusText: "Not Found" }),
+        )
+        .mockResolvedValueOnce(new Response(doc, { status: 200 }));
+
+      const source: DocsSource = {
+        type: "docs",
+        key: "doc",
+        urls: ["https://docs.example.com/page"],
+        selector: "## Config",
+      };
+      const result = await resolveDocs(source);
+      expect(result).toContain("## Config");
+      expect(result).toContain("Config content here.");
+      expect(result).not.toContain("## Other");
     });
   });
 

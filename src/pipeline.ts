@@ -1,4 +1,4 @@
-import { readFile, writeFile, mkdir, readdir } from "node:fs/promises";
+import { readFile, writeFile, mkdir, readdir, chmod } from "node:fs/promises";
 import { resolve } from "node:path";
 import {
   SKILLS_SRC_DIR,
@@ -9,6 +9,7 @@ import {
   MAX_COMPATIBILITY_LENGTH,
   NAME_PATTERN,
 } from "./config.js";
+import { assertWithinDir } from "./utils/path-safety.js";
 import type {
   SourcesConfig,
   SourceDeclaration,
@@ -116,12 +117,14 @@ async function writeOutputFiles(
   subdir: string,
   declarations: OutputFileDeclaration[],
   context: TemplateContext,
+  executable = false,
 ): Promise<void> {
   const targetDir = resolve(outputDir, subdir);
   await mkdir(targetDir, { recursive: true });
 
   for (const decl of declarations) {
     const targetPath = resolve(targetDir, decl.filename);
+    assertWithinDir(targetPath, targetDir, "Output file path");
 
     if (decl.template) {
       // Templated: render .hbs file with context
@@ -133,6 +136,9 @@ async function writeOutputFiles(
       await writeFile(targetPath, content);
     }
 
+    if (executable) {
+      await chmod(targetPath, 0o755);
+    }
     logger.info(`Wrote skills/${skillName}/${subdir}/${decl.filename}`);
   }
 }
@@ -232,7 +238,7 @@ async function buildSkill(
     await writeOutputFiles(skillName, outputDir, "references", config.references, context);
   }
   if (config.scripts?.length) {
-    await writeOutputFiles(skillName, outputDir, "scripts", config.scripts, context);
+    await writeOutputFiles(skillName, outputDir, "scripts", config.scripts, context, true);
   }
   if (config.assets?.length) {
     await writeOutputFiles(skillName, outputDir, "assets", config.assets, context);
@@ -245,7 +251,7 @@ async function buildSkill(
 async function discoverSkills(): Promise<string[]> {
   const entries = await readdir(SKILLS_SRC_DIR, { withFileTypes: true });
   return entries
-    .filter((e) => e.isDirectory())
+    .filter((e) => e.isDirectory() && !e.name.startsWith("."))
     .map((e) => e.name)
     .sort();
 }
@@ -254,6 +260,10 @@ async function discoverSkills(): Promise<string[]> {
  * Main build entry point.
  */
 export async function build(options: BuildOptions): Promise<void> {
+  if (options.skill && !NAME_PATTERN.test(options.skill)) {
+    throw new Error(`Invalid skill name: "${options.skill}"`);
+  }
+
   const skills = options.skill
     ? [options.skill]
     : await discoverSkills();
@@ -265,8 +275,20 @@ export async function build(options: BuildOptions): Promise<void> {
 
   logger.info(`Building ${skills.length} skill(s): ${skills.join(", ")}`);
 
+  const errors: Array<{ skill: string; error: Error }> = [];
   for (const skill of skills) {
-    await buildSkill(skill, options);
+    try {
+      await buildSkill(skill, options);
+    } catch (err) {
+      errors.push({ skill, error: err as Error });
+      logger.error(`Failed to build "${skill}": ${(err as Error).message}`);
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error(
+      `${errors.length} skill(s) failed to build: ${errors.map((e) => e.skill).join(", ")}`,
+    );
   }
 
   logger.info("Build complete.");

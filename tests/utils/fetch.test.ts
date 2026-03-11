@@ -16,7 +16,7 @@ describe("fetchText", () => {
     );
     const result = await fetchText("https://example.com/doc.md");
     expect(result).toBe("hello world");
-    expect(fetch).toHaveBeenCalledWith("https://example.com/doc.md");
+    expect(fetch).toHaveBeenCalledWith("https://example.com/doc.md", expect.anything());
   });
 
   it("throws on HTTP 404", async () => {
@@ -84,5 +84,40 @@ describe("fetchJson", () => {
     await expect(
       fetchJson("https://example.com/protected"),
     ).rejects.toThrow("HTTP 401");
+  });
+
+  it("throws on invalid JSON response body", async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      new Response("not json", { status: 200 }),
+    );
+    await expect(
+      fetchJson("https://example.com/bad.json"),
+    ).rejects.toThrow();
+  });
+});
+
+describe("URL validation", () => {
+  beforeEach(() => {
+    vi.stubGlobal("fetch", vi.fn());
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("rejects file:// URLs", async () => {
+    await expect(fetchText("file:///etc/passwd")).rejects.toThrow(
+      /unsupported url scheme/i,
+    );
+  });
+
+  it("rejects ftp:// URLs", async () => {
+    await expect(fetchJson("ftp://example.com/data")).rejects.toThrow(
+      /unsupported url scheme/i,
+    );
+  });
+
+  it("rejects invalid URLs", async () => {
+    await expect(fetchText("not-a-url")).rejects.toThrow(/invalid url/i);
   });
 });

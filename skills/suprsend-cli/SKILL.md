@@ -4,10 +4,8 @@ description: "SuprSend CLI reference for AI agents. Use when working with SuprSe
 license: MIT
 metadata:
   author: "suprsend"
-  version: "1.0"
+  version: "1.0.0"
 ---
-
-# SuprSend CLI
 
 The SuprSend CLI (`suprsend`) is a command-line tool for managing your SuprSend account and resources. It provides direct access to the SuprSend API for managing workspaces, workflows, templates, users, and more.
 
@@ -29,7 +27,6 @@ Or set environment variables:
 - `SUPRSEND_WORKSPACE_KEY` — Your workspace key
 - `SUPRSEND_WORKSPACE_SECRET` — Your workspace secret
 
-
 ## Commands
 
 ### Workspace
@@ -49,13 +46,13 @@ Or set environment variables:
 - `suprsend template list` — List all templates
 - `suprsend template get <slug>` — Get template details
 - `suprsend template push <path>` — Push a local template
+- `suprsend template validate <path>` — Validate a local template file against the schema
 
 ### Users
 
 - `suprsend user get <id>` — Get user profile
 - `suprsend user identify <id>` — Create or update a user
 - `suprsend user preferences <id>` — Get user preferences
-
 
 ## Examples
 
@@ -79,3 +76,8 @@ suprsend workflow get welcome-email --format json > workflow.json
 suprsend template list --channel email --status active
 ```
 
+## Resources
+
+- [Troubleshooting Guide](references/troubleshooting.md)
+- Run [check-auth.sh](scripts/check-auth.sh) to verify CLI authentication
+- Use [workflow-template.json](assets/workflow-template.json) as a starting point for new workflows

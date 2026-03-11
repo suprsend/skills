@@ -217,6 +217,7 @@ describe("resolveSchema", () => {
       expect(fetch).toHaveBeenNthCalledWith(
         2,
         "https://schema.example.com/v1/nested.json",
+        expect.anything(),
       );
     });
   });

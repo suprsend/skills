@@ -1,6 +1,7 @@
 /**
  * Extract a section from markdown by heading.
  * Returns everything from the matched heading to the next heading of same or higher level.
+ * Skips headings that appear inside fenced code blocks.
  */
 export function extractSection(markdown: string, selector: string): string | null {
   const headingMatch = selector.match(/^(#{1,6})\s+(.+)$/);
@@ -13,8 +14,15 @@ export function extractSection(markdown: string, selector: string): string | nul
   const lines = markdown.split("\n");
   let startIdx = -1;
   let endIdx = lines.length;
+  let inCodeBlock = false;
 
   for (let i = 0; i < lines.length; i++) {
+    if (lines[i].trimStart().startsWith("```")) {
+      inCodeBlock = !inCodeBlock;
+      continue;
+    }
+    if (inCodeBlock) continue;
+
     const lineMatch = lines[i].match(/^(#{1,6})\s+(.+)$/);
     if (!lineMatch) continue;
 

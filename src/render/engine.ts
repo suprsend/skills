@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import { SKILLS_SRC_DIR } from "../config.js";
 import { registerHelpers } from "./helpers.js";
 import { logger } from "../utils/logger.js";
+import { assertWithinDir } from "../utils/path-safety.js";
 import type { TemplateContext, SkillMeta } from "../sources/types.js";
 
 let initialized = false;
@@ -70,8 +71,11 @@ export async function renderOutputFile(
   context: TemplateContext,
 ): Promise<string> {
   ensureInit();
+  await registerPartials(skillName);
 
-  const templatePath = resolve(SKILLS_SRC_DIR, skillName, templateRelPath);
+  const skillDir = resolve(SKILLS_SRC_DIR, skillName);
+  const templatePath = resolve(skillDir, templateRelPath);
+  assertWithinDir(templatePath, skillDir, "Output template path");
   const templateSource = await readFile(templatePath, "utf-8");
   const template = Handlebars.compile(templateSource, { noEscape: true });
   return template(context);
@@ -85,7 +89,9 @@ export async function readStaticFile(
   subdir: string,
   filename: string,
 ): Promise<Buffer> {
-  const filePath = resolve(SKILLS_SRC_DIR, skillName, subdir, filename);
+  const baseDir = resolve(SKILLS_SRC_DIR, skillName, subdir);
+  const filePath = resolve(baseDir, filename);
+  assertWithinDir(filePath, baseDir, "Static file path");
   return readFile(filePath);
 }
 
@@ -93,7 +99,12 @@ export async function readStaticFile(
  * Escape a string for safe use as a YAML double-quoted value.
  */
 function yamlQuote(value: string): string {
-  const escaped = value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  const escaped = value
+    .replace(/\\/g, "\\\\")
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, "\\n")
+    .replace(/\r/g, "\\r")
+    .replace(/\t/g, "\\t");
   return `"${escaped}"`;
 }
 
@@ -112,7 +123,7 @@ export function generateFrontmatter(meta: SkillMeta): string {
       lines.push(`  ${k}: ${yamlQuote(v)}`);
     }
   }
-  if (meta.allowed_tools) lines.push(`allowed-tools: ${meta.allowed_tools}`);
+  if (meta.allowed_tools) lines.push(`allowed-tools: ${yamlQuote(meta.allowed_tools)}`);
   lines.push("---");
   return lines.join("\n");
 }
