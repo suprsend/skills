@@ -1,0 +1,24 @@
+name: valid-skill
+description: A valid test skill for testing the generator pipeline end to end.
+license: MIT
+compatibility: Requires Node.js 20+
+metadata:
+  author: test
+  version: "1.0"
+allowed_tools: "Bash(test:*) Read"
+
+sources:
+  - type: static
+    key: overview
+    path: overview.md
+
+references:
+  - filename: ref-doc.md
+    template: partials/ref-doc.hbs
+  - filename: static-ref.md
+
+scripts:
+  - filename: helper.sh
+
+assets:
+  - filename: config.json

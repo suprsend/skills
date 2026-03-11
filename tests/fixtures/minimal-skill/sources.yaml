@@ -1,0 +1,7 @@
+name: minimal-skill
+description: Minimal skill with only required fields.
+
+sources:
+  - type: static
+    key: content
+    path: content.md

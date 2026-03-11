@@ -1,0 +1,26 @@
+{
+  "name": "@suprsend/skills",
+  "version": "0.1.0",
+  "description": "SuprSend agent skills generator",
+  "type": "module",
+  "scripts": {
+    "build": "tsx src/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "handlebars": "^4.7.8",
+    "yaml": "^2.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^4.0.18"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
