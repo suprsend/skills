@@ -6,10 +6,6 @@ Detailed props for the `SuprSendProvider` wrapper component.
 
 ### From React SDK Documentation
 
-> ## Documentation Index
-> Fetch the complete documentation index at: https://docs.suprsend.com/llms.txt
-> Use this file to discover all available pages before exploring further.
-
 # SDK Integration
 
 > SDK Integration to enable SuprSend features like Inbox, Preferences, and Webpush into React-based web applications.
@@ -69,15 +65,12 @@ This context provider need to be wrapper around your component in which you want
   ```
 </CodeGroup>
 
-| Parameter                                                         | Description                                                                                                                                                                                                                   ...
+| Parameter                                                         | Description                                                                                                                                                                                                                            |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------...
 
 ---
 
 ### From Inbox Quick Start
-
-> ## Documentation Index
-> Fetch the complete documentation index at: https://docs.suprsend.com/llms.txt
-> Use this file to discover all available pages before exploring further.
 
 # Inbox
 
@@ -122,7 +115,9 @@ To design a workflow, you need:
 
 1. **A Trigger point**- Trigger initiates the workflow. You can initiate it
 
-   * [Using the direct workflow API](/docs/trigger-workflow#triggering-workflow-via-api), where you can include recipient channel information, preferences, and actor details directly in the tri...
+   * [Using the direct workflow API](/docs/trigger-workflow#triggering-workflow-via-api), where you can include recipient channel information, preferences, and actor details directly in the trigger.
+
+   * [By emitting an event](/docs/trigger-workflow#event-based-trigger): You can trigger these events from your frontend application or from your backend systems, depending ...
 
 ---
 

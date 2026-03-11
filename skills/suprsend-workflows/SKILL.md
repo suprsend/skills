@@ -33,10 +33,6 @@ A workflow is the core building block of SuprSend's notification system. It defi
 
 ## Designing a Workflow
 
-> ## Documentation Index
-> Fetch the complete documentation index at: https://docs.suprsend.com/llms.txt
-> Use this file to discover all available pages before exploring further.
-
 # Design Workflow
 
 > Learn how to design, edit or publish workflow on SuprSend dashboard.
@@ -56,15 +52,13 @@ Click on  button on the workflow page to create workflow from scratch or select 
 
 * After entering the required details, click on `Create` button to create a new workflow in draft state. You'll see the created workflow on top of the listing page, click on it to start editing.
 * Next, add relevant nodes to your workflow and edit workflow settings.
-* Once you've finalized your edits, remember to  make the workflow live. If you don't want to make your changes live ri...
+* Once you've finalized your edits, remember to  make the workflow live. If you don't want to make your changes live right away, you can `exit edit mode` and come back later to commit the changes. Rest assured, your modifications will remain saved in the draft state until finalized.
+
+![](https://fi...
 
 For detailed node configuration, see [Workflow Nodes Reference](references/nodes-reference.md).
 
 ## Triggering Workflows
-
-> ## Documentation Index
-> Fetch the complete documentation index at: https://docs.suprsend.com/llms.txt
-> Use this file to discover all available pages before exploring further.
 
 # Trigger Workflow
 
@@ -81,7 +75,10 @@ You can trigger workflows designed on SuprSend dashboard via making a [direct ca
 </Info>
 
 <Warning>
-  It is a new workflow method and ...
+  It is a new workflow method and is available in below SDK versions (Python >= v0.11.0, Go >= v0.5.1, Node >= 1.10.0 and Java >= 0.7.0). Upgrade to the latest version if you are on older SDK versions.
+</Warning>
+
+...
 
 For complete API payload examples, see [API Payload Examples](references/api-payloads.md).
 

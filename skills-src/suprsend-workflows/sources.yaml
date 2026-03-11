@@ -20,10 +20,12 @@ sources:
     key: trigger_docs
     urls:
       - https://docs.suprsend.com/docs/trigger-workflow.md
+    selector: "# Trigger Workflow"
   - type: docs
     key: design_docs
     urls:
       - https://docs.suprsend.com/docs/design-workflow.md
+    selector: "# Design Workflow"
 
 references:
   - filename: nodes-reference.md

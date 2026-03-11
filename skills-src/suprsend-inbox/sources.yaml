@@ -21,10 +21,12 @@ sources:
     key: inbox_docs
     urls:
       - https://docs.suprsend.com/docs/inbox-quick-start.md
+    selector: "# Inbox"
   - type: docs
     key: react_sdk_docs
     urls:
       - https://docs.suprsend.com/docs/react-sdk.md
+    selector: "# SDK Integration"
 
 references:
   - filename: component-props.md

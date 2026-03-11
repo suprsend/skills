@@ -77,10 +77,6 @@ Generate the `userToken` server-side using HMAC-SHA256 with your workspace secre
 
 ## From the Docs
 
-> ## Documentation Index
-> Fetch the complete documentation index at: https://docs.suprsend.com/llms.txt
-> Use this file to discover all available pages before exploring further.
-
 # Inbox
 
 > Set up guide to send In-app Inbox notifications via SuprSend.
@@ -108,15 +104,12 @@ Your SuprSend account includes three default workspaces: Sandbox, Staging, and P
    * Includes a sample workflow, a sample user with your registered email and pre-configured channels for quick testing.
    * Limitation: Available for a trial period.
 2. **Staging**
-   * **Development workspace** used to test notificatio...
+   * **Development workspace** used to test notification flows before pushing it to production.
+   * You can enable [Test Mode](/docs/developer/test-mode) to safely test notification flows without delivering to real users. In Test Mode...
 
 For full SDK component reference, see [Component Props Reference](references/component-props.md).
 
 ## React SDK Overview
-
-> ## Documentation Index
-> Fetch the complete documentation index at: https://docs.suprsend.com/llms.txt
-> Use this file to discover all available pages before exploring further.
 
 # SDK Integration
 
@@ -130,7 +123,9 @@ For full SDK component reference, see [Component Props Reference](references/com
 
 We support 2 SDK's for react based applications.
 
-* [@suprsend/react-core](https://www.npmjs.com/package/@suprsend/react-core): This provides context providers and hooks to integrate SuprSend in to your application. If you want to use web-push, user methods, track events or implement your own UI for preferences and inbox by using provided methods, this library is better option. If you want to use any of inbuilt components for inbox or preferences t...
+* [@suprsend/react-core](https://www.npmjs.com/package/@suprsend/react-core): This provides context providers and hooks to integrate SuprSend in to your application. If you want to use web-push, user methods, track events or implement your own UI for preferences and inbox by using provided methods, this library is better option. If you want to use any of inbuilt components for inbox or preferences then use `@suprsend/react`.
+
+* [@suprsend/react](https://www.npmjs.com/package/@suprsend/react): This library is built on top of `@suprsend/react-core`, so all hooks, context provid...
 
 > **Note:** This skill focuses on web integration. For mobile platforms (React Native, Flutter), refer to the SuprSend mobile SDK documentation.
 

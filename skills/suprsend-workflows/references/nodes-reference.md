@@ -4,10 +4,6 @@ This reference provides detailed documentation on designing workflows and config
 
 ## Workflow Design
 
-> ## Documentation Index
-> Fetch the complete documentation index at: https://docs.suprsend.com/llms.txt
-> Use this file to discover all available pages before exploring further.
-
 # Design Workflow
 
 > Learn how to design, edit or publish workflow on SuprSend dashboard.
@@ -191,10 +187,6 @@ Built with [Mintlify](https://mintlify.com).
 ---
 
 ## Triggering Workflows
-
-> ## Documentation Index
-> Fetch the complete documentation index at: https://docs.suprsend.com/llms.txt
-> Use this file to discover all available pages before exploring further.
 
 # Trigger Workflow
 
@@ -1067,13 +1059,5 @@ Here's a step-by-step guide on how to send notifications using google sheets:
 Built with [Mintlify](https://mintlify.com).
 
 ---
-
-## Skill Metadata
-
-```json
-{
-  "string": "{\n  \"author\": \"suprsend\",\n  \"version\": \"1.0\",\n  \"category\": \"workflows\"\n}"
-}
-```
 
 *This reference is part of the **suprsend-workflows** skill.*

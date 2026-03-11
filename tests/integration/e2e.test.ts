@@ -166,6 +166,7 @@ describe("end-to-end build", () => {
           "utf-8",
         );
         const parsed = JSON.parse(asset);
+        expect(parsed.$schema).toContain("suprsend.com");
         expect(parsed.workflow).toBeDefined();
         expect(parsed.recipients).toBeInstanceOf(Array);
       });
