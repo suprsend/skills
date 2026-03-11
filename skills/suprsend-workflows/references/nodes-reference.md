@@ -1,0 +1,1063 @@
+# Workflow Nodes Reference
+
+This reference provides detailed documentation on designing workflows and configuring nodes in SuprSend.
+
+## Workflow Design
+
+# Design Workflow
+
+> Learn how to design, edit or publish workflow on SuprSend dashboard.
+
+## Pre-Requisites
+
+[Understanding the basics of workflows](/docs/workflows)
+
+## Creating a new workflow
+
+Click on  button on the workflow page to create workflow from scratch or select a workflow from our sample library.
+
+* Pass workflow name and category. Choose a relevant name initially as it determines the related workflow slug, which cannot be modified later.
+* [Notification Category](https://docs.suprsend.com/docs/notification-category) is used to apply user preferences to the workflow. While creating the workflow, you can select any notification category and adjust it later if needed.
+
+<img src="https://mintcdn.com/suprsend/dnAGb1CmSRGCSyT3/images/docs/35a2d26-image.png?fit=max&auto=format&n=dnAGb1CmSRGCSyT3&q=85&s=ec86ce0a5840349b4326b35cf3937af3" alt="" width="934" height="752" data-path="images/docs/35a2d26-image.png" />
+
+* After entering the required details, click on `Create` button to create a new workflow in draft state. You'll see the created workflow on top of the listing page, click on it to start editing.
+* Next, add relevant nodes to your workflow and edit workflow settings.
+* Once you've finalized your edits, remember to  make the workflow live. If you don't want to make your changes live right away, you can `exit edit mode` and come back later to commit the changes. Rest assured, your modifications will remain saved in the draft state until finalized.
+
+![](https://files.readme.io/e79f3e2-ezgif.com-speed.gif)
+
+## Designing workflow
+
+Workflows enable you to build complex notifications by defining whom to notify, when, and through which channels. A workflow requires a trigger node to initiate it and a delivery node to send the final notification.
+
+Additionally, you have functional nodes that adds logic, branch nodes to split execution based on conditions, and data update nodes to modify or add data and assets in SuprSend. We've explained and listed down the available workflow nodes below.
+
+### 1. Trigger Node
+
+It is the first step of your workflow and contains information about what initiates the workflow, and related conditions. There are 3 types of workflow triggers possible:
+
+1. **List entry / exit:** Starts the workflow when a user enters or exists a [list](https://docs.suprsend.com/docs/lists).
+2. **Event Stream:** Starts the workflow when one of the linked events is sent to SuprSend.
+3. **Workflow API:** Here, you explicitly call a workflow using its workflow-slug, specifying the workflow and recipients directly in the API request.
+
+Other than re-engagement notifications, most transactional workflows will either be triggered by passing an event or using workflow API. Compare event vs workflow API here.
+
+<img src="https://mintcdn.com/suprsend/JOwfEC79k-vs3tUR/images/docs/982e348-image.png?fit=max&auto=format&n=JOwfEC79k-vs3tUR&q=85&s=6bc019c7ce25db5f0efd5f69689ce515" alt="" width="2134" height="824" data-path="images/docs/982e348-image.png" />
+
+### 2. Delivery Nodes
+
+These nodes are the final steps in the workflow, responsible for delivering notifications to users. Here's a list of available delivery nodes:
+
+<CardGroup cols="2">
+  <Card title="Single Channel" href="/docs/delivery-single-channel">
+    Send notification on one of the channels (Email, SMS, Whatsapp, Inbox, Mobile Push, Web Push, Slack or MS Teams).
+  </Card>
+
+  <Card title="Multi-Channel" href="/docs/delivery-multi-channel">
+    Send notification across multiple channels at once.
+  </Card>
+
+  <Card title="Smart Channel Routing" href="/docs/smart-delivery">
+    Send notification across multiple channels sequentially with a delay until user engages with one of the channels.
+  </Card>
+
+  <Card title="Webhook" href="/docs/webhook">
+    HTTP API request to notify an endpoint such as your CRMs, chat platforms or internal systems.
+  </Card>
+</CardGroup>
+
+Between multi-channel and smart channel routing, we recommend using the later as it is an optimal way of achieving the engagement uptick of multi-channel reach out without bombarding your users.
+
+<Frame caption="Smart Channel Routing configured to send reminder across Email and Inbox">
+    <img src="https://mintcdn.com/suprsend/ftswjUsq0JlUh-RL/images/docs/079fa1b-image.png?fit=max&auto=format&n=ftswjUsq0JlUh-RL&q=85&s=893f9ff0e27a9f385efd2ac58557caa1" alt="" width="2088" height="1194" data-path="images/docs/079fa1b-image.png" />
+</Frame>
+
+Notification content is picked from the template, and only published and live templates can be added to the delivery node. Therefore, it's essential to [design the template](/docs/templates) before configuring this node.
+
+When the workflow reaches this node, it looks for active channels in the template and user profile, and send the notification to active user channels whose template content is live. [User preferences](/docs/user-preferences) are also taken into account at this stage. If the user has opted out of the given notification category or channel, it will be skipped, and corresponding errors can be seen on the[ logs page](/docs/logging).
+
+### 3. Function Nodes
+
+Functions are logical steps in your workflow. We currently support the following functions:
+
+<CardGroup cols="3">
+  <Card title="Delay" href="/docs/delay">
+    Halt workflow for an interval before proceeding to the next node.
+  </Card>
+
+  <Card title="Batch" href="/docs/batch">
+    Aggregate multiple triggers into a single consolidated notification.
+  </Card>
+
+  <Card title="Digest" href="/docs/digest">
+    Batch multiple alerts and send a summary at a recurring schedule.
+  </Card>
+
+  <Card title="Time Window" href="/docs/time-window">
+    Send notification in a given time schedule or in user's timezone.
+  </Card>
+
+  <Card title="Data Transform" href="/docs/data-transform">
+    Transforms existing workflow data and creates / modifies variables.
+  </Card>
+
+  <Card title="Invoke Workflow" href="/docs/invoke-workflow">
+    Trigger another workflow using current workflow data.
+  </Card>
+</CardGroup>
+
+We are adding more functions to support the complex notification use cases. Have a use case in mind? Reach out to us in our [Slack community](https://join.slack.com/t/suprsendcommunity/shared_invite/zt-3932rw936-XNWY1RC8bsffh4if4ZyoXQ), and we'll prioritize it.
+
+### 4. Branch Nodes
+
+Branches split the workflow execution into parallel flows. We currently support following branches:
+
+<CardGroup cols="2">
+  <Card title="Wait Until" href="/docs/wait-until">
+    Halt workflow until a condition is met or a specific time interval is reached.
+  </Card>
+
+  <Card title="Branch" href="/docs/branch">
+    Route notifications through different workflow routes based on conditions.
+  </Card>
+</CardGroup>
+
+### 5. Data Update Nodes
+
+These Nodes are used to bring in, modify or update data within workflow. Available data update nodes are:
+
+<CardGroup cols="2">
+  <Card title="Fetch" href="/docs/fetch">
+    HTTP API request to GET data from an external endpoint to use in workflow.
+  </Card>
+
+  <Card title="Update User Profile" href="/docs/update-user-profile">
+    Update recipient or actor within the workflow before sending them notification.
+  </Card>
+
+  <Card title="Add / Remove user from list" href="/docs/add-user-to-list">
+    Dynamically add or remove recipient or actor in/from the list.
+  </Card>
+
+  <Card title="Update Object Subscription" href="/docs/subscribe-to-object">
+    Dynamically add or remove recipient or actor in/from the object subscript.
+  </Card>
+</CardGroup>
+
+### Workflow Settings
+
+This is where basic workflow details like name, description and tags go. You can also define workflow-level conditions like [throttle](https://docs.suprsend.com/docs/throttle) here. Below is a list of workflow configurations and their descriptions:
+
+<img src="https://mintcdn.com/suprsend/y77gmHjmaTSnbCzd/images/docs/bd4ac3f-image.png?fit=max&auto=format&n=y77gmHjmaTSnbCzd&q=85&s=60295856755e80b2f765086ccc350584" alt="" width="830" height="1428" data-path="images/docs/bd4ac3f-image.png" />
+
+| Field                     | Obligation    | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Name**                  | *\*mandatory* | Unique name of the workflow. The workflow name should be easily identifiable for your reference at a later stage. e.g. - `Appointment Reminder`. You can also use event name as your workflow name if there is only one workflow linked to that event.                                                                                                                                                                                                                                      |
+| **Description**           | *optional*    | You can use this field to add more details about your workflow like the notification logic. e.g. - `Send 1 hour before the appointment`.                                                                                                                                                                                                                                                                                                                                                    |
+| **Notification Category** | *\*mandatory* | \[Notification category] ("[https://docs.suprsend.com/docs/notification-category](https://docs.suprsend.com/docs/notification-category)") is used to group related workflows together and are also used for users to set their preferences across a group of workflows. There are 3 notification categories by default: `transactional` (user action-based alerts), `promotional` (marketing notifications), and `system` (time-sensitive notifications like OTP and authentication codes). |
+| **Tags**                  | *optional*    | Tags are used to group related workflows together. e.g., all booking-related workflows can be tagged as `Booking`.                                                                                                                                                                                                                                                                                                                                                                          |
+| **Throttle**              | *optional*    | You can use throttle to limit the number of workflow executions per user in a given time window. \[Know more about throttle here] ("[https://docs.suprsend.com/docs/throttle](https://docs.suprsend.com/docs/throttle)") .                                                                                                                                                                                                                                                                  |
+
+### Change Node name and description
+
+To modify the name and description of a node, click on the `edit metadata` option from the burger menu on your node form. Choose a descriptive name that clarifies the function of the step, and we suggest including node type in the name for easier identification. In the description field, provide a concise explanation of the logic and important elements of the node. For instance, in a send node, you can specify the template being used or provide details about the list of users who will be notified if it differs from the actor.
+
+<img src="https://mintcdn.com/suprsend/iZJ8XgyTL4NrLVtX/images/docs/aeb24d6-image.png?fit=max&auto=format&n=iZJ8XgyTL4NrLVtX&q=85&s=ec04ead06b5c1fc217cc416ba6c31c80" alt="" width="1888" height="975" data-path="images/docs/aeb24d6-image.png" />
+
+## Delete Node
+
+If you want to remove a node from the workflow, click on the `delete` option from the burger menu on your node form to delete it.
+
+## Cloning a workflow
+
+We recommend designing and testing workflows in staging workspace first before pushing it to production. You can use clone functionality to duplicate workflows across workspaces or to avoid creating similar workflows from scratch.
+
+To clone a workflow, just click the clone button on workflow details page in view mode. Please note that you won't see this option while editing the workflow.
+
+Once cloned, your workflow will appear as a draft in your chosen destination. You can then commit it to make it live.
+
+![](https://files.readme.io/fe58c04-workflow_clone.gif)
+
+***
+
+
+Built with [Mintlify](https://mintlify.com).
+
+---
+
+## Triggering Workflows
+
+# Trigger Workflow
+
+> Learn how to trigger workflows using any of the available methods.
+
+You can trigger workflows designed on SuprSend dashboard via making a [direct call](/docs/trigger-workflow#triggering-workflow-via-api) to `workflows.trigger` endpoint or via [event trigger](/docs/trigger-workflow#event-based-trigger). In SuprSend, we refer events as user-initiated actions, such as social media interactions, or system-generated events like pending payments. User needs to be created beforehand for event based triggers.
+
+[Direct API trigger](/docs/trigger-workflow#triggering-workflow-via-api) is a straightforward way to get started, as you can include recipient channel information directly in the API call and doesn't require prior user creation to initiate the notification.
+
+## Triggering workflow via API
+
+<Info>
+  It is a unified API to trigger workflow and doesn't require user creation before hand to trigger notification. Recommended for platforms transitioning their existing notifications to SuprSend. If you are using our frontend SDKs to configure notifications and passing events and user properties from third-party data platforms like Segment, then [event-based trigger](/docs/trigger-workflow#event-based-trigger) would be a better choice.
+</Info>
+
+<Warning>
+  It is a new workflow method and is available in below SDK versions (Python >= v0.11.0, Go >= v0.5.1, Node >= 1.10.0 and Java >= 0.7.0). Upgrade to the latest version if you are on older SDK versions.
+</Warning>
+
+Here is a list of integrations that you can use to trigger workflow over API:
+
+<CardGroup cols="3">
+  <Card title="Python Backend SDK" icon="python" iconType="solid" href="/docs/python-trigger-workflow-from-api" />
+
+  <Card title="Node Backend SDK" icon="js" iconType="solid" href="/docs/node-trigger-workflow-from-api" />
+
+  <Card title="Java Backend SDK" icon="java" iconType="solid" href="/docs/java-trigger-workflow-from-api" />
+
+  <Card title="Trigger Workflow HTTP API" icon="arrows-spin" iconType="solid" href="/reference/trigger-workflow-api" />
+
+  <Card title="Backend SDK with Golang" icon="golang" iconType="solid" href="/docs/go-trigger-workflow-from-api" />
+</CardGroup>
+
+### Sample Payload
+
+Here is a sample payload of direct API trigger
+
+<CodeGroup>
+  ```python Python theme={"system"}
+  from suprsend import Event
+  from suprsend import WorkflowTriggerRequest
+
+  supr_client = Suprsend("_workspace_key_", "_workspace_secret_")
+
+  # Prepare workflow payload
+  w1 = WorkflowTriggerRequest(
+      body={
+          "workflow": "_workflow_slug_",
+          "actor": {
+              "distinct_id": "0fxxx8f74-xxxx-41c5-8752-xxxcb6911fb08",
+              "name": "actor_1",
+              "$skip_create": true,
+          },
+          "recipients": [
+              # notify user
+              {
+                  "distinct_id": "0gxxx9f14-xxxx-23c5-1902-xxxcb6912ab09",
+                  "$email": ["abc@example.com"],
+                  "name": "recipient_1",
+                  "$preferred_language": "en",
+                  "$timezone": "America/New_York",
+                  "$skip_create": true,
+              },
+              # notify object
+              {"object_type": "teams", "id": "finance", "$skip_create": true},
+          ],
+          "data": {
+              "first_name": "User",
+              "invoice_amount": "$5000",
+              "invoice_id": "Invoice-1234",
+          },
+      },
+      tenant_id="tenant_id1",
+      idempotency_key="_unique_identifier_of_the_request_",
+  )
+
+  # Trigger workflow
+  response = supr_client.workflows.trigger(w1)
+  print(response)
+  ```
+
+  ```javascript Node theme={"system"}
+  const { Suprsend, WorkflowTriggerRequest } = require("@suprsend/node-sdk");
+  const supr_client = new Suprsend("_workspace_key_", "_workspace_secret_");
+
+  // Prepare workflow payload
+  const body = {
+     "workflow": "_workflow_slug_",
+     "actor": {
+        "distinct_id": "0fxxx8f74-xxxx-41c5-8752-xxxcb6911fb08",
+        "name": "actor_1",
+        "$skip_create": true
+     },
+     "recipients": [
+        // notify user
+        {
+           "distinct_id": "0gxxx9f14-xxxx-23c5-1902-xxxcb6912ab09",
+           "$email": ["abc@example.com"],
+           "name": "recipient_1",
+           "$preferred_language": "en",
+           "$timezone": "America/New_York",
+           "$skip_create": true
+        },
+        // notify object
+        {
+           "object_type": "teams",
+           "id": "finance",
+           "$skip_create": true
+        }
+     ],
+     "data": {
+        "first_name": "User",
+        "invoice_amount": "$5000",
+        "invoice_id": "Invoice-1234"
+     }
+  };
+
+  // Create workflow instance
+  const w1 = new WorkflowTriggerRequest(body, {
+     tenant_id: "tenant_id1",
+     idempotency_key: "_unique_identifier_of_the_request_"
+  });
+
+  // Trigger workflow
+  const response = supr_client.workflows.trigger(w1);
+  response.then(res => console.log("response", res));
+  ```
+
+  ```go Go theme={"system"}
+  package main
+
+  import (
+      "log"
+      suprsend "github.com/suprsend/suprsend-go"
+  )
+
+  // Initialize SDK
+  func main() {
+      suprClient, err: = suprsend.NewClient("_workspace_key_", "_workspace_secret_")
+      if err != nil {
+          log.Println(err)
+      }
+      _ = suprClient
+      triggerWorkflowAPI(suprClient)
+  }
+
+  func triggerWorkflowAPI(suprClient * suprsend.Client) {
+
+      // Create WorkflowRequest body
+      wfReqBody: = map[string] interface {} {
+          "workflow": "_workflow_slug_",
+          "actor": map[string] interface {} {
+                  "distinct_id": "0fxxx8f74-xxxx-41c5-8752-xxxcb6911fb08",
+                  "name": "actor_1",
+                  "$skip_create": true,
+              },
+              "recipients": [] map[string] interface {} {
+                  // notify user
+                  {
+                      "distinct_id": "0gxxx9f14-xxxx-23c5-1902-xxxcb6912ab09",
+                      "$email": [] string {
+                          "abc@example.com"
+                      },
+                      "name": "recipient_1",
+                      "$preferred_language": "en",
+                      "$timezone": "America/New_York",
+                      "$skip_create": true,
+                  },
+                  // notify object
+                  {
+                      "object_type":   "teams",
+                      "id": "finance",
+                      "$skip_create": true,
+                  },
+              },
+              // data can be any json/serializable map structure
+              "data": map[string] interface {} {
+                  "first_name": "User",
+                  "invoice_amount": "$5000",
+                  "invoice_id": "Invoice-1234",
+                  "spend_amount": "$10",
+              },
+      }
+
+          w1: = & suprsend.WorkflowTriggerRequest {
+              Body: wfReqBody,
+              TenantId: "tenant_id1",
+              IdempotencyKey: "_unique_identifier_of_the_request_",
+          }
+          // Call Workflows.Trigger to send request to Suprsend
+      resp,
+      err: = suprClient.Workflows.Trigger(w1)
+      if err != nil {
+          log.Fatalln(err)
+      }
+      log.Println(resp)
+  }
+  ```
+
+  ```java Java theme={"system"}
+  package test;
+
+  import java.io.IOException;
+  import java.io.UnsupportedEncodingException;
+  import java.util.Arrays;
+
+  import org.json.JSONArray;
+  import org.json.JSONObject;
+
+  import suprsend.Suprsend;
+  import suprsend.SuprsendException;
+  import suprsend.WorkflowTriggerRequest;
+
+  public class Workflow {
+
+      public static void main(String[] args) throws Exception {
+          WorkflowTrigger();
+      }
+
+      private static void WorkflowTrigger() throws SuprsendException, UnsupportedEncodingException {
+          Suprsend suprClient = Helper.getClientInstance();
+          // payload
+          JSONObject body = getWorkflowBody();
+          String idempotencyKey = "_unique_request_identifier";
+          String tenantId = "tenant_id1";
+          WorkflowTriggerRequest wf = new WorkflowTriggerRequest(body, idempotencyKey, tenantId);
+          //
+          JSONObject resp = suprClient.workflows.trigger(wf);
+          System.out.println(resp);
+      }
+
+      private static JSONObject getWorkflowBody() {
+          JSONObject body = new JSONObject()
+              .put("workflow", "__workflow_slug__")
+              .put("actor", new JSONObject()
+                  .put("distinct_id", "0fxxx8f74-xxxx-41c5-8752-xxxcb6911fb08")
+                  .put("name", "actor_1")
+                  .put("$skip_create", true)
+              )
+              .put("recipients", new JSONArray()
+                  // notify user
+                  .put(new JSONObject()
+                      .put("distinct_id", "0gxxx9f14-xxxx-23c5-1902-xxxcb6912ab09")
+                      .put("$email", Arrays.asList("abc@example.com"))
+                      .put("name", "recipient_1")
+                      .put("$preferred_language", "en")
+                      .put("$timezone", "America/New_York")
+                      .put("$skip_create", true)
+                  )
+                  // notify object
+                  .put(new JSONObject()
+                      .put("object_type", "teams")
+                      .put("id", "finance")
+                      .put("$skip_create", true)
+                  )
+              )
+              .put("data", new JSONObject()
+                  .put("first_name", "User")
+                  .put("invoice_amount", "$5000")
+                  .put("invoice_id", "Invoice-1234")
+              );
+
+          return body;
+      }
+  }
+  ```
+
+  ```curl curl theme={"system"}
+  curl --request POST \
+       --url https://hub.suprsend.com/trigger/ \
+       --header 'Authorization: Bearer _API_key_' \
+       --header 'accept: application/json' \
+       --header 'content-type: application/json' \
+       --data '
+  {
+    "workflow": "_workflow_slug_",
+    "actor": {
+      "distinct_id": "0fxxx8f74-xxxx-41c5-8752-xxxcb6911fb08",
+      "name": "actor_1",
+      "$skip_create": true
+    },
+    "recipients": [
+      {
+        "distinct_id": "0gxxx9f14-xxxx-23c5-1902-xxxcb6912ab09",
+        "$email": ["abc@example.com"],
+        "name": "recipient_1",
+        "$preferred_language": "en",
+        "$timezone": "America/New_York",
+        "$skip_create": true
+      },
+      {
+        "object_type": "teams",
+        "id": "finance",
+        "$skip_create": true
+      }
+    ],
+    "data": {
+      "first_name": "User",
+      "invoice_amount": "$5000",
+      "invoice_id": "Invoice-1234"
+    }
+  }
+  '
+  ```
+</CodeGroup>
+
+<Note>
+  To prevent automatic creation of an actor, or recipient (user/object) in SuprSend (the case where they already exist in your system), you can use the `"$skip_create": true` flag.
+
+  This can be applied inside the actor, individual user recipient objects, or object recipient objects.
+</Note>
+
+**Payload Schema**
+
+| Property                           | Type                               | Description                                                                                                                                                                                                                                                                                                                                                                            |
+| ---------------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `workflow`                         | string                             | Slug of designed workflow on SuprSend dashboard. You'll get the slug from workflow settings.                                                                                                                                                                                                                                                                                           |
+| `actor` (*optional*)               | string / object                    | Includes distinct\_id and properties of the user who performed the action. You can use it for [cross-user notifications](/docs/trigger-workflow#sending-cross-user-notifications) where you need to include actor properties in notification template. Actor properties can be added as `$actor.<prop>`.                                                                               |
+| `recipients`                       | array of string / array of objects | List of users who need to be notified. You can add up to 100 recipients in a workflow trigger. You can either pass recipients as an array of `distinct_id` (if user is pre-synced in SuprSend database) or [define recipient information inline](/docs/trigger-workflow#identifying-recipients-inline). To notify [object](/docs/objects), pass object\_id and type in recipient JSON. |
+| `data`                             | object                             | variable data required to render dynamic template content or workflow properties such as dynamic delay or channel override in send node.                                                                                                                                                                                                                                               |
+| `tenant_id`                        | string                             | unique identifier of the [brand / tenant](/docs/tenants)                                                                                                                                                                                                                                                                                                                               |
+| `idempotency_key`                  | string                             | unique identifier of the request. We'll be returning idempotency\_key in our [outbound webhook response](/docs/outbound-webhook). You can use it to map notification statuses and replies in your system.                                                                                                                                                                              |
+| `recipients[].$timezone`           | string                             | to set recipient's timezone. Used to send notification in user's local timezone. You can pass timezone in [IANA (TZ identifier)](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List) format.                                                                                                                                                                            |
+| `recipients[].$preferred_language` | string                             | to set recipient's preferred language. This is to support localization in notification content. You can pass the language in `ISO 639-1 2-letter` format. [Refer all language codes here](https://github.com/suprsend/suprsend-py-sdk/blob/v0.12.0/src/suprsend/language_codes.py).                                                                                                    |
+| `$skip_create`                     | boolean                            | Optional flag that can be used inside `actor`, or recipient payloads including both `user`, or `object`. When set to `true`, SuprSend will **not create the user or object** if it doesn’t already exist in the system.                                                                                                                                                                |
+
+### Identifying recipients inline
+
+One of the benefits of using direct workflow trigger is that you can identify recipients inline. You can include recipient channel information, their channel preferences, and their user properties along with the workflow trigger. Upon triggering the workflow, the recipient will be automatically created in the SuprSend database in the background.
+
+This facilitates dynamic synchronization of your user data within SuprSend and eliminates the need for any migration efforts on your end to start sending notifications from SuprSend. You can also use recipient properties in your template as `$recipient.<property>`.
+
+This is how the complete recipient payload with look like
+
+<CodeGroup>
+  ```json json theme={"system"}
+  {
+    "distinct_id": "0gxxx9f14-xxxx-23c5-1902-xxxcb6912ab09",
+    "$email":["abc@example.com"],
+    "$channels":["email","inbox"],
+    "user_prop1":"value_1",
+    "$preferred_language":"en",
+    "$timezone": "America/New_York"
+  }
+  // Object will be identified by {object_type, id}. Rest of the payload will be same as user.
+  {
+    "object_type": "departments",
+    "id":"finance",
+    "$email":["abc@example.com"],
+    "user_prop1":"value_1"
+  }
+  ```
+</CodeGroup>
+
+| Property                                    | Type                    | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ------------------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `distinct_id`                               | string                  | Unique identifier of the user to be notified.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| communication channels ($email, $sms, etc). | array of string         | You can pass user channel information using `$<channel>` key. This will override existing channel value from the user profile and use the channel value defined in the key for notification trigger. The same channel information will also be appended to user profile in the background Refer how different communication channels can be passed [here](/docs/trigger-workflow#add-user-communication-channel)                                                                                                                                                                                                                                                                                                                                                                                 |
+| `$channels`                                 | array of string / dicts | Use it to pass user's channel preference in the payload. You can always use our [in-build preference APIs](/docs/user-preferences) to maintain user notification preferences. Preferences defined within SuprSend will automatically apply with workflow trigger. By default, notifications will be sent to all channels defined in the workflow delivery node. However, if you have a scenario where user has specific channel preference for a notification (e.g. they only want to receive payment reminders via email), you can include that preference in the workflow payload. This will ensure that notifications are sent only to the channels specified in the \$channels key. The supported channel values are `email, sms, whatsapp, androidpush, iospush, slack, webpush, ms_teams`. |
+| `$preferred_language`                       | string                  | to set recipient's preferred language. This is to support localization in notification content. You can pass the language in `ISO 639-1 2-letter` format. [Refer all language codes here](https://github.com/suprsend/suprsend-py-sdk/blob/v0.12.0/src/suprsend/language_codes.py) .                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `$timezone`                                 | string                  | to set recipient's timezone. Used to send notification in user's local timezone. You can pass timezone in [IANA (TZ identifier)](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List) format.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| \*                                          | key-value pair          | You can pass other user properties to render dynamic template content in key-value pair as `"user_prop1":"value1"` . Extra properties will be set in subscriber profile (as subscriber properties) which can then be used in the template as `$recipient.<property>`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+
+#### Add user communication channel
+
+<CodeGroup>
+  ```json json theme={"system"}
+  "$email":["user@example.com"],
+  "$whatsapp":["+15555555555"],
+  "$sms":["+15555555555"],
+  "$androidpush": [{"token": "__android_push_token__", "provider": "fcm", "device_id": ""}],
+  "$iospush":[{"token": "__ios_push_token__", "provider": "apns", "device_id": ""}],
+  "$slack": [{
+    "email": "user@example.com",
+    "access_token": "xoxb-XXXXXXXX"
+  }]   // slack using email
+
+  "$slack": [{
+    "user_id": "U/WXXXXXXXX",
+    "access_token": "xoxb-XXXXXX"
+  }] // slack using member_id
+
+  "$slack": [{
+    "channel": "CXXXXXXXX",
+    "access_token": "xoxb-XXXXXX"
+  }] // slack channel
+
+  "$slack": [{
+    "incoming_webhook": {
+      "url": "https://hooks.slack.com/services/TXXXX/BXXXX/XXXXXXX"
+    }
+  }] // slack incoming webhook
+
+  "$ms_teams": [{
+    "tenant_id": "c1981ab2-9aaf-xxxx-xxxx",
+    "service_url": "https://smba.trafficmanager.net/amer",
+    "conversation_id": "19:c1524d7c-a06f-456f-8abe-xxxx"
+  }] // MS teams user or channel using conversation_id
+
+  "$ms_teams": [{
+    "tenant_id": "c1981ab2-9aaf-xxxx-xxxx",
+    "service_url": "https://smba.trafficmanager.net/amer",
+    "user_id": "29:1nsLcmJ2RKtYH6Cxxxx-xxxx"
+  }] // MS teams user using user_id
+
+  "$ms_teams": [{
+    "incoming_webhook": {
+      "url": "https://wnk1z.webhook.office.com/webhookb2/XXXXXXXXX"
+    }
+  }] // MS teams incoming webhook
+  ```
+</CodeGroup>
+
+### Sending notification to multiple recipients
+
+Recipients in workflow call is an array of `distinct_ids` or recipient objects. You can pass up to 100 recipients in a single workflow trigger. SuprSend will internally convert it into multiple workflow triggers, one for each recipient in the array.
+
+<CodeGroup>
+  ```json json theme={"system"}
+  "recipients": [
+        {
+          "distinct_id": "id1",
+          "$email":["id1@example.com"],
+          "name":"recipient_1"
+        },
+    	 {
+          "distinct_id": "id1",
+          "$email":["id2@example.com"],
+          "name":"recipient_2"
+        }
+      ]
+
+  ---- OR ------
+  "recipients": ["id1","id2"]
+  ```
+</CodeGroup>
+
+<Info>
+  We recommend you to use [lists](/docs/lists) and [broadcasts](/docs/broadcast) to send notifications to a user list larger than 1000 users. This approach allows for bulk processing within SuprSend, resulting in significantly faster delivery compared to individual workflow calls. Sending individual workflows to a large set of users may introduce delays in your notification queue and is not an optimized way of handling bulk trigger.
+</Info>
+
+### Sending cross-user notifications
+
+In scenarios where you need to notify a group of users based on another user's action, such as sending a notification to the document owner when someone comments on it, you can specify the actor in your workflow call. This allows you to use actor's name or other properties in your notification template. Actor properties can be included in the template as `$actor.<property>`.
+
+Sample template with actor and recipient properties:
+
+<CodeGroup>
+  ```text text theme={"system"}
+  //handlebar template
+  Hi {{$recipient.name}}, {{$actor.name}} added {{length comments}} new comments on the {{doc_name}}.
+
+  //Rendered content
+  Hi recipient_1, actor_1 added 2 new comments on the annual IT report.
+  ```
+
+  ```json API request theme={"system"}
+  {
+    "workflow": "new_comment",
+    "actor": {
+      "distinct_id": "0fxxx8f74-xxxx-41c5-8752-xxxcb6911fb08",
+      "name":"actor_1"
+    },
+    "recipients": [
+      {
+        "distinct_id": "0gxxx9f14-xxxx-23c5-1902-xxxcb6912ab09",
+        "$email":["abc@example.com"],
+        "name":"recipient_1"
+      }
+    ],
+    "data":{
+      "doc_name": "annual IT report",
+      "date": "2024-01-01",
+      "comments":["change the date","rest looks good"]
+    }
+  }
+  ```
+</CodeGroup>
+
+## Event based trigger
+
+<Info>
+  It is a cleaner way of triggering notifications where your user sync is separate and events are generated from multiple sources, backend systems, Frontend applications (user actions on the platform) or CDP platforms like Segment.
+
+  Please Note that the user profile should be created beforehand for `distinct_id` passed in your event call. If user is not present, it will discard the event call.
+
+  Object triggers are not currently supported in event. Please [get in touch](mailto:support@suprsend.com) if you have this requirement.
+</Info>
+
+Below is a sample event call to trigger payment reminder workflow:
+
+<CodeGroup>
+  ```python Python theme={"system"}
+  from suprsend import Event
+
+  # Track Event Example
+  distinct_id = "0fxxx8f74-xxxx-41c5-8752-xxxcb6911fb08"
+  event_name = "Payment Pending"
+  properties = {
+    "first_name": "User",
+    "invoice_amount": "$5000",
+    "invoice_id":"Invoice-1234"
+  }
+  event = Event(distinct_id=distinct_id, event_name=event_name, properties=properties)
+
+  # Track event
+  response = supr_client.track_event(event)
+  print(response)
+  ```
+
+  ```javascript Node.js theme={"system"}
+  const { Event } = require("@suprsend/node-sdk");
+
+  // Track Event Example
+  const distinct_id = "0fxxx8f74-xxxx-41c5-8752-xxxcb6911fb08"
+  const event_name = "Payment Pending"
+
+  const properties = {
+    "first_name": "User",
+    "invoice_amount": "$5000",
+    "invoice_id":"Invoice-1234"
+  }
+
+  const event = new Event(distinct_id, event_name, properties)
+
+  // Track event
+  const response = supr_client.track_event(event)
+  response.then((res) => console.log("response", res));
+  ```
+
+  ```java Java theme={"system"}
+  import org.json.JSONObject;
+
+  import suprsend.Suprsend;
+  import suprsend.Event;
+
+  public class Event {
+    public static void main(String[] args) throws Exception {
+      trackEvent();
+    }
+
+    private static Subscriber trackEvent() throws SuprsendException {
+      Suprsend suprsendClient = new Suprsend("_workspace_key_", "_workspace_secret_");
+
+      String distinctId = "0fxxx8f74-xxxx-41c5-8752-xxxcb6911fb08";
+      String eventName = "Payment Pending";
+
+      JSONObject eventProps = new JSONObject()
+        .put("first_name", "User")
+        .put("invoice_amount", "$5000");
+     	  .put("invoice_id", "Invoice-1234");
+
+      Event e = new Event(distinctId, eventName, eventProps);
+
+      // Track event
+      JSONObject response = suprClient.trackEvent(e);
+      System.out.println(response);
+    }
+  ```
+
+  ```go Go theme={"system"}
+  ev := &suprsend.Event{
+    EventName:  "Payment Pending",
+    DistinctId: "0fxxx8f74-xxxx-41c5-8752-xxxcb6911fb08",
+    Properties: map[string]interface{}{
+      "first_name": "User",
+      "invoice_amount": "$5000",
+      "invoice_id":"Invoice-1234"
+    }
+  }
+
+  // Send event to Suprsend by calling .TrackEvent
+  _, err = suprClient.TrackEvent(ev)
+  if err != nil {
+    log.Fatalln(err)
+  }
+  ```
+
+  ```curl curl theme={"system"}
+  curl --request POST \
+       --url https://hub.suprsend.com/event/ \
+       --header 'Authorization: Bearer _API_key_' \
+       --header 'accept: application/json' \
+       --header 'content-type: application/json' \
+       --data '
+  {
+    "distinct_id": "0fxxx8f74-xxxx-41c5-8752-xxxcb6911fb08",
+    "event": "Payment Pending",
+    "properties": {
+    "first_name": "User",
+    "invoice_amount": "$5000",
+    "invoice_id":"Invoice-1234"
+  	}
+  }
+  '
+  ```
+</CodeGroup>
+
+Here is a list of all integrations that you can use to trigger event:
+
+<CardGroup cols="4">
+  <Card title="Python Backend SDK" icon="python" href="/docs/python-send-event-data" />
+
+  <Card title="Node Backend SDK" icon="js" href="/docs/node-send-event-data" />
+
+  <Card title="Java Backend SDK" icon="java" href="/docs/java-send-event-data" />
+
+  <Card title="Go Backend SDK" icon="Golang" href="/docs/go-trigger-workflow-from-api" />
+
+  <Card title="Trigger Event HTTP API" icon="arrows-spin" href="reference/trigger-event" />
+
+  <Card title="JavaScript Frontend SDK" icon="js" href="/docs/js-events-and-user-methods#trigger-events">
+    (Web)
+  </Card>
+
+  <Card title="Kotlin Frontend SDK" icon="android" href="/docs/android-send-event-data">
+    (Android)
+  </Card>
+
+  <Card title="React Native Frontend SDK" icon="react" href="/docs/react-native-send-event-data">
+    (App)
+  </Card>
+
+  <Card title="Flutter Frontend SDK" icon="flutter" href="/docs/flutter-send-event-data">
+    (App)
+  </Card>
+
+  <Card title="Segment" icon="user" href="/docs/segment">
+    Customer Data Platform (CDP)
+  </Card>
+</CardGroup>
+
+## Triggering workflow using google sheets
+
+<Tip>
+  Recommended for one-time notification trigger.
+</Tip>
+
+This can be used by growth or product teams to trigger one time notifications for lead generation, sales cold messaging or to send announcements and product updates. We do not recommend sending more than 10,000 notifications using google sheets as each row in google sheet trigger converts to 1 workflow request and might take a lot of time to process.
+
+Also, since triggers via google sheets are generally promotional notifications, we recommend using one of the [promotional sub-categories](docs/notification-category#creating-sub-categories-for-preference-management) to trigger this notification. [Read more about categories and how they impact your send latencies.](/docs/notification-category)
+
+Here's a step-by-step guide on how to send notifications using google sheets:
+
+<Steps>
+  <Step title="Create a template group on SuprSend account.">
+    All the static content can be designed on the template, and all the variable data defined within `{{...}}` will be passed from the Google Sheet at the time of trigger.
+  </Step>
+
+  <Step title="Create a google sheet with following data.">
+    Each row in the sheet corresponds to one recipient.
+
+    * `distinct_id` **column**- this is the unique identifier of the user who needs to be notified.
+    * **Dynamic data columns**- you need to create one column each for the dynamic data (aka variables) in your template. Note that variable names are case sensitive. \
+      \
+      If this is the template content:`Hi {{name}}, your {{Event}} is scheduled at {{Schedule}}. See you there.` , you'll have to create a column for each template variable -`name` , `Event` , and `schedule` in your sheet.
+    * **User Channels columns**- Next, create columns for user channel details. These channel columns are necessary to pass channel information that may not be present in the user profile. \
+      It's always a good practice to include channel information if you're unsure of its presence in the user profile. You can pass channels as `WA` for whatsapp, `Email` for email and `SMS` for SMS. \
+      For Whatsapp and SMS, you need to enter country code infront of the mobile number as `+917123xxxxxx` .
+    * `SuprSend Status` **column**- Fill the value `TBT` in rows for which you want to trigger the notification. Once, the notification is triggered, the status changes to `OK` .\
+      <img src="https://mintcdn.com/suprsend/09Y8zJBSaqwwb23r/images/docs/6408ef6-image.png?fit=max&auto=format&n=09Y8zJBSaqwwb23r&q=85&s=020005a99b29d78d5832a3816b18a4f0" alt="" width="2052" height="1000" data-path="images/docs/6408ef6-image.png" />
+
+      <Tip>
+        📘 TIP:
+
+        Google Sheet doesn't allow to start a field with \*`+`\*\*. To enter in + format, use string function: `="+917123xxxxxx"`
+      </Tip>
+  </Step>
+
+  <Step title="Go top the Google Sheets Navbar">
+    In the Navbar of Google Sheets, click on `Extensions` and select `Apps Script`
+    <img src="https://mintcdn.com/suprsend/3ix_OjxB_ZGM-pa-/images/docs/2aa0141-Screenshot_2022-02-01_at_10.51.37_AM.png?fit=max&auto=format&n=3ix_OjxB_ZGM-pa-&q=85&s=1924080f0dbeee7f3155dd0941a6e765" alt="" width="1814" height="746" data-path="images/docs/2aa0141-Screenshot_2022-02-01_at_10.51.37_AM.png" />
+  </Step>
+
+  <Step title="Remove the default information in the Apps Script">
+    It will open Apps Script in a new tab. Remove the default information present in the editor, and copy-paste the following in the editor.
+
+    <CodeGroup>
+      ```json Appscript theme={"system"}
+      //Enter your workspace key, secret, template slug, workflow name & category
+      const workspace_key = "__API_KEY__";
+      const workspace_secret = "__API_SECRET__";
+      const template_slug = "__TEMPLATE_SLUG__";
+      const workflow_name = "__WORKFLOW_NAME__";
+      const category = "promotional"
+
+      // Map your column names to channels if need be
+      // Or ensure you use following names for your columns to directly map them to channels
+      // distinc_id for user's distinct id
+      // $sms for user's mobile number
+      // $email for user's email
+      // $whatsapp for user's WhatsApp
+      // If you have other names of your columns you can modify following two lines accordingly
+      const channel_col_names = {"WA":"$whatsapp","Email":"$email","SMS":"$sms"};
+      const distinct_id_col_name = 'distinct_id'
+
+      //--------- No Editing required below -----------------//
+      function Trigger_Workflows() {
+        var sheet = SpreadsheetApp.getActiveSheet();
+        var data = sheet.getDataRange().getValues();
+        var headers = data[0];
+        for (var i = 1; i < data.length; i++) {
+          var response = convert_row_to_payload(data[i], headers);
+          if (response.status === "TBT") {
+            make_api_request(
+              response.payload,
+              sheet.getRange(i + 1, parseInt(response.status_col) + 1)
+            );
+          }
+        }
+      }
+
+      function convert_row_to_payload(data, headers) {
+        let status = "";
+        let status_col = -1;
+        let user = {
+          distinct_id: null,
+          $email: [],
+          $sms: [],
+          $whatsapp: [],
+        };
+        let payload = {};
+        payload.data = {};
+        let private_channelkeys = ["$sms", "$whatsapp", "$email", "distinct_id"];
+        for (var i = 0; i < headers.length; i++) {
+          if (data[i].length !== 0) {
+            if (
+              channel_col_names[headers[i]] ||
+              private_channelkeys.includes(headers[i])
+            ) {
+              if (headers[i] !== "distinct_id") {
+                if (user[channel_col_names[headers[i]]])
+                  user[channel_col_names[headers[i]]].push(data[i]);
+                if (user[headers[i]]) user[headers[i]].push(data[i]);
+              } else {
+                user[headers[i]] = data[i];
+              }
+            }
+            if (headers[i] !== "SuprSend Status") {
+              payload.data[headers[i]] = data[i];
+            } else {
+              status = data[i];
+              status_col = i;
+            }
+          }
+        }
+        user["distinct_id"] = payload.data[distinct_id_col_name];
+        //user["is_transient"] = true; //Uncomment if user is temporary
+        payload.users = [user];
+        payload.name = workflow_name;
+        payload.notification_category = category;
+        payload.template = template_slug;
+        return {
+          payload: JSON.stringify(payload),
+          status: status,
+          status_col: status_col,
+        };
+      }
+
+      function make_api_request(payload, cell) {
+        const uri = "/" + workspace_key + "/trigger/";
+        const url = "https://hub.suprsend.com" + uri;
+        const md5 = MD5(payload);
+        const now = new Date().toISOString();
+        const message =
+          "POST" + "\n" + md5 + "\n" + "application/json" + "\n" + now + "\n" + uri;
+        const byteSignature = Utilities.computeHmacSha256Signature(
+          message,
+          workspace_secret
+        );
+        const signature = Utilities.base64Encode(byteSignature);
+        var options = {
+          method: "POST",
+          contentType: "application/json",
+          headers: {
+            Authorization: workspace_key + ":" + signature,
+            Date: now,
+          },
+          payload: payload,
+          muteHttpExceptions: true,
+        };
+        cell.setValue("Processing...");
+        try {
+          var response = UrlFetchApp.fetch(url, options);
+          cell.setValue(response.getContentText());
+        } catch (error) {
+          cell.setValue("Error : " + error);
+        }
+      }
+
+      function onOpen() {
+        var ui = SpreadsheetApp.getUi();
+        // Or DocumentApp or FormApp.
+        ui.createMenu("SuprSend")
+          .addItem("Trigger SuprSend Workflow", "Trigger_Workflows")
+          .addToUi();
+      }
+
+      function MD5(input, isShortMode) {
+        var isShortMode = !!isShortMode; // Be sure to be bool
+        var txtHash = "";
+        var rawHash = Utilities.computeDigest(
+          Utilities.DigestAlgorithm.MD5,
+          input,
+          Utilities.Charset.UTF_8
+        );
+
+        if (!isShortMode) {
+          for (i = 0; i < rawHash.length; i++) {
+            var hashVal = rawHash[i];
+
+            if (hashVal < 0) {
+              hashVal += 256;
+            }
+            if (hashVal.toString(16).length == 1) {
+              txtHash += "0";
+            }
+            txtHash += hashVal.toString(16);
+          }
+        } else {
+          for (j = 0; j < 16; j += 8) {
+            hashVal =
+              (rawHash[j] + rawHash[j + 1] + rawHash[j + 2] + rawHash[j + 3]) ^
+              (rawHash[j + 4] + rawHash[j + 5] + rawHash[j + 6] + rawHash[j + 7]);
+
+            if (hashVal < 0) {
+              hashVal += 1024;
+            }
+            if (hashVal.toString(36).length == 1) {
+              txtHash += "0";
+            }
+
+            txtHash += hashVal.toString(36);
+          }
+        }
+
+        // change below to "txtHash.toUpperCase()" if needed
+        return txtHash;
+      }
+      ```
+    </CodeGroup>
+
+    You'll find following information to be added in your script from SuprSend dashboard.
+
+    | Data            | Description                                                                                                                                                                                     |
+    | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+    | `api-key`       | API Key for your workspace. From left navigation panel, select settings -> API Keys.                                                                                                            |
+    | `api-secret`    | API Key for your workspace. From left navigation panel, select settings -> API Keys.                                                                                                            |
+    | `template-slug` | Add the template slug of the template that you want to trigger. You can copy the the template slug by clicking on copy icon next to the template name on template details page.                 |
+    | `Workflow Name` | Give a name to identify your workflow. It'll help you locate the sent workflow on the workflow listing page. You can see the notification performance on **Workflow -> Analytics** page.        |
+    | `category`      | Provide notification category. We recommend using promotional sub-category for sending engagement notifications. You can read more [Notification Categories here](/docs/notification-category). |
+  </Step>
+
+  <Step title="Save the Script - Close the Tab - Reload your Google Sheets Page!">
+    After reloading, you will find a new option named "**SuprSend**" in the navigation bar. On clicking it, you will see the option to **Trigger SuprSend Workflow**. On triggering, the script will pick up all the rows which have value
+
+    in the column name "**SuprSend Status**", and will make an API call to SuprSend. For the successful API call, the status will change to `OK`.
+    <img src="https://mintcdn.com/suprsend/3ix_OjxB_ZGM-pa-/images/docs/17410e4-Screenshot_2022-02-01_at_11.12.09_AM.png?fit=max&auto=format&n=3ix_OjxB_ZGM-pa-&q=85&s=8e4ca446cbd09b98b0166b30a0d9a8c9" alt="" width="1984" height="906" data-path="images/docs/17410e4-Screenshot_2022-02-01_at_11.12.09_AM.png" />
+  </Step>
+
+  <Step title="Check the Status">
+    You can check the status of your notification trigger on the `Logs` page.
+    <img src="https://mintcdn.com/suprsend/dnAGb1CmSRGCSyT3/images/docs/4db6a17-image.png?fit=max&auto=format&n=dnAGb1CmSRGCSyT3&q=85&s=e55391e7f63e19cc87d50c93b479652b" alt="" width="2757" height="884" data-path="images/docs/4db6a17-image.png" />
+  </Step>
+</Steps>
+
+***
+
+
+Built with [Mintlify](https://mintlify.com).
+
+---
+
+*This reference is part of the **suprsend-workflows** skill.*
