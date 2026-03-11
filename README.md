@@ -10,7 +10,8 @@ npx skills add suprsend/skills
 
 | Skill | Description |
 |-------|-------------|
-| `suprsend-cli` | CLI command reference, authentication, workflow management, and common patterns |
+| `suprsend-workflows` | Workflow design, configuration, and triggering guide — covers workflow nodes, API/SDK triggers, and multi-channel delivery |
+| `suprsend-inbox` | In-App Inbox integration guide — covers React SDK setup, authentication, theming, and headless mode |
 
 ## For Users
 
@@ -45,7 +46,7 @@ npm install
 npm run build
 
 # Generate a single skill
-npm run build -- --skill=suprsend-cli
+npm run build -- --skill=suprsend-workflows
 
 # Force fresh Claude API calls (bypass cache)
 npm run build -- --no-cache
