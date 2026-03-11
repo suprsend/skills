@@ -4,6 +4,8 @@ import { logger } from "../utils/logger.js";
 
 type JsonSchema = Record<string, unknown>;
 
+const MAX_REF_DEPTH = 20;
+
 /**
  * Recursively resolve $ref pointers in a JSON Schema.
  * Handles both local (#/definitions/...) and remote HTTP refs.
@@ -12,7 +14,12 @@ async function resolveRefs(
   schema: JsonSchema,
   baseUrl: string,
   cache: Map<string, JsonSchema>,
+  depth: number = 0,
 ): Promise<JsonSchema> {
+  if (depth > MAX_REF_DEPTH) {
+    logger.warn(`$ref resolution exceeded max depth (${MAX_REF_DEPTH}), stopping`);
+    return schema;
+  }
   if (typeof schema !== "object" || schema === null) {
     return schema;
   }
@@ -21,7 +28,7 @@ async function resolveRefs(
     const resolved = await Promise.all(
       schema.map((item) =>
         typeof item === "object" && item !== null
-          ? resolveRefs(item as JsonSchema, baseUrl, cache)
+          ? resolveRefs(item as JsonSchema, baseUrl, cache, depth + 1)
           : item,
       ),
     );
@@ -46,13 +53,13 @@ async function resolveRefs(
     logger.debug(`Resolving $ref: ${refUrl}`);
     const refSchema = await fetchJson<JsonSchema>(refUrl);
     cache.set(refUrl, refSchema);
-    return resolveRefs(refSchema, refUrl, cache);
+    return resolveRefs(refSchema, refUrl, cache, depth + 1);
   }
 
   const result: JsonSchema = {};
   for (const [key, value] of Object.entries(schema)) {
     if (typeof value === "object" && value !== null) {
-      result[key] = await resolveRefs(value as JsonSchema, baseUrl, cache);
+      result[key] = await resolveRefs(value as JsonSchema, baseUrl, cache, depth + 1);
     } else {
       result[key] = value;
     }

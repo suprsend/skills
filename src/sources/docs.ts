@@ -1,44 +1,20 @@
 import { fetchText } from "../utils/fetch.js";
 import type { DocsSource } from "./types.js";
 import { logger } from "../utils/logger.js";
+import { extractSection as extractSectionUtil } from "../utils/markdown.js";
 
-/**
- * Extract a section from markdown by heading.
- * Returns everything from the matched heading to the next heading of same or higher level.
- */
 function extractSection(markdown: string, selector: string): string {
   const headingMatch = selector.match(/^(#{1,6})\s+(.+)$/);
   if (!headingMatch) {
     throw new Error(`Invalid section selector: ${selector}. Must be a markdown heading like "## Heading"`);
   }
 
-  const level = headingMatch[1].length;
-  const title = headingMatch[2];
-  const lines = markdown.split("\n");
-  let startIdx = -1;
-  let endIdx = lines.length;
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const lineHeading = line.match(/^(#{1,6})\s+(.+)$/);
-    if (!lineHeading) continue;
-
-    if (startIdx === -1) {
-      if (lineHeading[2].trim() === title.trim() && lineHeading[1].length === level) {
-        startIdx = i;
-      }
-    } else if (lineHeading[1].length <= level) {
-      endIdx = i;
-      break;
-    }
-  }
-
-  if (startIdx === -1) {
+  const result = extractSectionUtil(markdown, selector);
+  if (result === null) {
     logger.warn(`Section "${selector}" not found in document`);
     return "";
   }
-
-  return lines.slice(startIdx, endIdx).join("\n").trim();
+  return result;
 }
 
 export async function resolveDocs(source: DocsSource): Promise<string> {

@@ -112,7 +112,7 @@ describe("pipeline", () => {
         "utf-8",
       );
       expect(content).toContain("name: valid-skill");
-      expect(content).toContain("description: A valid test skill");
+      expect(content).toContain('description: "A valid test skill');
     });
 
     it("includes optional frontmatter fields when set", async () => {
@@ -122,7 +122,7 @@ describe("pipeline", () => {
         "utf-8",
       );
       expect(content).toContain("license: MIT");
-      expect(content).toContain("compatibility: Requires Node.js 20+");
+      expect(content).toContain('compatibility: "Requires Node.js 20+"');
       expect(content).toContain("metadata:");
       expect(content).toContain('author: "test"');
       expect(content).toContain('version: "1.0"');

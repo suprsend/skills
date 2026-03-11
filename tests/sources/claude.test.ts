@@ -82,7 +82,7 @@ describe("resolveClaude", () => {
     );
   });
 
-  it("skips cache check when useCache is false", async () => {
+  it("skips cache read and write when useCache is false", async () => {
     const source: ClaudeSource = {
       type: "claude",
       key: "test",
@@ -90,6 +90,7 @@ describe("resolveClaude", () => {
     };
     await resolveClaude(source, "Generate something", false);
     expect(getCached).not.toHaveBeenCalled();
+    expect(setCache).not.toHaveBeenCalled();
     expect(mockCreate).toHaveBeenCalled();
   });
 

@@ -221,6 +221,47 @@ describe("resolveSchema", () => {
     });
   });
 
+  it("stops resolving refs beyond max depth", async () => {
+    // Build a chain of schemas that each reference the next
+    const schemas: Record<string, object> = {};
+    for (let i = 0; i <= 25; i++) {
+      if (i < 25) {
+        schemas[`https://schema.example.com/${i}.json`] = {
+          type: "object",
+          properties: {
+            next: { $ref: `https://schema.example.com/${i + 1}.json` },
+          },
+        };
+      } else {
+        schemas[`https://schema.example.com/${i}.json`] = { type: "string" };
+      }
+    }
+
+    vi.mocked(fetch).mockImplementation(async (url) => {
+      const schema = schemas[url as string];
+      if (schema) {
+        return new Response(JSON.stringify(schema), { status: 200 });
+      }
+      return new Response("", { status: 404, statusText: "Not Found" });
+    });
+
+    const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    const source: SchemaSource = {
+      type: "schema",
+      key: "schema",
+      url: "https://schema.example.com/0.json",
+      follow_refs: true,
+    };
+
+    // Should complete without stack overflow
+    const result = await resolveSchema(source);
+    expect(result).toBeDefined();
+    expect(warnSpy).toHaveBeenCalled();
+
+    warnSpy.mockRestore();
+  });
+
   it("throws on fetch failure", async () => {
     vi.mocked(fetch).mockResolvedValue(
       new Response("", { status: 500, statusText: "Server Error" }),

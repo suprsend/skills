@@ -16,9 +16,16 @@ function ensureInit(): void {
 }
 
 /**
- * Register partials from skills-src/<skill>/partials/
+ * Register partials from skills-src/<skill>/partials/.
+ * Clears previously registered partials first to prevent leakage between skills.
  */
 async function registerPartials(skillName: string): Promise<void> {
+  // Clear all previously registered partials to isolate skills from each other
+  const existing = Handlebars.partials;
+  for (const name of Object.keys(existing)) {
+    Handlebars.unregisterPartial(name);
+  }
+
   const partialsDir = resolve(SKILLS_SRC_DIR, skillName, "partials");
   try {
     const entries = await readdir(partialsDir);
@@ -83,18 +90,26 @@ export async function readStaticFile(
 }
 
 /**
+ * Escape a string for safe use as a YAML double-quoted value.
+ */
+function yamlQuote(value: string): string {
+  const escaped = value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  return `"${escaped}"`;
+}
+
+/**
  * Generate YAML frontmatter from skill metadata.
  */
 export function generateFrontmatter(meta: SkillMeta): string {
   const lines: string[] = ["---"];
   lines.push(`name: ${meta.name}`);
-  lines.push(`description: ${meta.description.trim()}`);
+  lines.push(`description: ${yamlQuote(meta.description.trim())}`);
   if (meta.license) lines.push(`license: ${meta.license}`);
-  if (meta.compatibility) lines.push(`compatibility: ${meta.compatibility}`);
+  if (meta.compatibility) lines.push(`compatibility: ${yamlQuote(meta.compatibility)}`);
   if (meta.metadata) {
     lines.push("metadata:");
     for (const [k, v] of Object.entries(meta.metadata)) {
-      lines.push(`  ${k}: "${v}"`);
+      lines.push(`  ${k}: ${yamlQuote(v)}`);
     }
   }
   if (meta.allowed_tools) lines.push(`allowed-tools: ${meta.allowed_tools}`);

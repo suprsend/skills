@@ -70,6 +70,15 @@ function validateMeta(config: SourcesConfig): void {
       `Compatibility exceeds ${MAX_COMPATIBILITY_LENGTH} chars (got ${compatibility.length})`,
     );
   }
+
+  // Check for duplicate source keys
+  const keys = new Set<string>();
+  for (const source of config.sources) {
+    if (keys.has(source.key)) {
+      throw new Error(`Duplicate source key: "${source.key}"`);
+    }
+    keys.add(source.key);
+  }
 }
 
 /**

@@ -46,8 +46,14 @@ export async function resolveClaude(
   const textBlock = message.content.find((b) => b.type === "text");
   const response = textBlock ? textBlock.text : "";
 
-  // Save to cache
-  await setCache(model, interpolatedPrompt, response);
+  if (!response) {
+    logger.warn(`Claude returned empty response for key "${source.key}"`);
+  }
+
+  // Save to cache (only when caching is enabled)
+  if (useCache) {
+    await setCache(model, interpolatedPrompt, response);
+  }
 
   return response;
 }

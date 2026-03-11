@@ -1,6 +1,6 @@
 ---
 name: suprsend-cli
-description: SuprSend CLI reference for AI agents. Use when working with SuprSend workflows, templates, channels, or API integrations. Covers all CLI commands, configuration, and common patterns.
+description: "SuprSend CLI reference for AI agents. Use when working with SuprSend workflows, templates, channels, or API integrations. Covers all CLI commands, configuration, and common patterns."
 license: MIT
 metadata:
   author: "suprsend"

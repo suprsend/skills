@@ -23,7 +23,7 @@ describe("generateFrontmatter", () => {
     };
     const result = generateFrontmatter(meta);
     expect(result).toBe(
-      "---\nname: test-skill\ndescription: A test skill for testing.\n---",
+      '---\nname: test-skill\ndescription: "A test skill for testing."\n---',
     );
   });
 
@@ -44,7 +44,7 @@ describe("generateFrontmatter", () => {
       compatibility: "Requires Node 20+",
     };
     const result = generateFrontmatter(meta);
-    expect(result).toContain("compatibility: Requires Node 20+");
+    expect(result).toContain('compatibility: "Requires Node 20+"');
   });
 
   it("includes metadata as nested YAML", () => {
@@ -81,13 +81,24 @@ describe("generateFrontmatter", () => {
     expect(result).not.toContain("allowed-tools");
   });
 
+  it("quotes descriptions with YAML-special characters", () => {
+    const meta: SkillMeta = {
+      name: "test",
+      description: 'Use for: building # things & "stuff"',
+    };
+    const result = generateFrontmatter(meta);
+    expect(result).toContain(
+      'description: "Use for: building # things & \\"stuff\\""',
+    );
+  });
+
   it("trims description whitespace", () => {
     const meta: SkillMeta = {
       name: "test",
       description: "  desc with spaces  \n",
     };
     const result = generateFrontmatter(meta);
-    expect(result).toContain("description: desc with spaces");
+    expect(result).toContain('description: "desc with spaces"');
   });
 
   it("includes all fields when all are set", () => {
@@ -104,9 +115,9 @@ describe("generateFrontmatter", () => {
     expect(lines[0]).toBe("---");
     expect(lines[lines.length - 1]).toBe("---");
     expect(result).toContain("name: full-skill");
-    expect(result).toContain("description: Full skill description.");
+    expect(result).toContain('description: "Full skill description."');
     expect(result).toContain("license: Apache-2.0");
-    expect(result).toContain("compatibility: Requires docker");
+    expect(result).toContain('compatibility: "Requires docker"');
     expect(result).toContain("metadata:");
     expect(result).toContain("allowed-tools: Bash(docker:*)");
   });

@@ -1,4 +1,5 @@
 import Handlebars from "handlebars";
+import { extractSection } from "../utils/markdown.js";
 
 type SchemaObj = {
   properties?: Record<
@@ -42,30 +43,9 @@ export function registerHelpers(hbs: typeof Handlebars): void {
   // {{section markdown "## Heading"}} — Extract section by heading
   hbs.registerHelper("section", (markdown: string, heading: string) => {
     if (typeof markdown !== "string") return "";
-    const headingMatch = heading.match(/^(#{1,6})\s+(.+)$/);
-    if (!headingMatch) return "";
-
-    const level = headingMatch[1].length;
-    const title = headingMatch[2].trim();
-    const lines = markdown.split("\n");
-    let startIdx = -1;
-    let endIdx = lines.length;
-
-    for (let i = 0; i < lines.length; i++) {
-      const lineMatch = lines[i].match(/^(#{1,6})\s+(.+)$/);
-      if (!lineMatch) continue;
-      if (startIdx === -1) {
-        if (lineMatch[2].trim() === title && lineMatch[1].length === level) {
-          startIdx = i;
-        }
-      } else if (lineMatch[1].length <= level) {
-        endIdx = i;
-        break;
-      }
-    }
-
-    if (startIdx === -1) return "";
-    return new hbs.SafeString(lines.slice(startIdx, endIdx).join("\n").trim());
+    const result = extractSection(markdown, heading);
+    if (result === null) return "";
+    return new hbs.SafeString(result);
   });
 
   // {{trim text}} — Strip whitespace

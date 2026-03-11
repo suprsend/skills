@@ -223,6 +223,27 @@ describe("agentskills.io validation", () => {
     });
   });
 
+  describe("duplicate source keys", () => {
+    it("rejects sources with duplicate keys", async () => {
+      await createSkill("dup-keys", {
+        sources: [
+          { type: "static", key: "content", path: "content.md" },
+          { type: "static", key: "content", path: "content.md" },
+        ],
+      });
+      await expect(build({ skill: "dup-keys" })).rejects.toThrow(
+        /duplicate source key/i,
+      );
+    });
+
+    it("accepts sources with unique keys", async () => {
+      await createSkill("unique-keys");
+      await expect(
+        build({ skill: "unique-keys" }),
+      ).resolves.toBeUndefined();
+    });
+  });
+
   describe("line count warning", () => {
     it("warns when SKILL.md exceeds 500 lines", async () => {
       const warnSpy = vi.spyOn(console, "warn");
