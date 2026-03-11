@@ -1,0 +1,13 @@
+{
+  "workflow": "",
+  "recipients": [
+    {
+      "distinct_id": "",
+      "$email": [],
+      "$channels": []
+    }
+  ],
+  "data": {},
+  "tenant_id": "",
+  "idempotency_key": ""
+}
