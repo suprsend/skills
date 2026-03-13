@@ -3,7 +3,6 @@ name: suprsend-workflow-schema
 description: "SuprSend workflow schema reference for creating, modifying, or understanding notification workflows. Lists all available workflow nodes with documentation and JSON schema details."
 metadata:
   author: "suprsend"
-  version: "1.0"
   category: "workflows"
 ---
 

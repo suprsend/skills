@@ -3,7 +3,6 @@ name: suprsend-docs-support
 description: "How to access SuprSend documentation and get support. Includes docs site, LLM-friendly doc endpoints, in-app chat, AI copilot, Slack community, and email support."
 metadata:
   author: "suprsend"
-  version: "1.0"
   category: "support"
 ---
 

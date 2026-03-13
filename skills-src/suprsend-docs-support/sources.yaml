@@ -4,7 +4,6 @@ description: >
   LLM-friendly doc endpoints, in-app chat, AI copilot, Slack community, and email support.
 metadata:
   author: suprsend
-  version: "1.0"
   category: support
 
 sources:
