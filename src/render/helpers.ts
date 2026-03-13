@@ -96,4 +96,40 @@ export function registerHelpers(hbs: typeof Handlebars): void {
     if (text.length <= max) return text;
     return text.slice(0, max) + "...";
   });
+
+  // {{get obj "path.to.key"}} — Deep property access
+  // Supports dot notation (a.b.c) and JSON Pointer fragments (#/$definitions/foo)
+  hbs.registerHelper("get", (obj: unknown, path: unknown) => {
+    if (obj == null || typeof path !== "string") return undefined;
+    let normalized = path;
+    if (normalized.startsWith("#/")) {
+      normalized = normalized.slice(2);
+    }
+    const parts = normalized.includes("/")
+      ? normalized.split("/")
+      : normalized.split(".");
+    let current: unknown = obj;
+    for (const part of parts) {
+      if (current == null || typeof current !== "object") return undefined;
+      current = (current as Record<string, unknown>)[part];
+    }
+    return current;
+  });
+
+  // {{keys obj}} — Get keys of an object as an array
+  hbs.registerHelper("keys", (obj: unknown) => {
+    if (obj == null || typeof obj !== "object" || Array.isArray(obj)) return [];
+    return Object.keys(obj as Record<string, unknown>);
+  });
+
+  // {{concat "a" "b" "c"}} — Concatenate strings
+  hbs.registerHelper("concat", (...args: unknown[]) => {
+    // Last argument is Handlebars options object
+    return args.slice(0, -1).map(String).join("");
+  });
+
+  // {{default value "fallback"}} — Return value or fallback if nullish
+  hbs.registerHelper("default", (value: unknown, fallback: unknown) => {
+    return value ?? fallback;
+  });
 }

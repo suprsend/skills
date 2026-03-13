@@ -1,0 +1,43 @@
+# Data Transform Node
+
+**Schema `node_type`:** `transform`
+
+## Documentation
+
+{{{docs_transform}}}
+
+## Schema Properties
+
+{{schema-table (get other_funcs_schema "$definitions.transform_props")}}
+
+### Variable item properties
+
+Each item in the `variables` array:
+
+{{schema-table (get other_funcs_schema "$definitions.transform_props.properties.variables.items")}}
+
+### Supported languages (`value_lang`)
+
+{{schema-enum (get other_funcs_schema "$definitions.transform_props.properties.variables.items.properties.value_lang.enum")}}
+
+## Example
+
+```json
+{
+  "node_type": "transform",
+  "properties": {
+    "variables": [
+      {
+        "key": "greeting",
+        "value_lang": "handlebars",
+        "value": "Hello {{$recipient.name}}, welcome!"
+      },
+      {
+        "key": "discount_rate",
+        "value_lang": "jsonnet",
+        "value": "if data[\"$recipient\"].monthly_spend > 1000 then 15 else 10"
+      }
+    ]
+  }
+}
+```

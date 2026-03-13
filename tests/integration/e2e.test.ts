@@ -7,16 +7,19 @@ import { parse as parseYaml } from "yaml";
 const ROOT = resolve(import.meta.dirname, "../..");
 const SKILLS_DIR = resolve(ROOT, "skills");
 
+// e2e tests run real builds with network fetches (schemas, docs, external skills)
+const E2E_TIMEOUT = 120_000;
+
 describe("end-to-end build", () => {
   beforeAll(() => {
-    // Run the actual build
-    execSync("npm run build", { cwd: ROOT, encoding: "utf-8" });
-  });
+    // Run the actual build (includes network fetches for schemas, docs, and external skills)
+    execSync("npm run build", { cwd: ROOT, encoding: "utf-8", timeout: E2E_TIMEOUT });
+  }, E2E_TIMEOUT);
 
-  describe("suprsend-workflows skill", () => {
+  describe("suprsend-workflow-schema skill", () => {
     let content: string;
     let frontmatter: Record<string, unknown>;
-    const skillDir = resolve(SKILLS_DIR, "suprsend-workflows");
+    const skillDir = resolve(SKILLS_DIR, "suprsend-workflow-schema");
 
     beforeAll(async () => {
       content = await readFile(resolve(skillDir, "SKILL.md"), "utf-8");
@@ -32,12 +35,12 @@ describe("end-to-end build", () => {
     });
 
     it("has valid YAML frontmatter", () => {
-      expect(frontmatter.name).toBe("suprsend-workflows");
+      expect(frontmatter.name).toBe("suprsend-workflow-schema");
       expect(frontmatter.description).toBeTruthy();
     });
 
     it("has name matching directory", () => {
-      expect(frontmatter.name).toBe("suprsend-workflows");
+      expect(frontmatter.name).toBe("suprsend-workflow-schema");
     });
 
     describe("frontmatter compliance", () => {
@@ -62,10 +65,6 @@ describe("end-to-end build", () => {
         expect((frontmatter.description as string).trim().length).toBeGreaterThan(0);
       });
 
-      it("has license field", () => {
-        expect(frontmatter.license).toBe("MIT");
-      });
-
       it("has metadata field with string values", () => {
         const meta = frontmatter.metadata as Record<string, unknown>;
         expect(meta).toBeDefined();
@@ -81,32 +80,30 @@ describe("end-to-end build", () => {
         expect(lines).toBeLessThanOrEqual(500);
       });
 
-      it("contains workflow overview", () => {
-        expect(content).toContain("SuprSend Workflows");
+      it("contains workflow nodes overview", () => {
+        expect(content).toContain("Workflow Nodes");
       });
 
-      it("contains key concepts", () => {
-        expect(content).toContain("Key Concepts");
+      it("contains delivery nodes", () => {
+        expect(content).toContain("Delivery Nodes");
       });
 
-      it("contains supported channels", () => {
-        expect(content).toContain("Supported Channels");
+      it("contains function nodes", () => {
+        expect(content).toContain("Function Nodes");
       });
 
-      it("contains examples section", () => {
-        expect(content).toContain("Quick Example");
-        expect(content).toContain("SDK Examples");
+      it("contains branch nodes", () => {
+        expect(content).toContain("Branch Nodes");
       });
 
-      it("contains code blocks", () => {
-        expect(content).toContain("```bash");
-        expect(content).toContain("```javascript");
-        expect(content).toContain("```python");
+      it("contains data nodes", () => {
+        expect(content).toContain("Data Nodes");
       });
 
       it("contains reference links", () => {
-        expect(content).toContain("references/nodes-reference.md");
-        expect(content).toContain("references/api-payloads.md");
+        expect(content).toContain("references/node-delivery.md");
+        expect(content).toContain("references/node-delay.md");
+        expect(content).toContain("references/workflow-schema-guide.md");
       });
     });
 
@@ -117,66 +114,44 @@ describe("end-to-end build", () => {
         ).resolves.toBeUndefined();
       });
 
-      it("contains nodes-reference.md (templated)", async () => {
+      it("contains workflow-schema-guide.md", async () => {
         const ref = await readFile(
-          resolve(skillDir, "references", "nodes-reference.md"),
+          resolve(skillDir, "references", "workflow-schema-guide.md"),
           "utf-8",
         );
-        expect(ref).toContain("Workflow Nodes Reference");
-        expect(ref).toContain("Workflow Design");
+        expect(ref).toContain("Workflow Schema");
       });
 
-      it("contains api-payloads.md (static)", async () => {
+      it("contains node-delivery.md", async () => {
         const ref = await readFile(
-          resolve(skillDir, "references", "api-payloads.md"),
+          resolve(skillDir, "references", "node-delivery.md"),
           "utf-8",
         );
-        expect(ref).toContain("API Payload Examples");
-        expect(ref).toContain("distinct_id");
-      });
-    });
-
-    describe("scripts/ directory", () => {
-      it("exists", async () => {
-        await expect(
-          access(resolve(skillDir, "scripts")),
-        ).resolves.toBeUndefined();
+        expect(ref).toContain("Delivery Nodes");
       });
 
-      it("contains trigger-workflow.sh", async () => {
-        const script = await readFile(
-          resolve(skillDir, "scripts", "trigger-workflow.sh"),
+      it("contains node-delay.md", async () => {
+        const ref = await readFile(
+          resolve(skillDir, "references", "node-delay.md"),
           "utf-8",
         );
-        expect(script).toContain("#!/usr/bin/env bash");
-        expect(script).toContain("SUPRSEND_WORKSPACE_KEY");
-      });
-    });
-
-    describe("assets/ directory", () => {
-      it("exists", async () => {
-        await expect(
-          access(resolve(skillDir, "assets")),
-        ).resolves.toBeUndefined();
+        expect(ref).toContain("Delay");
       });
 
-      it("contains workflow-template.json", async () => {
-        const asset = await readFile(
-          resolve(skillDir, "assets", "workflow-template.json"),
+      it("contains node-batch.md", async () => {
+        const ref = await readFile(
+          resolve(skillDir, "references", "node-batch.md"),
           "utf-8",
         );
-        const parsed = JSON.parse(asset);
-        expect(parsed.$schema).toContain("suprsend.com");
-        expect(parsed.workflow).toBeDefined();
-        expect(parsed.recipients).toBeInstanceOf(Array);
+        expect(ref).toContain("Batch");
       });
     });
   });
 
-  describe("suprsend-inbox skill", () => {
+  describe("suprsend-cli skill (external)", () => {
     let content: string;
     let frontmatter: Record<string, unknown>;
-    const skillDir = resolve(SKILLS_DIR, "suprsend-inbox");
+    const skillDir = resolve(SKILLS_DIR, "suprsend-cli");
 
     beforeAll(async () => {
       content = await readFile(resolve(skillDir, "SKILL.md"), "utf-8");
@@ -192,12 +167,12 @@ describe("end-to-end build", () => {
     });
 
     it("has valid YAML frontmatter", () => {
-      expect(frontmatter.name).toBe("suprsend-inbox");
+      expect(frontmatter.name).toBe("suprsend-cli");
       expect(frontmatter.description).toBeTruthy();
     });
 
     it("has name matching directory", () => {
-      expect(frontmatter.name).toBe("suprsend-inbox");
+      expect(frontmatter.name).toBe("suprsend-cli");
     });
 
     describe("frontmatter compliance", () => {
@@ -221,18 +196,6 @@ describe("end-to-end build", () => {
       it("description is non-empty", () => {
         expect((frontmatter.description as string).trim().length).toBeGreaterThan(0);
       });
-
-      it("has license field", () => {
-        expect(frontmatter.license).toBe("MIT");
-      });
-
-      it("has metadata field with string values", () => {
-        const meta = frontmatter.metadata as Record<string, unknown>;
-        expect(meta).toBeDefined();
-        for (const [, v] of Object.entries(meta)) {
-          expect(typeof v).toBe("string");
-        }
-      });
     });
 
     describe("body content", () => {
@@ -241,98 +204,18 @@ describe("end-to-end build", () => {
         expect(lines).toBeLessThanOrEqual(500);
       });
 
-      it("contains inbox overview", () => {
-        expect(content).toContain("In-App Inbox");
+      it("contains CLI overview", () => {
+        expect(content).toContain("suprsend");
       });
 
-      it("contains installation instructions", () => {
-        expect(content).toContain("npm install @suprsend/react");
+      it("contains available commands", () => {
+        expect(content).toContain("Available Commands");
       });
 
-      it("contains SuprSendProvider setup", () => {
-        expect(content).toContain("SuprSendProvider");
-      });
-
-      it("contains authentication section", () => {
-        expect(content).toContain("Authentication");
-        expect(content).toContain("userToken");
-      });
-
-      it("contains code blocks", () => {
-        expect(content).toContain("```bash");
-        expect(content).toContain("```jsx");
-      });
-
-      it("contains reference links", () => {
-        expect(content).toContain("references/component-props.md");
-        expect(content).toContain("references/customization-guide.md");
-      });
-
-      it("contains platform note via ifEqual", () => {
-        expect(content).toContain("web integration");
-      });
-    });
-
-    describe("references/ directory", () => {
-      it("exists", async () => {
+      it("contains references/ directory", async () => {
         await expect(
           access(resolve(skillDir, "references")),
         ).resolves.toBeUndefined();
-      });
-
-      it("contains component-props.md (templated)", async () => {
-        const ref = await readFile(
-          resolve(skillDir, "references", "component-props.md"),
-          "utf-8",
-        );
-        expect(ref).toContain("Component Props Reference");
-        expect(ref).toContain("SuprSendProvider");
-      });
-
-      it("contains customization-guide.md (static)", async () => {
-        const ref = await readFile(
-          resolve(skillDir, "references", "customization-guide.md"),
-          "utf-8",
-        );
-        expect(ref).toContain("Customization Guide");
-        expect(ref).toContain("Theming");
-        expect(ref).toContain("Headless Mode");
-      });
-    });
-
-    describe("scripts/ directory", () => {
-      it("exists", async () => {
-        await expect(
-          access(resolve(skillDir, "scripts")),
-        ).resolves.toBeUndefined();
-      });
-
-      it("contains check-inbox-setup.sh", async () => {
-        const script = await readFile(
-          resolve(skillDir, "scripts", "check-inbox-setup.sh"),
-          "utf-8",
-        );
-        expect(script).toContain("#!/usr/bin/env bash");
-        expect(script).toContain("@suprsend/react");
-      });
-    });
-
-    describe("assets/ directory", () => {
-      it("exists", async () => {
-        await expect(
-          access(resolve(skillDir, "assets")),
-        ).resolves.toBeUndefined();
-      });
-
-      it("contains inbox-config.json", async () => {
-        const asset = await readFile(
-          resolve(skillDir, "assets", "inbox-config.json"),
-          "utf-8",
-        );
-        const parsed = JSON.parse(asset);
-        expect(parsed.publicApiKey).toBeDefined();
-        expect(parsed.inbox).toBeDefined();
-        expect(parsed.inbox.theme).toBeDefined();
       });
     });
   });
@@ -352,13 +235,13 @@ describe("CLI flags", () => {
 
   it("--skill flag builds only the specified skill", () => {
     const output = execSync(
-      "npx tsx src/index.ts --skill=suprsend-workflows",
-      { cwd: ROOT, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] },
+      "npx tsx src/index.ts --skill=suprsend-workflow-schema",
+      { cwd: ROOT, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"], timeout: E2E_TIMEOUT },
     );
     // Build should complete without error (exit 0 implied by no throw)
     // Verify SKILL.md exists for the specified skill
     expect(output).toBeDefined();
-  });
+  }, E2E_TIMEOUT);
 
   it("unknown flag causes error", () => {
     expect(() => {

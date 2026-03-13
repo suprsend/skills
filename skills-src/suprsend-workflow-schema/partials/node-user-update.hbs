@@ -1,0 +1,27 @@
+# Update User Profile Node
+
+**Schema `node_type`:** `userupdate`
+
+## Documentation
+
+{{{docs_user_update}}}
+
+## Schema Properties
+
+{{schema-table (get other_funcs_schema "$definitions.userupdate_props")}}
+
+### User selection values
+
+{{schema-enum (get other_funcs_schema "$definitions.userupdate_props.properties.user_selection.enum")}}
+
+## Example
+
+```json
+{
+  "node_type": "userupdate",
+  "properties": {
+    "user_selection": "recipient",
+    "properties": "{ onboarding_complete: true, last_workflow_run: data.timestamp }"
+  }
+}
+```

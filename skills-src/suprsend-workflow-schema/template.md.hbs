@@ -1,0 +1,68 @@
+{{{overview}}}
+
+For a complete guide on creating workflows using the JSON schema, see {{ref-link "workflow-schema-guide.md" "Workflow Schema Guide"}}.
+
+## Workflow Nodes
+
+### Delivery Nodes
+
+Send notifications to users. Every workflow must end with at least one delivery or HTTP API node.
+
+| Node Type | Schema `node_type` | Description |
+|---|---|---|
+| Single Channel | `send_email`, `send_sms`, `send_whatsapp`, `send_inbox`, `send_mobile_push`, `send_webpush`, `send_slack`, `send_ms_teams` | Send via one channel |
+| Multi-Channel | `send_multi_channel` | Send across multiple channels simultaneously |
+| Smart Channel Routing | `send_smart_channel_routing` | Send sequentially across channels with delays until engagement |
+
+See {{ref-link "node-delivery.md" "Delivery Nodes Reference"}} for configuration details and schema.
+
+### Function Nodes
+
+Control timing and aggregation of notifications.
+
+| Node Type | Schema `node_type` | Description |
+|---|---|---|
+| Delay | `delay` | Pause workflow for a fixed, dynamic, or relative duration |
+| Batch | `batch` | Aggregate multiple triggers into one notification |
+| Digest | `digest` | Send batched summary on a recurring schedule |
+| Time Window | `timewindow` | Deliver only within specified day/time ranges |
+
+See: {{ref-link "node-delay.md" "Delay"}}, {{ref-link "node-batch.md" "Batch"}}, {{ref-link "node-digest.md" "Digest"}}, {{ref-link "node-timewindow.md" "Time Window"}}
+
+### Branch Nodes
+
+Route notifications through different paths based on conditions.
+
+| Node Type | Schema `node_type` | Description |
+|---|---|---|
+| Branch | `branch` | If/else routing based on conditions |
+| Wait Until | `branch_waituntil` | Pause until condition is met or timeout expires |
+
+See: {{ref-link "node-branch.md" "Branch"}}, {{ref-link "node-wait-until.md" "Wait Until"}}
+
+### Data Nodes
+
+Fetch, transform, or update data during workflow execution.
+
+| Node Type | Schema `node_type` | Description |
+|---|---|---|
+| Fetch | `httpapi_fetch` | GET data from an external API |
+| Webhook | `httpapi_webhook` | Call external API (GET/POST/PUT/PATCH/DELETE) |
+| Data Transform | `transform` | Generate or modify variables using Handlebars or JSONNET |
+| Invoke Workflow | `invokeworkflow` | Trigger another workflow as a step |
+| Update User Profile | `userupdate` | Modify recipient or actor profile properties |
+
+See: {{ref-link "node-fetch.md" "Fetch"}}, {{ref-link "node-webhook.md" "Webhook"}}, {{ref-link "node-transform.md" "Transform"}}, {{ref-link "node-invoke-workflow.md" "Invoke Workflow"}}, {{ref-link "node-user-update.md" "User Update"}}
+
+### List & Object Nodes
+
+Manage user list memberships and object subscriptions.
+
+| Node Type | Schema `node_type` | Description |
+|---|---|---|
+| Add User to List | `subscriberlistoperation_adduser` | Add recipient/actor to a list |
+| Remove User from List | `subscriberlistoperation_removeuser` | Remove recipient/actor from a list |
+| Subscribe to Object | `objectoperation_addsubscription` | Add user to an object subscription |
+| Unsubscribe from Object | `objectoperation_removesubscription` | Remove user from an object subscription |
+
+See: {{ref-link "node-list-operations.md" "List Operations"}}, {{ref-link "node-object-operations.md" "Object Operations"}}

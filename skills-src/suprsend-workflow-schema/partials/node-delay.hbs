@@ -1,0 +1,37 @@
+# Delay Node
+
+**Schema `node_type`:** `delay`
+
+## Documentation
+
+{{{docs_delay}}}
+
+## Schema Properties
+
+{{schema-table (get fragment_schema "$definitions.delay_component_props")}}
+
+### Delay type values
+
+{{schema-enum (get fragment_schema "$definitions.delay_component_props.properties.delay_type.enum")}}
+
+### Relative-to properties
+
+{{schema-table (get fragment_schema "$definitions.relative_to_component_props")}}
+
+### Duration format
+
+Pattern: `{{get fragment_schema "$definitions.static_duration_format.pattern"}}`
+
+Examples: `30s`, `5m`, `1h30m`, `2d12h`
+
+## Example
+
+```json
+{
+  "node_type": "delay",
+  "properties": {
+    "delay_type": "fixed",
+    "value": "1h"
+  }
+}
+```

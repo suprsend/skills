@@ -13,7 +13,7 @@ This repo generates official SuprSend agent skills for distribution via `npx ski
 ## How It Works
 
 Each skill in `skills-src/<name>/` has:
-- `sources.yaml` — declares data sources (static files, CLI exports, docs URLs, JSON schemas, Claude prompts) and output file declarations
+- `sources.yaml` — declares data sources (static files, docs URLs, JSON schemas, Claude prompts) and output file declarations
 - `template.md.hbs` — Handlebars template that produces the SKILL.md body
 - `static/` — human-written markdown content used by `static` sources
 - `partials/` — reusable Handlebars partials
@@ -61,9 +61,8 @@ All generated SKILL.md files MUST comply with https://agentskills.io/specificati
 
 In Handlebars templates, each source's `key` becomes a template variable:
 - Static sources → raw markdown string
-- CLI sources → parsed JSON/YAML object
 - Docs sources → fetched markdown string
-- Schema sources → parsed JSON Schema object
+- Schema sources → parsed JSON Schema object (use `get` helper to navigate)
 - Claude sources → generated text string
 
 `meta` is always available with `meta.name`, `meta.description`, and other frontmatter fields.
@@ -80,6 +79,10 @@ In Handlebars templates, each source's `key` becomes a template variable:
 - `{{#each-sorted obj}}...{{/each-sorted}}` — Iterate keys alphabetically
 - `{{ref-link "file.md" "Label"}}` — Link to references/ file
 - `{{truncate text 500}}` — Truncate text to N characters
+- `{{get obj "path.to.key"}}` — Deep property access (dot notation or JSON Pointer `#/$defs/foo`)
+- `{{keys obj}}` — Get object keys as an array
+- `{{concat "a" "b"}}` — Concatenate strings
+- `{{default value "fallback"}}` — Return value, or fallback if null/undefined
 
 ## Output File Declarations
 

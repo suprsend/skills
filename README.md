@@ -10,8 +10,9 @@ npx skills add suprsend/skills
 
 | Skill | Description |
 |-------|-------------|
-| `suprsend-workflows` | Workflow design, configuration, and triggering guide — covers workflow nodes, API/SDK triggers, and multi-channel delivery |
-| `suprsend-inbox` | In-App Inbox integration guide — covers React SDK setup, authentication, theming, and headless mode |
+| `suprsend-workflow-schema` | Workflow schema reference — all workflow nodes with documentation, JSON schema details, and usage examples |
+| `suprsend-docs-support` | How to access SuprSend documentation and get support — docs site, LLM-friendly endpoints, in-app chat, AI copilot, Slack community, and email |
+| `suprsend-cli` | SuprSend CLI reference — command-line tool for managing workspaces, templates, workflows, schemas, and more *(pulled from [suprsend/cli](https://github.com/suprsend/cli))* |
 
 ## For Users
 
@@ -46,7 +47,7 @@ npm install
 npm run build
 
 # Generate a single skill
-npm run build -- --skill=suprsend-workflows
+npm run build -- --skill=suprsend-workflow-schema
 
 # Force fresh Claude API calls (bypass cache)
 npm run build -- --no-cache
@@ -112,12 +113,6 @@ sources:
     key: overview
     path: overview.md
 
-  # SuprSend CLI export
-  - type: cli
-    key: commands
-    command: "suprsend genskills --format json"
-    format: json
-
   # Mintlify hosted docs
   - type: docs
     key: workflow_docs
@@ -180,7 +175,6 @@ npm run build -- --skill=my-skill
 | Type | Resolves To | Description |
 |------|-------------|-------------|
 | `static` | String | Reads a `.md` file from `static/` |
-| `cli` | Object or String | Runs a command (via `execFile`, no shell), parses output as JSON or YAML |
 | `docs` | String | Fetches markdown from a URL (Mintlify `.md` append auto-tried) |
 | `schema` | Object | Fetches JSON Schema, optionally resolves `$ref` pointers |
 | `claude` | String | Calls Claude API with a prompt (can reference other resolved keys). Responses are cached by `sha256(model + prompt)` in `.cache/claude/`. |
@@ -208,6 +202,10 @@ The `references`, `scripts`, and `assets` arrays in `sources.yaml` declare files
 | `each-sorted` | `{{#each-sorted obj}}...{{/each-sorted}}` | Iterate keys alphabetically |
 | `ref-link` | `{{ref-link "file.md" "Label"}}` | Link to `references/` file |
 | `truncate` | `{{truncate text 500}}` | Truncate to N characters |
+| `get` | `{{get obj "path.to.key"}}` | Deep property access (dot notation or JSON Pointer) |
+| `keys` | `{{keys obj}}` | Get object keys as array |
+| `concat` | `{{concat "a" "b"}}` | Concatenate strings |
+| `default` | `{{default value "fallback"}}` | Return value, or fallback if null/undefined |
 
 ### agentskills.io Compliance
 

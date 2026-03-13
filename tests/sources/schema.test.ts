@@ -189,6 +189,131 @@ describe("resolveSchema", () => {
       expect((result.oneOf as unknown[])[1]).toEqual({ type: "string" });
     });
 
+    it("resolves remote $ref with hash fragment to specific definition", async () => {
+      const mainSchema = {
+        type: "object",
+        properties: {
+          delay: {
+            $ref: "https://schema.example.com/fragment.json#/$definitions/delay_props",
+          },
+        },
+      };
+      const fragmentSchema = {
+        $definitions: {
+          delay_props: {
+            type: "object",
+            properties: {
+              delay_type: { type: "string", enum: ["fixed", "dynamic"] },
+            },
+            required: ["delay_type"],
+          },
+          other_props: {
+            type: "object",
+            properties: { unused: { type: "string" } },
+          },
+        },
+      };
+
+      vi.mocked(fetch)
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify(mainSchema), { status: 200 }),
+        )
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify(fragmentSchema), { status: 200 }),
+        );
+
+      const source: SchemaSource = {
+        type: "schema",
+        key: "schema",
+        url: "https://schema.example.com/v1/schema.json",
+        follow_refs: true,
+      };
+      const result = await resolveSchema(source);
+      const delay = (result.properties as Record<string, unknown>)["delay"] as Record<string, unknown>;
+      // Should navigate to the specific definition, not return the whole schema
+      expect(delay).toEqual(fragmentSchema.$definitions.delay_props);
+      expect(delay).not.toHaveProperty("$ref");
+    });
+
+    it("caches remote schema and resolves different fragments from same file", async () => {
+      const mainSchema = {
+        type: "object",
+        properties: {
+          a: { $ref: "https://schema.example.com/defs.json#/$definitions/alpha" },
+          b: { $ref: "https://schema.example.com/defs.json#/$definitions/beta" },
+        },
+      };
+      const defsSchema = {
+        $definitions: {
+          alpha: { type: "string", description: "alpha" },
+          beta: { type: "number", description: "beta" },
+        },
+      };
+
+      vi.mocked(fetch)
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify(mainSchema), { status: 200 }),
+        )
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify(defsSchema), { status: 200 }),
+        );
+
+      const source: SchemaSource = {
+        type: "schema",
+        key: "schema",
+        url: "https://schema.example.com/v1/schema.json",
+        follow_refs: true,
+      };
+      const result = await resolveSchema(source);
+      const a = (result.properties as Record<string, unknown>)["a"] as Record<string, unknown>;
+      const b = (result.properties as Record<string, unknown>)["b"] as Record<string, unknown>;
+      expect(a).toEqual({ type: "string", description: "alpha" });
+      expect(b).toEqual({ type: "number", description: "beta" });
+      // Only 2 fetches: main + defs (not fetched twice)
+      expect(fetch).toHaveBeenCalledTimes(2);
+    });
+
+    it("keeps original $ref when fragment target not found", async () => {
+      const mainSchema = {
+        type: "object",
+        properties: {
+          missing: {
+            $ref: "https://schema.example.com/defs.json#/$definitions/nonexistent",
+          },
+        },
+      };
+      const defsSchema = {
+        $definitions: {
+          other: { type: "string" },
+        },
+      };
+
+      vi.mocked(fetch)
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify(mainSchema), { status: 200 }),
+        )
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify(defsSchema), { status: 200 }),
+        );
+
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      const source: SchemaSource = {
+        type: "schema",
+        key: "schema",
+        url: "https://schema.example.com/v1/schema.json",
+        follow_refs: true,
+      };
+      const result = await resolveSchema(source);
+      const missing = (result.properties as Record<string, unknown>)["missing"] as Record<string, unknown>;
+      // Original $ref preserved when target not found
+      expect(missing.$ref).toBe(
+        "https://schema.example.com/defs.json#/$definitions/nonexistent",
+      );
+
+      warnSpy.mockRestore();
+    });
+
     it("resolves relative $ref URLs against base", async () => {
       const mainSchema = {
         type: "object",

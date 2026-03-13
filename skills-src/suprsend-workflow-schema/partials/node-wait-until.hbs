@@ -1,0 +1,67 @@
+# Wait Until Node
+
+**Schema `node_type`:** `branch_waituntil`
+
+## Documentation
+
+{{{docs_wait_until}}}
+
+## Branch Structure
+
+Wait Until uses the same `branches` array as the branch node but always has exactly 2 branches:
+one condition branch (`is_default: false`) and one timeout branch (`is_default: true`).
+
+### Branch item properties
+
+{{schema-table (get branch_schema "$definitions.temp_branch.items")}}
+
+### Condition types
+
+The condition branch supports these condition types:
+
+- `future_event` — waits for a specific event to arrive
+- `expression_v1` — evaluates conditions on existing data
+- `delay` — timeout (used in the default branch)
+
+### Future event condition properties
+
+{{schema-table (get fragment_schema "$definitions.future_events_condition_def")}}
+
+### Delay condition (timeout) properties
+
+The default branch uses a delay condition with the same schema as the delay node:
+
+{{schema-table (get fragment_schema "$definitions.delay_component_props")}}
+
+## Example
+
+```json
+{
+  "node_type": "branch_waituntil",
+  "properties": {},
+  "branches": [
+    {
+      "name": "Payment received",
+      "is_default": false,
+      "conditions": [
+        {
+          "type": "future_event",
+          "event_name": "payment_completed",
+          "event_conditions": []
+        }
+      ],
+      "nodes": []
+    },
+    {
+      "name": "Timeout after 48h",
+      "is_default": true,
+      "conditions": [
+        { "type": "delay", "delay_properties": { "delay_type": "fixed", "value": "2d" } }
+      ],
+      "nodes": [
+        { "node_type": "send_email", "properties": { "template": "payment-overdue" } }
+      ]
+    }
+  ]
+}
+```

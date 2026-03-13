@@ -1,0 +1,70 @@
+# List Operation Nodes
+
+## Add User to List
+
+**Schema `node_type`:** `subscriberlistoperation_adduser`
+
+### Documentation
+
+{{{docs_list_add}}}
+
+## Remove User from List
+
+**Schema `node_type`:** `subscriberlistoperation_removeuser`
+
+### Documentation
+
+{{{docs_list_remove}}}
+
+## Schema Properties (shared)
+
+{{schema-table (get subscriberlist_schema "$definitions.subscriberlistoperation_props")}}
+
+### User selection values
+
+{{schema-enum (get subscriberlist_schema "$definitions.subscriberlistoperation_props.properties.user_selection.items.enum")}}
+
+## Examples
+
+### Add user to list
+
+```json
+{
+  "node_type": "subscriberlistoperation_adduser",
+  "properties": {
+    "op": "add_user",
+    "list_id": "event-attendees",
+    "user_selection": ["recipient"],
+    "create_list_if_missing": true,
+    "list_name": "Event Attendees"
+  }
+}
+```
+
+### Add user to dynamic list
+
+```json
+{
+  "node_type": "subscriberlistoperation_adduser",
+  "properties": {
+    "op": "add_user",
+    "is_list_id_dynamic": true,
+    "list_id": "{{event_id}}_subscribers",
+    "user_selection": ["recipient"],
+    "create_list_if_missing": true
+  }
+}
+```
+
+### Remove user from list
+
+```json
+{
+  "node_type": "subscriberlistoperation_removeuser",
+  "properties": {
+    "op": "remove_user",
+    "list_id": "trial-users",
+    "user_selection": ["recipient"]
+  }
+}
+```

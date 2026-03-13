@@ -1,0 +1,88 @@
+# Delivery Nodes
+
+Delivery nodes send notifications to users. Every workflow must end with at least one delivery node.
+
+## Single Channel Nodes
+
+Send via one specific channel. Each uses a different `node_type` but shares the same schema properties.
+
+| `node_type` | Channel |
+|---|---|
+| `send_email` | Email |
+| `send_sms` | SMS |
+| `send_whatsapp` | WhatsApp |
+| `send_inbox` | In-app Inbox |
+| `send_mobile_push` | Mobile Push (Android + iOS) |
+| `send_webpush` | Web Push |
+| `send_slack` | Slack |
+| `send_ms_teams` | Microsoft Teams |
+
+### Documentation — Single Channel
+
+{{{docs_delivery_single}}}
+
+## Multi-Channel Node
+
+**Schema `node_type`:** `send_multi_channel`
+
+Sends across multiple channels simultaneously.
+
+### Documentation — Multi-Channel
+
+{{{docs_delivery_multi}}}
+
+## Smart Channel Routing Node
+
+**Schema `node_type`:** `send_smart_channel_routing`
+
+Sends sequentially across channels with delays until the user engages on one channel.
+
+### Documentation — Smart Channel Routing
+
+{{{docs_smart_delivery}}}
+
+## Schema Properties (shared by all delivery nodes)
+
+{{schema-table (get send_schema "$definitions.send_node_props")}}
+
+### Channel values
+
+{{schema-enum (get send_schema "$definitions.send_node_props.properties.channels.items.enum")}}
+
+## Examples
+
+### Single channel — Email
+
+```json
+{
+  "node_type": "send_email",
+  "properties": {
+    "template": "welcome-email"
+  }
+}
+```
+
+### Multi-channel
+
+```json
+{
+  "node_type": "send_multi_channel",
+  "properties": {
+    "template": "order-confirmation",
+    "channels": ["email", "inbox", "whatsapp"]
+  }
+}
+```
+
+### Smart channel routing
+
+```json
+{
+  "node_type": "send_smart_channel_routing",
+  "properties": {
+    "template": "payment-reminder",
+    "mandatory_channels": ["inbox"],
+    "success": "seen"
+  }
+}
+```

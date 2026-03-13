@@ -1,0 +1,73 @@
+# Object Operation Nodes
+
+## Subscribe to Object
+
+**Schema `node_type`:** `objectoperation_addsubscription`
+
+### Documentation
+
+{{{docs_object_subscribe}}}
+
+## Unsubscribe from Object
+
+**Schema `node_type`:** `objectoperation_removesubscription`
+
+### Documentation
+
+{{{docs_object_unsubscribe}}}
+
+## Schema Properties (shared)
+
+{{schema-table (get objectop_schema "$definitions.objectoperation_props")}}
+
+### User selection values
+
+{{schema-enum (get objectop_schema "$definitions.objectoperation_props.properties.user_selection.items.enum")}}
+
+## Examples
+
+### Subscribe to object
+
+```json
+{
+  "node_type": "objectoperation_addsubscription",
+  "properties": {
+    "op": "add_subscription",
+    "object_type": "team",
+    "object_id": "engineering",
+    "user_selection": ["recipient"],
+    "create_object_if_missing": true,
+    "subscription_properties": "{ role: data.team_role }"
+  }
+}
+```
+
+### Subscribe to dynamic object
+
+```json
+{
+  "node_type": "objectoperation_addsubscription",
+  "properties": {
+    "op": "add_subscription",
+    "is_object_id_dynamic": true,
+    "object_type": "{{group_type}}",
+    "object_id": "{{group_id}}",
+    "user_selection": ["recipient"],
+    "create_object_if_missing": true
+  }
+}
+```
+
+### Unsubscribe from object
+
+```json
+{
+  "node_type": "objectoperation_removesubscription",
+  "properties": {
+    "op": "remove_subscription",
+    "object_type": "tournament",
+    "object_id": "summer-2024",
+    "user_selection": ["recipient"]
+  }
+}
+```
