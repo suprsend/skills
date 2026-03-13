@@ -1,0 +1,33 @@
+# Fetch Node
+
+**Schema `node_type`:** `httpapi_fetch`
+
+## Documentation
+
+{{{docs_fetch}}}
+
+## Schema Properties
+
+{{schema-table (get httpapi_schema "$definitions.httpapi_node_props")}}
+
+The fetch node is restricted to `GET` requests only. The `body` field must be `null`.
+
+## Example
+
+```json
+{
+  "node_type": "httpapi_fetch",
+  "properties": {
+    "http_method": "GET",
+    "url": "\"https://api.example.com/users/\" + data[\"$recipient\"].distinct_id",
+    "headers": [
+      { "key": "Authorization", "value": "\"Bearer \" + data.api_token" }
+    ],
+    "query_params": [
+      { "key": "include", "value": "\"preferences\"" }
+    ],
+    "body": null,
+    "output_key": "user_data"
+  }
+}
+```

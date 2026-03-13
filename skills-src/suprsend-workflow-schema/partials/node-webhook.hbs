@@ -1,0 +1,33 @@
+# Webhook Node
+
+**Schema `node_type`:** `httpapi_webhook`
+
+## Documentation
+
+{{{docs_webhook}}}
+
+## Schema Properties
+
+{{schema-table (get httpapi_schema "$definitions.httpapi_node_props")}}
+
+### HTTP method values
+
+{{schema-enum (get httpapi_schema "$definitions.httpapi_node_props.properties.http_method.enum")}}
+
+## Example
+
+```json
+{
+  "node_type": "httpapi_webhook",
+  "properties": {
+    "http_method": "POST",
+    "url": "\"https://api.example.com/notify\"",
+    "headers": [
+      { "key": "Authorization", "value": "\"Bearer \" + data.api_token" }
+    ],
+    "body_content_type": "application/json",
+    "body": "{ user_id: data[\"$recipient\"].distinct_id, event: data.event_name }",
+    "output_key": "webhook_response"
+  }
+}
+```

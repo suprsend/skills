@@ -1,0 +1,37 @@
+# Digest Node
+
+**Schema `node_type`:** `digest`
+
+## Documentation
+
+{{{docs_digest}}}
+
+## Schema Properties
+
+{{schema-table digest_schema}}
+
+### Schedule type values
+
+{{schema-enum (get digest_schema "properties.schedule_type.enum")}}
+
+### Retain order values
+
+{{schema-enum (get digest_schema "properties.retain_order.enum")}}
+
+## Example
+
+```json
+{
+  "node_type": "digest",
+  "properties": {
+    "schedule_type": "static",
+    "schedule": {
+      "frequency": "daily",
+      "time": "09:00",
+      "tz_selection": "recipient"
+    },
+    "retain_count": 50,
+    "retain_order": "last"
+  }
+}
+```

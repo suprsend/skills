@@ -1,0 +1,50 @@
+name: Validate Skills
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate-skills:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Uncomment and set ANTHROPIC_API_KEY secret when adding claude-type sources:
+    # env:
+    #   ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build all skills
+        run: npm run build -- --no-cache
+
+      - name: Check skills output is up-to-date
+        run: |
+          git config core.fileMode false
+          UNTRACKED=$(git ls-files --others --exclude-standard skills/)
+          if ! git diff --exit-code skills/ || [ -n "$UNTRACKED" ]; then
+            echo ""
+            echo "========================================="
+            echo "ERROR: skills/ output is out of date."
+            echo "Run 'npm run build' locally and commit the updated skills/ directory."
+            echo "========================================="
+            if [ -n "$UNTRACKED" ]; then
+              echo ""
+              echo "Untracked files:"
+              echo "$UNTRACKED"
+            fi
+            exit 1
+          fi

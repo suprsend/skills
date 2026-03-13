@@ -82,91 +82,91 @@ describe("agentskills.io validation", () => {
   describe("name field", () => {
     it("accepts valid lowercase name", async () => {
       await createSkill("my-skill");
-      await expect(build({ skill: "my-skill" })).resolves.toBeUndefined();
+      await expect(build({ pullExternal: false, skill: "my-skill" })).resolves.toBeUndefined();
     });
 
     it("accepts single-character name", async () => {
       await createSkill("a");
-      await expect(build({ skill: "a" })).resolves.toBeUndefined();
+      await expect(build({ pullExternal: false, skill: "a" })).resolves.toBeUndefined();
     });
 
     it("accepts name with numbers", async () => {
       await createSkill("skill123");
-      await expect(build({ skill: "skill123" })).resolves.toBeUndefined();
+      await expect(build({ pullExternal: false, skill: "skill123" })).resolves.toBeUndefined();
     });
 
     it("accepts name with hyphens", async () => {
       await createSkill("my-cool-skill");
-      await expect(build({ skill: "my-cool-skill" })).resolves.toBeUndefined();
+      await expect(build({ pullExternal: false, skill: "my-cool-skill" })).resolves.toBeUndefined();
     });
 
     it("rejects name starting with hyphen", async () => {
       await createSkill("-bad-name", { name: "-bad-name" });
-      await expect(build({ skill: "-bad-name" })).rejects.toThrow(
+      await expect(build({ pullExternal: false, skill: "-bad-name" })).rejects.toThrow(
         /invalid skill name/i,
       );
     });
 
     it("rejects name ending with hyphen", async () => {
       await createSkill("bad-name-", { name: "bad-name-" });
-      await expect(build({ skill: "bad-name-" })).rejects.toThrow(
+      await expect(build({ pullExternal: false, skill: "bad-name-" })).rejects.toThrow(
         /invalid skill name/i,
       );
     });
 
     it("rejects name with uppercase letters", async () => {
       await createSkill("bad-name", { name: "Bad-Name" });
-      await expect(build({ skill: "bad-name" })).rejects.toThrow();
+      await expect(build({ pullExternal: false, skill: "bad-name" })).rejects.toThrow();
     });
 
     it("rejects name with consecutive hyphens", async () => {
       await createSkill("bad--name", { name: "bad--name" });
-      await expect(build({ skill: "bad--name" })).rejects.toThrow();
+      await expect(build({ pullExternal: false, skill: "bad--name" })).rejects.toThrow();
     });
 
     it("rejects name exceeding 64 characters", async () => {
       const longName = "a".repeat(65);
       await createSkill(longName, { name: longName });
-      await expect(build({ skill: longName })).rejects.toThrow();
+      await expect(build({ pullExternal: false, skill: longName })).rejects.toThrow();
     });
 
     it("accepts name at exactly 64 characters", async () => {
       const name64 = "a".repeat(64);
       await createSkill(name64, { name: name64 });
-      await expect(build({ skill: name64 })).resolves.toBeUndefined();
+      await expect(build({ pullExternal: false, skill: name64 })).resolves.toBeUndefined();
     });
 
     it("rejects name with spaces", async () => {
       await createSkill("bad-name", { name: "bad name" });
-      await expect(build({ skill: "bad-name" })).rejects.toThrow();
+      await expect(build({ pullExternal: false, skill: "bad-name" })).rejects.toThrow();
     });
 
     it("rejects name with underscores", async () => {
       await createSkill("bad-name", { name: "bad_name" });
-      await expect(build({ skill: "bad-name" })).rejects.toThrow();
+      await expect(build({ pullExternal: false, skill: "bad-name" })).rejects.toThrow();
     });
 
     it("rejects name with dots", async () => {
       await createSkill("bad-name", { name: "bad.name" });
-      await expect(build({ skill: "bad-name" })).rejects.toThrow();
+      await expect(build({ pullExternal: false, skill: "bad-name" })).rejects.toThrow();
     });
 
     it("rejects empty name", async () => {
       await createSkill("empty-name", { name: "" });
-      await expect(build({ skill: "empty-name" })).rejects.toThrow();
+      await expect(build({ pullExternal: false, skill: "empty-name" })).rejects.toThrow();
     });
   });
 
   describe("directory name matching", () => {
     it("rejects when directory name does not match skill name", async () => {
       await createSkill("dir-name", { name: "different-name" });
-      await expect(build({ skill: "dir-name" })).rejects.toThrow();
+      await expect(build({ pullExternal: false, skill: "dir-name" })).rejects.toThrow();
     });
 
     it("accepts when directory name matches skill name", async () => {
       await createSkill("matching-name");
       await expect(
-        build({ skill: "matching-name" }),
+        build({ pullExternal: false, skill: "matching-name" }),
       ).resolves.toBeUndefined();
     });
   });
@@ -174,39 +174,39 @@ describe("agentskills.io validation", () => {
   describe("description field", () => {
     it("rejects missing description", async () => {
       await createSkill("no-desc", { description: "" });
-      await expect(build({ skill: "no-desc" })).rejects.toThrow();
+      await expect(build({ pullExternal: false, skill: "no-desc" })).rejects.toThrow();
     });
 
     it("rejects description exceeding 1024 characters", async () => {
       const longDesc = "x".repeat(1025);
       await createSkill("long-desc", { description: longDesc });
-      await expect(build({ skill: "long-desc" })).rejects.toThrow();
+      await expect(build({ pullExternal: false, skill: "long-desc" })).rejects.toThrow();
     });
 
     it("accepts description at exactly 1024 characters", async () => {
       const desc1024 = "x".repeat(1024);
       await createSkill("exact-desc", { description: desc1024 });
-      await expect(build({ skill: "exact-desc" })).resolves.toBeUndefined();
+      await expect(build({ pullExternal: false, skill: "exact-desc" })).resolves.toBeUndefined();
     });
   });
 
   describe("compatibility field", () => {
     it("accepts missing compatibility (optional)", async () => {
       await createSkill("no-compat");
-      await expect(build({ skill: "no-compat" })).resolves.toBeUndefined();
+      await expect(build({ pullExternal: false, skill: "no-compat" })).resolves.toBeUndefined();
     });
 
     it("rejects compatibility exceeding 500 characters", async () => {
       const longCompat = "x".repeat(501);
       await createSkill("long-compat", { compatibility: longCompat });
-      await expect(build({ skill: "long-compat" })).rejects.toThrow();
+      await expect(build({ pullExternal: false, skill: "long-compat" })).rejects.toThrow();
     });
 
     it("accepts compatibility at exactly 500 characters", async () => {
       const compat500 = "x".repeat(500);
       await createSkill("exact-compat", { compatibility: compat500 });
       await expect(
-        build({ skill: "exact-compat" }),
+        build({ pullExternal: false, skill: "exact-compat" }),
       ).resolves.toBeUndefined();
     });
   });
@@ -219,13 +219,13 @@ describe("agentskills.io validation", () => {
           { type: "static", key: "content", path: "content.md" },
         ],
       });
-      await expect(build({ skill: "dup-keys" })).rejects.toThrow();
+      await expect(build({ pullExternal: false, skill: "dup-keys" })).rejects.toThrow();
     });
 
     it("accepts sources with unique keys", async () => {
       await createSkill("unique-keys");
       await expect(
-        build({ skill: "unique-keys" }),
+        build({ pullExternal: false, skill: "unique-keys" }),
       ).resolves.toBeUndefined();
     });
   });
@@ -235,7 +235,7 @@ describe("agentskills.io validation", () => {
       const warnSpy = vi.spyOn(console, "warn");
       const longContent = Array.from({ length: 600 }, (_, i) => `Line ${i}`).join("\n");
       await createSkill("long-skill", {}, "{{{content}}}", longContent);
-      await build({ skill: "long-skill" });
+      await build({ pullExternal: false, skill: "long-skill" });
       expect(warnSpy).toHaveBeenCalledWith(
         expect.stringContaining("[WARN]"),
         expect.stringContaining("500"),
@@ -245,7 +245,7 @@ describe("agentskills.io validation", () => {
     it("does not warn when SKILL.md is under 500 lines", async () => {
       const warnSpy = vi.spyOn(console, "warn");
       await createSkill("short-skill");
-      await build({ skill: "short-skill" });
+      await build({ pullExternal: false, skill: "short-skill" });
       // Filter for line count warnings specifically
       const lineWarnings = warnSpy.mock.calls.filter(
         (call) => typeof call[1] === "string" && call[1].includes("lines"),

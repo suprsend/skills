@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { resolveDocs } from "../../src/sources/docs.js";
+import { resolveDocs, cleanMintlifyMarkdown } from "../../src/sources/docs.js";
 import type { DocsSource } from "../../src/sources/types.js";
 
 describe("resolveDocs", () => {
@@ -291,5 +291,166 @@ describe("resolveDocs", () => {
       };
       await expect(resolveDocs(source)).rejects.toThrow();
     });
+  });
+
+  describe("cleanMintlifyMarkdown integration", () => {
+    it("strips Mintlify boilerplate from fetched content", async () => {
+      const rawDoc = [
+        "> ## Documentation Index",
+        "> Fetch the complete documentation index at: https://docs.suprsend.com/llms.txt",
+        "> Use this file to discover all available pages before exploring further.",
+        "",
+        "# Delay",
+        "",
+        "> Learn about delay node.",
+        "",
+        "Content here.",
+        "",
+        "Built with [Mintlify](https://mintlify.com).",
+      ].join("\n");
+
+      vi.mocked(fetch).mockResolvedValue(
+        new Response(rawDoc, { status: 200 }),
+      );
+
+      const source: DocsSource = {
+        type: "docs",
+        key: "doc",
+        urls: ["https://docs.example.com/page.md"],
+      };
+      const result = await resolveDocs(source);
+      expect(result).not.toContain("Documentation Index");
+      expect(result).not.toContain("Mintlify");
+      expect(result).toContain("# Delay");
+      expect(result).toContain("Content here.");
+    });
+  });
+});
+
+describe("cleanMintlifyMarkdown", () => {
+  it("removes Documentation Index blockquote", () => {
+    const input = [
+      "> ## Documentation Index",
+      "> Fetch the complete documentation index at: https://docs.suprsend.com/llms.txt",
+      "> Use this file to discover all available pages before exploring further.",
+      "",
+      "# Actual Content",
+    ].join("\n");
+    const result = cleanMintlifyMarkdown(input);
+    expect(result).not.toContain("Documentation Index");
+    expect(result).toContain("# Actual Content");
+  });
+
+  it("removes Built with Mintlify footer", () => {
+    const input = "Some content.\n\nBuilt with [Mintlify](https://mintlify.com).";
+    const result = cleanMintlifyMarkdown(input);
+    expect(result).not.toContain("Mintlify");
+    expect(result).toContain("Some content.");
+  });
+
+  it("removes <img> tags", () => {
+    const input = 'Content before.\n\n<img src="https://mintcdn.com/suprsend/image.png" alt="" width="800" height="600" />\n\nContent after.';
+    const result = cleanMintlifyMarkdown(input);
+    expect(result).not.toContain("<img");
+    expect(result).toContain("Content before.");
+    expect(result).toContain("Content after.");
+  });
+
+  it("converts <Warning> to blockquote", () => {
+    const input = "<Warning>\n  List ID only supports a-z, 0-9.\n</Warning>";
+    const result = cleanMintlifyMarkdown(input);
+    expect(result).toContain("> **Warning:**");
+    expect(result).toContain("List ID only supports a-z, 0-9.");
+    expect(result).not.toContain("</Warning>");
+  });
+
+  it("converts <Note> to blockquote", () => {
+    const input = "<Note>\n  Important information here.\n</Note>";
+    const result = cleanMintlifyMarkdown(input);
+    expect(result).toContain("> **Note:**");
+    expect(result).not.toContain("</Note>");
+  });
+
+  it("converts <Accordion> to headings", () => {
+    const input = '<AccordionGroup>\n  <Accordion title="Fixed">\n    Fixed delay content.\n  </Accordion>\n  <Accordion title="Dynamic">\n    Dynamic content.\n  </Accordion>\n</AccordionGroup>';
+    const result = cleanMintlifyMarkdown(input);
+    expect(result).toContain("### Fixed");
+    expect(result).toContain("### Dynamic");
+    expect(result).not.toContain("<AccordionGroup>");
+    expect(result).not.toContain("<Accordion");
+  });
+
+  it("converts <Step> to bold", () => {
+    const input = '<Steps>\n  <Step title="Open batch window">\n    Content.\n  </Step>\n</Steps>';
+    const result = cleanMintlifyMarkdown(input);
+    expect(result).toContain("**Open batch window**");
+    expect(result).not.toContain("<Steps>");
+    expect(result).not.toContain("<Step");
+  });
+
+  it("strips <CodeGroup> wrappers", () => {
+    const input = "<CodeGroup>\n```json\n{}\n```\n</CodeGroup>";
+    const result = cleanMintlifyMarkdown(input);
+    expect(result).not.toContain("CodeGroup");
+    expect(result).toContain("```json");
+  });
+
+  it("fixes over-escaped characters", () => {
+    const input = "format: \\\\\\*\\\\\\*d \\\\\\*\\\\\\*h";
+    const result = cleanMintlifyMarkdown(input);
+    expect(result).not.toContain("\\\\\\*");
+    // Over-escaped \\\* becomes * so \\\\\\*\\\\\\* becomes **
+    expect(result).toContain("**d **h");
+  });
+
+  it("fixes single-escaped asterisks in duration patterns", () => {
+    const input = "format: `*\\*d \\*\\*h \\*\\*m \\*\\*s`";
+    const result = cleanMintlifyMarkdown(input);
+    expect(result).toContain("`**d **h **m **s`");
+  });
+
+  it("fixes escaped brackets", () => {
+    const input = 'values: \\\\\\["email", "sms"\\\\\\]';
+    const result = cleanMintlifyMarkdown(input);
+    expect(result).toContain('["email", "sms"]');
+  });
+
+  it("fixes escaped underscores", () => {
+    const input = "workflow\\_slug and batch\\_key";
+    const result = cleanMintlifyMarkdown(input);
+    expect(result).toContain("workflow_slug and batch_key");
+  });
+
+  it("removes <br /> tags", () => {
+    const input = "Line one.<br />\nLine two.";
+    const result = cleanMintlifyMarkdown(input);
+    expect(result).not.toContain("<br");
+  });
+
+  it("collapses excessive blank lines", () => {
+    const input = "A\n\n\n\n\n\nB";
+    const result = cleanMintlifyMarkdown(input);
+    expect(result).toBe("A\n\n\nB");
+  });
+
+  it("handles content with no Mintlify artifacts", () => {
+    const input = "# Clean Content\n\nJust plain markdown.";
+    const result = cleanMintlifyMarkdown(input);
+    expect(result).toBe(input);
+  });
+
+  it("strips <Frame> wrapper but keeps content", () => {
+    const input = '<Frame caption="Example">\n  Some content inside frame.\n</Frame>';
+    const result = cleanMintlifyMarkdown(input);
+    expect(result).not.toContain("<Frame");
+    expect(result).not.toContain("</Frame>");
+    expect(result).toContain("Some content inside frame.");
+  });
+
+  it("converts <Check> to blockquote", () => {
+    const input = "<Check>\n  ### Important\n  Check content.\n</Check>";
+    const result = cleanMintlifyMarkdown(input);
+    expect(result).toContain("> **Note:**");
+    expect(result).not.toContain("</Check>");
   });
 });

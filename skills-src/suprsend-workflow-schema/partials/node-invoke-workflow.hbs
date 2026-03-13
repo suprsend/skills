@@ -1,0 +1,34 @@
+# Invoke Workflow Node
+
+**Schema `node_type`:** `invokeworkflow`
+
+## Documentation
+
+{{{docs_invoke_workflow}}}
+
+## Schema Properties
+
+{{schema-table (get other_funcs_schema "$definitions.invokeworkflow_props")}}
+
+### Recipient selection values
+
+{{schema-enum (get other_funcs_schema "$definitions.invokeworkflow_props.properties.recipient_selection.enum")}}
+
+### Actor selection values
+
+{{schema-enum (get other_funcs_schema "$definitions.invokeworkflow_props.properties.actor_selection.enum")}}
+
+## Example
+
+```json
+{
+  "node_type": "invokeworkflow",
+  "properties": {
+    "workflow": "escalation-workflow",
+    "recipient_selection": "expression",
+    "recipient_expression": "data.manager_id",
+    "actor_selection": "recipient",
+    "append_current_run_data": true
+  }
+}
+```

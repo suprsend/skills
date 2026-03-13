@@ -7,8 +7,25 @@ type JsonSchema = Record<string, unknown>;
 const MAX_REF_DEPTH = 20;
 
 /**
+ * Navigate a JSON object using a JSON Pointer fragment (e.g., "#/$definitions/foo").
+ * Returns undefined if the path doesn't exist.
+ */
+function resolvePointer(schema: JsonSchema, fragment: string): unknown {
+  // Strip leading "#/"
+  const parts = fragment.replace(/^#\//, "").split("/");
+  let current: unknown = schema;
+  for (const part of parts) {
+    if (current == null || typeof current !== "object") return undefined;
+    current = (current as Record<string, unknown>)[part];
+  }
+  return current;
+}
+
+/**
  * Recursively resolve $ref pointers in a JSON Schema.
  * Handles both local (#/definitions/...) and remote HTTP refs.
+ * Remote refs with hash fragments (e.g., "other.json#/$definitions/Foo")
+ * are fetched and then navigated to the specific definition.
  */
 async function resolveRefs(
   schema: JsonSchema,
@@ -44,17 +61,34 @@ async function resolveRefs(
       return schema;
     }
 
-    // Remote ref
-    const refUrl = new URL(ref, baseUrl).href;
-    if (cache.has(refUrl)) {
-      return cache.get(refUrl)!;
+    // Remote ref — separate URL from hash fragment
+    const refUrlObj = new URL(ref, baseUrl);
+    const fragment = refUrlObj.hash; // e.g., "#/$definitions/foo" or ""
+    refUrlObj.hash = "";
+    const schemaUrl = refUrlObj.href;
+
+    // Fetch & cache the remote schema (without fragment)
+    let resolvedSchema: JsonSchema;
+    if (cache.has(schemaUrl)) {
+      resolvedSchema = cache.get(schemaUrl)!;
+    } else {
+      logger.debug(`Resolving $ref: ${schemaUrl}`);
+      const rawSchema = await fetchJson<JsonSchema>(schemaUrl);
+      resolvedSchema = await resolveRefs(rawSchema, schemaUrl, cache, depth + 1);
+      cache.set(schemaUrl, resolvedSchema);
     }
 
-    logger.debug(`Resolving $ref: ${refUrl}`);
-    const refSchema = await fetchJson<JsonSchema>(refUrl);
-    const resolved = await resolveRefs(refSchema, refUrl, cache, depth + 1);
-    cache.set(refUrl, resolved);
-    return resolved;
+    // Navigate to the specific definition if a hash fragment is present
+    if (fragment && fragment.startsWith("#/")) {
+      const target = resolvePointer(resolvedSchema, fragment);
+      if (target != null && typeof target === "object") {
+        return target as JsonSchema;
+      }
+      logger.warn(`Could not resolve fragment "${fragment}" in ${schemaUrl}`);
+      return schema;
+    }
+
+    return resolvedSchema;
   }
 
   const result: JsonSchema = {};

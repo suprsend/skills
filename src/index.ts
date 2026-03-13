@@ -6,6 +6,7 @@ const { values } = parseArgs({
   options: {
     skill: { type: "string", short: "s" },
     "no-cache": { type: "boolean", default: false },
+    "no-cli-skills": { type: "boolean", default: false },
     verbose: { type: "boolean", short: "v", default: false },
     help: { type: "boolean", short: "h", default: false },
   },
@@ -19,6 +20,7 @@ Usage: npm run build [-- options]
 Options:
   --skill, -s <name>   Build a single skill
   --no-cache           Force fresh Claude API calls (bypass cache)
+  --no-cli-skills      Skip pulling external skills from suprsend/cli repo
   --verbose, -v        Enable debug logging
   --help, -h           Show this help
 `);
@@ -33,6 +35,7 @@ try {
   await build({
     skill: values.skill,
     noCache: values["no-cache"],
+    pullExternal: !values["no-cli-skills"],
   });
 } catch (err) {
   console.error(`[ERROR] Build failed: ${(err as Error).message}`);

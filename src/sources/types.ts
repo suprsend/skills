@@ -30,14 +30,6 @@ export interface StaticSource {
   path: string;
 }
 
-/** CLI source — run a command, parse output */
-export interface CliSource {
-  type: "cli";
-  key: string;
-  command: string;
-  format: "json" | "yaml";
-}
-
 /** Docs source — fetch markdown from Mintlify */
 export interface DocsSource {
   type: "docs";
@@ -65,7 +57,6 @@ export interface ClaudeSource {
 
 export type SourceDeclaration =
   | StaticSource
-  | CliSource
   | DocsSource
   | SchemaSource
   | ClaudeSource;

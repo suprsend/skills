@@ -1,0 +1,41 @@
+# Time Window Node
+
+**Schema `node_type`:** `timewindow`
+
+## Documentation
+
+{{{docs_timewindow}}}
+
+## Schema Properties
+
+{{schema-table timewindow_schema}}
+
+### Window frequency values
+
+{{schema-enum (get timewindow_schema "properties.windows.items.properties.frequency.enum")}}
+
+### Weekday values
+
+{{schema-enum (get timewindow_schema "properties.windows.items.properties.weekdays.items.enum")}}
+
+### Timezone selection values
+
+{{schema-enum (get timewindow_schema "properties.tz_selection.enum")}}
+
+## Example
+
+```json
+{
+  "node_type": "timewindow",
+  "properties": {
+    "windows": [
+      {
+        "frequency": "weekly_mo2fr",
+        "stime": "09:00",
+        "etime": "17:00"
+      }
+    ],
+    "tz_selection": "recipient"
+  }
+}
+```

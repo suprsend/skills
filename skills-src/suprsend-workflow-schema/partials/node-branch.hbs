@@ -1,0 +1,61 @@
+# Branch Node
+
+**Schema `node_type`:** `branch`
+
+## Documentation
+
+{{{docs_branch}}}
+
+## Branch Structure
+
+A branch node uses the `branches` array at the node level (not inside `properties`).
+Each branch has 2-10 items: up to 9 conditional branches and 1 default branch (must be last).
+
+### Branch item properties
+
+{{schema-table (get branch_schema "$definitions.temp_branch.items")}}
+
+### Condition expression operators
+
+{{schema-enum (get fragment_schema "$definitions.condition_expr_v1_branch_def.properties.expression_v1.properties.args.items.properties.op.enum")}}
+
+### Variable namespaces (in branch conditions)
+
+{{schema-enum (get fragment_schema "$definitions.condition_expr_v1_branch_def.properties.expression_v1.properties.args.items.properties.variable_ns.enum")}}
+
+## Example
+
+```json
+{
+  "node_type": "branch",
+  "properties": {},
+  "branches": [
+    {
+      "name": "Premium users",
+      "is_default": false,
+      "conditions": [
+        {
+          "type": "expression_v1",
+          "expression_v1": {
+            "op": "AND",
+            "args": [
+              { "variable_ns": "$recipient", "variable": "plan", "op": "==", "value": "premium" }
+            ]
+          }
+        }
+      ],
+      "nodes": [
+        { "node_type": "send_smart_channel_routing", "properties": { "template": "premium-alert" } }
+      ]
+    },
+    {
+      "name": "Default",
+      "is_default": true,
+      "conditions": [{ "type": "expression_v1", "expression_v1": { "op": "AND", "args": [] } }],
+      "nodes": [
+        { "node_type": "send_email", "properties": { "template": "free-tier-alert" } }
+      ]
+    }
+  ]
+}
+```

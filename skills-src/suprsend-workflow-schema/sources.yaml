@@ -1,0 +1,213 @@
+name: suprsend-workflow-schema
+description: >
+  SuprSend workflow schema reference for creating, modifying, or understanding
+  notification workflows. Lists all available workflow nodes with documentation
+  and JSON schema details.
+metadata:
+  author: suprsend
+  category: workflows
+
+sources:
+  - type: static
+    key: overview
+    path: overview.md
+
+  # ── Schemas (fetched at build time, available in templates) ────────────
+
+  - type: schema
+    key: workflow_schema
+    url: "https://schema.suprsend.com/workflow/v1/schema.json"
+    follow_refs: true
+
+  - type: schema
+    key: tree_schema
+    url: "https://schema.suprsend.com/workflow/v1/tree_schema.json"
+    follow_refs: true
+
+  - type: schema
+    key: fragment_schema
+    url: "https://schema.suprsend.com/workflow/v1/fragment_schema.json"
+
+  - type: schema
+    key: send_schema
+    url: "https://schema.suprsend.com/workflow/v1/node_send_schema.json"
+    follow_refs: true
+
+  - type: schema
+    key: branch_schema
+    url: "https://schema.suprsend.com/workflow/v1/node_branch_schema.json"
+    follow_refs: true
+
+  - type: schema
+    key: batch_schema
+    url: "https://schema.suprsend.com/workflow/v1/node_batch_schema.json"
+    follow_refs: true
+
+  - type: schema
+    key: digest_schema
+    url: "https://schema.suprsend.com/workflow/v1/node_digest_schema.json"
+    follow_refs: true
+
+  - type: schema
+    key: timewindow_schema
+    url: "https://schema.suprsend.com/workflow/v1/node_timewindow_schema.json"
+
+  - type: schema
+    key: httpapi_schema
+    url: "https://schema.suprsend.com/workflow/v1/node_httpapi_schema.json"
+    follow_refs: true
+
+  - type: schema
+    key: other_funcs_schema
+    url: "https://schema.suprsend.com/workflow/v1/node_other_funcs_schema.json"
+    follow_refs: true
+
+  - type: schema
+    key: subscriberlist_schema
+    url: "https://schema.suprsend.com/workflow/v1/node_subscriberlistoperation_schema.json"
+    follow_refs: true
+
+  - type: schema
+    key: objectop_schema
+    url: "https://schema.suprsend.com/workflow/v1/node_objectoperation_schema.json"
+    follow_refs: true
+
+  # ── Docs (fetched at build time, available in templates) ───────────────
+  # Each docs source fetches the raw markdown from SuprSend documentation.
+  # Use the `selector` field to extract a specific section by heading.
+  #
+  # Add more docs sources for each node you want to document:
+  #   - type: docs
+  #     key: docs_<node_name>
+  #     urls:
+  #       - https://docs.suprsend.com/docs/<node_name>
+
+  - type: docs
+    key: docs_delay
+    urls:
+      - "https://docs.suprsend.com/docs/delay"
+
+  - type: docs
+    key: docs_batch
+    urls:
+      - "https://docs.suprsend.com/docs/batch"
+
+  - type: docs
+    key: docs_digest
+    urls:
+      - "https://docs.suprsend.com/docs/digest"
+
+  - type: docs
+    key: docs_timewindow
+    urls:
+      - "https://docs.suprsend.com/docs/time-window"
+
+  - type: docs
+    key: docs_branch
+    urls:
+      - "https://docs.suprsend.com/docs/branch"
+
+  - type: docs
+    key: docs_wait_until
+    urls:
+      - "https://docs.suprsend.com/docs/wait-until"
+
+  - type: docs
+    key: docs_delivery_single
+    urls:
+      - "https://docs.suprsend.com/docs/delivery-single-channel"
+
+  - type: docs
+    key: docs_delivery_multi
+    urls:
+      - "https://docs.suprsend.com/docs/delivery-multi-channel"
+
+  - type: docs
+    key: docs_smart_delivery
+    urls:
+      - "https://docs.suprsend.com/docs/smart-delivery"
+
+  - type: docs
+    key: docs_webhook
+    urls:
+      - "https://docs.suprsend.com/docs/webhook"
+
+  - type: docs
+    key: docs_fetch
+    urls:
+      - "https://docs.suprsend.com/docs/fetch"
+
+  - type: docs
+    key: docs_transform
+    urls:
+      - "https://docs.suprsend.com/docs/data-transform"
+
+  - type: docs
+    key: docs_invoke_workflow
+    urls:
+      - "https://docs.suprsend.com/docs/invoke-workflow"
+
+  - type: docs
+    key: docs_user_update
+    urls:
+      - "https://docs.suprsend.com/docs/update-user-profile"
+
+  - type: docs
+    key: docs_list_add
+    urls:
+      - "https://docs.suprsend.com/docs/add-user-to-list"
+
+  - type: docs
+    key: docs_list_remove
+    urls:
+      - "https://docs.suprsend.com/docs/remove-user-from-list"
+
+  - type: docs
+    key: docs_object_subscribe
+    urls:
+      - "https://docs.suprsend.com/docs/subscribe-to-object"
+
+  - type: docs
+    key: docs_object_unsubscribe
+    urls:
+      - "https://docs.suprsend.com/docs/unsubscribe-from-object"
+
+# ── Output references ────────────────────────────────────────────────────
+# Each reference file is rendered from a Handlebars template in partials/.
+# The template has access to ALL sources above plus the `meta` object.
+#
+# To add a new reference:
+#   1. Create a .hbs template in partials/
+#   2. Add an entry here pointing to it
+
+references:
+  - filename: workflow-schema-guide.md
+    template: partials/workflow-schema-guide.hbs
+  - filename: node-delay.md
+    template: partials/node-delay.hbs
+  - filename: node-batch.md
+    template: partials/node-batch.hbs
+  - filename: node-digest.md
+    template: partials/node-digest.hbs
+  - filename: node-timewindow.md
+    template: partials/node-timewindow.hbs
+  - filename: node-branch.md
+    template: partials/node-branch.hbs
+  - filename: node-wait-until.md
+    template: partials/node-wait-until.hbs
+  - filename: node-delivery.md
+    template: partials/node-delivery.hbs
+  - filename: node-webhook.md
+    template: partials/node-webhook.hbs
+  - filename: node-fetch.md
+    template: partials/node-fetch.hbs
+  - filename: node-transform.md
+    template: partials/node-transform.hbs
+  - filename: node-invoke-workflow.md
+    template: partials/node-invoke-workflow.hbs
+  - filename: node-user-update.md
+    template: partials/node-user-update.hbs
+  - filename: node-list-operations.md
+    template: partials/node-list-operations.hbs
+  - filename: node-object-operations.md
+    template: partials/node-object-operations.hbs

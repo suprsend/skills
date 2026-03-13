@@ -51,7 +51,7 @@ describe("pipeline", () => {
 
   describe("build()", () => {
     it("discovers and builds all skills in skills-src", async () => {
-      await build({});
+      await build({ pullExternal: false });
       // Should find valid-skill and minimal-skill in fixtures
       const validSkillMd = await readFile(
         resolve(outputDir, "valid-skill", "SKILL.md"),
@@ -67,7 +67,7 @@ describe("pipeline", () => {
     });
 
     it("builds a single skill when --skill is specified", async () => {
-      await build({ skill: "minimal-skill" });
+      await build({ skill: "minimal-skill", pullExternal: false });
       const skillMd = await readFile(
         resolve(outputDir, "minimal-skill", "SKILL.md"),
         "utf-8",
@@ -81,7 +81,7 @@ describe("pipeline", () => {
       const warnSpy = vi.spyOn(console, "warn");
       // Build all skills - both fixtures exist, so the "no skills" path isn't hit
       // But we can verify the discover path works
-      await build({});
+      await build({ pullExternal: false });
       // The "no skills" warning is not triggered with fixture dirs present
       // This test verifies build completes with discover path
       expect(warnSpy).not.toHaveBeenCalledWith(
@@ -92,14 +92,14 @@ describe("pipeline", () => {
 
     it("throws on non-existent single skill", async () => {
       await expect(
-        build({ skill: "does-not-exist" }),
+        build({ skill: "does-not-exist", pullExternal: false }),
       ).rejects.toThrow();
     });
   });
 
   describe("SKILL.md output", () => {
     it("has valid YAML frontmatter delimiters", async () => {
-      await build({ skill: "valid-skill" });
+      await build({ skill: "valid-skill", pullExternal: false });
       const content = await readFile(
         resolve(outputDir, "valid-skill", "SKILL.md"),
         "utf-8",
@@ -111,7 +111,7 @@ describe("pipeline", () => {
     });
 
     it("includes all required frontmatter fields", async () => {
-      await build({ skill: "valid-skill" });
+      await build({ skill: "valid-skill", pullExternal: false });
       const content = await readFile(
         resolve(outputDir, "valid-skill", "SKILL.md"),
         "utf-8",
@@ -121,7 +121,7 @@ describe("pipeline", () => {
     });
 
     it("includes optional frontmatter fields when set", async () => {
-      await build({ skill: "valid-skill" });
+      await build({ skill: "valid-skill", pullExternal: false });
       const content = await readFile(
         resolve(outputDir, "valid-skill", "SKILL.md"),
         "utf-8",
@@ -135,7 +135,7 @@ describe("pipeline", () => {
     });
 
     it("omits optional frontmatter fields when not set", async () => {
-      await build({ skill: "minimal-skill" });
+      await build({ skill: "minimal-skill", pullExternal: false });
       const content = await readFile(
         resolve(outputDir, "minimal-skill", "SKILL.md"),
         "utf-8",
@@ -147,7 +147,7 @@ describe("pipeline", () => {
     });
 
     it("renders template body with resolved static sources", async () => {
-      await build({ skill: "valid-skill" });
+      await build({ skill: "valid-skill", pullExternal: false });
       const content = await readFile(
         resolve(outputDir, "valid-skill", "SKILL.md"),
         "utf-8",
@@ -157,7 +157,7 @@ describe("pipeline", () => {
     });
 
     it("renders Handlebars helpers in template", async () => {
-      await build({ skill: "valid-skill" });
+      await build({ skill: "valid-skill", pullExternal: false });
       const content = await readFile(
         resolve(outputDir, "valid-skill", "SKILL.md"),
         "utf-8",
@@ -168,7 +168,7 @@ describe("pipeline", () => {
     });
 
     it("produces output under 500 lines for valid skill", async () => {
-      await build({ skill: "valid-skill" });
+      await build({ skill: "valid-skill", pullExternal: false });
       const content = await readFile(
         resolve(outputDir, "valid-skill", "SKILL.md"),
         "utf-8",
@@ -180,7 +180,7 @@ describe("pipeline", () => {
 
   describe("output directories", () => {
     it("writes templated reference files", async () => {
-      await build({ skill: "valid-skill" });
+      await build({ skill: "valid-skill", pullExternal: false });
       const refContent = await readFile(
         resolve(outputDir, "valid-skill", "references", "ref-doc.md"),
         "utf-8",
@@ -190,7 +190,7 @@ describe("pipeline", () => {
     });
 
     it("copies static reference files", async () => {
-      await build({ skill: "valid-skill" });
+      await build({ skill: "valid-skill", pullExternal: false });
       const refContent = await readFile(
         resolve(outputDir, "valid-skill", "references", "static-ref.md"),
         "utf-8",
@@ -200,7 +200,7 @@ describe("pipeline", () => {
     });
 
     it("copies script files", async () => {
-      await build({ skill: "valid-skill" });
+      await build({ skill: "valid-skill", pullExternal: false });
       const scriptContent = await readFile(
         resolve(outputDir, "valid-skill", "scripts", "helper.sh"),
         "utf-8",
@@ -210,7 +210,7 @@ describe("pipeline", () => {
     });
 
     it("copies asset files", async () => {
-      await build({ skill: "valid-skill" });
+      await build({ skill: "valid-skill", pullExternal: false });
       const assetContent = await readFile(
         resolve(outputDir, "valid-skill", "assets", "config.json"),
         "utf-8",
@@ -220,21 +220,21 @@ describe("pipeline", () => {
     });
 
     it("does not create references/ when none declared", async () => {
-      await build({ skill: "minimal-skill" });
+      await build({ skill: "minimal-skill", pullExternal: false });
       await expect(
         access(resolve(outputDir, "minimal-skill", "references")),
       ).rejects.toThrow();
     });
 
     it("does not create scripts/ when none declared", async () => {
-      await build({ skill: "minimal-skill" });
+      await build({ skill: "minimal-skill", pullExternal: false });
       await expect(
         access(resolve(outputDir, "minimal-skill", "scripts")),
       ).rejects.toThrow();
     });
 
     it("does not create assets/ when none declared", async () => {
-      await build({ skill: "minimal-skill" });
+      await build({ skill: "minimal-skill", pullExternal: false });
       await expect(
         access(resolve(outputDir, "minimal-skill", "assets")),
       ).rejects.toThrow();

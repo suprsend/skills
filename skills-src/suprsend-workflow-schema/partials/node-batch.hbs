@@ -1,0 +1,39 @@
+# Batch Node
+
+**Schema `node_type`:** `batch`
+
+## Documentation
+
+{{{docs_batch}}}
+
+## Schema Properties
+
+{{schema-table batch_schema}}
+
+### Mode values
+
+{{schema-enum (get batch_schema "properties.mode.enum")}}
+
+### Window type values
+
+{{schema-enum (get batch_schema "properties.window_type.enum")}}
+
+### Retain order values
+
+{{schema-enum (get batch_schema "properties.retain_order.enum")}}
+
+## Example
+
+```json
+{
+  "node_type": "batch",
+  "properties": {
+    "mode": "accumulate_all",
+    "window_type": "fixed",
+    "fixed_window": "1h",
+    "batch_key": ".post_id",
+    "retain_count": 10,
+    "retain_order": "last"
+  }
+}
+```

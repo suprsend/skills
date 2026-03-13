@@ -1,4 +1,4 @@
-# SuprSend Agent Skills
+# SuprSend Skills
 
 Official [agent skills](https://agentskills.io) for working with SuprSend. Install them in any compatible AI agent:
 
@@ -8,16 +8,18 @@ npx skills add suprsend/skills
 
 ## What's Included
 
-| Skill | Description |
-|-------|-------------|
-| `suprsend-workflows` | Workflow design, configuration, and triggering guide — covers workflow nodes, API/SDK triggers, and multi-channel delivery |
-| `suprsend-inbox` | In-App Inbox integration guide — covers React SDK setup, authentication, theming, and headless mode |
+| Skill                      | Description                                                                                                                                                                 |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `suprsend-workflow-schema` | Workflow schema reference — all workflow nodes with documentation, JSON schema details, and usage examples                                                                  |
+| `suprsend-docs-support`    | How to access SuprSend documentation and get support — docs site, LLM-friendly endpoints, in-app chat, AI copilot, Slack community, and email                               |
+| `suprsend-cli`             | SuprSend CLI reference — command-line tool for managing workspaces, templates, workflows, schemas, and more _(pulled from [suprsend/cli](https://github.com/suprsend/cli))_ |
 
 ## For Users
 
 Once installed, skills are automatically available to your AI agent. The agent will activate the relevant skill when you're working with SuprSend — managing workflows, configuring templates, debugging integrations, etc.
 
 Skills follow the [agentskills.io progressive disclosure](https://agentskills.io/specification) model:
+
 - **Metadata** loads at startup (skill name + description) so the agent knows what's available
 - **Instructions** load on activation (the SKILL.md body) with step-by-step guidance
 - **Resources** load on demand — `references/` for detailed docs, `scripts/` for executable helpers, `assets/` for templates and data files
@@ -46,7 +48,7 @@ npm install
 npm run build
 
 # Generate a single skill
-npm run build -- --skill=suprsend-workflows
+npm run build -- --skill=suprsend-workflow-schema
 
 # Force fresh Claude API calls (bypass cache)
 npm run build -- --no-cache
@@ -104,19 +106,12 @@ description: >
 license: MIT
 metadata:
   author: suprsend
-  version: "1.0.0"
 
 sources:
   # Human-written content
   - type: static
     key: overview
     path: overview.md
-
-  # SuprSend CLI export
-  - type: cli
-    key: commands
-    command: "suprsend genskills --format json"
-    format: json
 
   # Mintlify hosted docs
   - type: docs
@@ -177,13 +172,12 @@ npm run build -- --skill=my-skill
 
 ### Source Types
 
-| Type | Resolves To | Description |
-|------|-------------|-------------|
-| `static` | String | Reads a `.md` file from `static/` |
-| `cli` | Object or String | Runs a command (via `execFile`, no shell), parses output as JSON or YAML |
-| `docs` | String | Fetches markdown from a URL (Mintlify `.md` append auto-tried) |
-| `schema` | Object | Fetches JSON Schema, optionally resolves `$ref` pointers |
-| `claude` | String | Calls Claude API with a prompt (can reference other resolved keys). Responses are cached by `sha256(model + prompt)` in `.cache/claude/`. |
+| Type     | Resolves To | Description                                                                                                                               |
+| -------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `static` | String      | Reads a `.md` file from `static/`                                                                                                         |
+| `docs`   | String      | Fetches markdown from a URL (Mintlify `.md` append auto-tried)                                                                            |
+| `schema` | Object      | Fetches JSON Schema, optionally resolves `$ref` pointers                                                                                  |
+| `claude` | String      | Calls Claude API with a prompt (can reference other resolved keys). Responses are cached by `sha256(model + prompt)` in `.cache/claude/`. |
 
 Claude sources run after all other sources, so their prompts can interpolate any previously resolved key using `{{key}}` syntax.
 
@@ -196,18 +190,22 @@ The `references`, `scripts`, and `assets` arrays in `sources.yaml` declare files
 
 ### Handlebars Helpers
 
-| Helper | Usage | Description |
-|--------|-------|-------------|
-| `json` | `{{json obj}}` | Formatted JSON output |
-| `schema-table` | `{{schema-table schemaObj}}` | JSON Schema properties → markdown table |
-| `schema-enum` | `{{schema-enum enumArray}}` | Enum values → bullet list |
-| `section` | `{{section markdown "## Heading"}}` | Extract a section by heading |
-| `codeblock` | `{{codeblock content "json"}}` | Fenced code block |
-| `trim` | `{{trim text}}` | Strip whitespace |
-| `ifEqual` | `{{#ifEqual a b}}...{{/ifEqual}}` | Conditional equality |
-| `each-sorted` | `{{#each-sorted obj}}...{{/each-sorted}}` | Iterate keys alphabetically |
-| `ref-link` | `{{ref-link "file.md" "Label"}}` | Link to `references/` file |
-| `truncate` | `{{truncate text 500}}` | Truncate to N characters |
+| Helper         | Usage                                     | Description                                         |
+| -------------- | ----------------------------------------- | --------------------------------------------------- |
+| `json`         | `{{json obj}}`                            | Formatted JSON output                               |
+| `schema-table` | `{{schema-table schemaObj}}`              | JSON Schema properties → markdown table             |
+| `schema-enum`  | `{{schema-enum enumArray}}`               | Enum values → bullet list                           |
+| `section`      | `{{section markdown "## Heading"}}`       | Extract a section by heading                        |
+| `codeblock`    | `{{codeblock content "json"}}`            | Fenced code block                                   |
+| `trim`         | `{{trim text}}`                           | Strip whitespace                                    |
+| `ifEqual`      | `{{#ifEqual a b}}...{{/ifEqual}}`         | Conditional equality                                |
+| `each-sorted`  | `{{#each-sorted obj}}...{{/each-sorted}}` | Iterate keys alphabetically                         |
+| `ref-link`     | `{{ref-link "file.md" "Label"}}`          | Link to `references/` file                          |
+| `truncate`     | `{{truncate text 500}}`                   | Truncate to N characters                            |
+| `get`          | `{{get obj "path.to.key"}}`               | Deep property access (dot notation or JSON Pointer) |
+| `keys`         | `{{keys obj}}`                            | Get object keys as array                            |
+| `concat`       | `{{concat "a" "b"}}`                      | Concatenate strings                                 |
+| `default`      | `{{default value "fallback"}}`            | Return value, or fallback if null/undefined         |
 
 ### agentskills.io Compliance
 

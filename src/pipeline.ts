@@ -20,8 +20,8 @@ import type {
 } from "./sources/types.js";
 import { parseYaml } from "./utils/yaml.js";
 import { logger } from "./utils/logger.js";
+import { pullExternalSkills } from "./external.js";
 import { resolveStatic } from "./sources/static.js";
-import { resolveCli } from "./sources/cli.js";
 import { resolveDocs } from "./sources/docs.js";
 import { resolveSchema } from "./sources/schema.js";
 import { resolveClaude } from "./sources/claude.js";
@@ -36,6 +36,7 @@ import {
 interface BuildOptions {
   skill?: string;
   noCache?: boolean;
+  pullExternal?: boolean;
 }
 
 /**
@@ -92,9 +93,7 @@ async function resolveSource(
   switch (source.type) {
     case "static":
       return resolveStatic(skillName, source);
-    case "cli":
-      return resolveCli(source);
-    case "docs":
+case "docs":
       return resolveDocs(source);
     case "schema":
       return resolveSchema(source);
@@ -268,27 +267,31 @@ export async function build(options: BuildOptions): Promise<void> {
     ? [options.skill]
     : await discoverSkills();
 
-  if (skills.length === 0) {
-    logger.warn("No skills found in skills-src/");
-    return;
-  }
+  if (skills.length > 0) {
+    logger.info(`Building ${skills.length} skill(s): ${skills.join(", ")}`);
 
-  logger.info(`Building ${skills.length} skill(s): ${skills.join(", ")}`);
-
-  const errors: Array<{ skill: string; error: Error }> = [];
-  for (const skill of skills) {
-    try {
-      await buildSkill(skill, options);
-    } catch (err) {
-      errors.push({ skill, error: err as Error });
-      logger.error(`Failed to build "${skill}": ${(err as Error).message}`);
+    const errors: Array<{ skill: string; error: Error }> = [];
+    for (const skill of skills) {
+      try {
+        await buildSkill(skill, options);
+      } catch (err) {
+        errors.push({ skill, error: err as Error });
+        logger.error(`Failed to build "${skill}": ${(err as Error).message}`);
+      }
     }
+
+    if (errors.length > 0) {
+      throw new Error(
+        `${errors.length} skill(s) failed to build: ${errors.map((e) => e.skill).join(", ")}`,
+      );
+    }
+  } else {
+    logger.info("No local skills found in skills-src/");
   }
 
-  if (errors.length > 0) {
-    throw new Error(
-      `${errors.length} skill(s) failed to build: ${errors.map((e) => e.skill).join(", ")}`,
-    );
+  // Pull external skills (unless --no-external)
+  if (options.pullExternal !== false) {
+    await pullExternalSkills();
   }
 
   logger.info("Build complete.");

@@ -445,4 +445,139 @@ describe("Handlebars helpers", () => {
       expect(result2).toBe("a".repeat(500) + "...");
     });
   });
+
+  describe("get", () => {
+    it("accesses a nested property via dot notation", () => {
+      const result = render("{{get obj \"a.b.c\"}}", {
+        obj: { a: { b: { c: "deep" } } },
+      });
+      expect(result).toBe("deep");
+    });
+
+    it("accesses a property via JSON Pointer fragment", () => {
+      const result = render("{{get obj \"#/$definitions/delay\"}}", {
+        obj: { $definitions: { delay: "found" } },
+      });
+      expect(result).toBe("found");
+    });
+
+    it("accesses top-level property", () => {
+      const result = render("{{get obj \"name\"}}", { obj: { name: "test" } });
+      expect(result).toBe("test");
+    });
+
+    it("returns undefined for missing path", () => {
+      const result = render("{{get obj \"a.b.missing\"}}", {
+        obj: { a: { b: { c: 1 } } },
+      });
+      expect(result).toBe("");
+    });
+
+    it("returns undefined for null obj", () => {
+      const result = render("{{get obj \"a\"}}", { obj: null });
+      expect(result).toBe("");
+    });
+
+    it("returns undefined for non-string path", () => {
+      const result = render("{{get obj 42}}", { obj: { "42": "nope" } });
+      expect(result).toBe("");
+    });
+
+    it("works with slash-separated paths", () => {
+      const result = render("{{get obj \"a/b/c\"}}", {
+        obj: { a: { b: { c: "slash" } } },
+      });
+      expect(result).toBe("slash");
+    });
+
+    it("can be composed with schema-table", () => {
+      const schema = {
+        $definitions: {
+          thing: {
+            properties: {
+              name: { type: "string", description: "The name" },
+            },
+            required: ["name"],
+          },
+        },
+      };
+      const result = render("{{schema-table (get schema \"$definitions.thing\")}}", { schema });
+      expect(result).toContain("| name | string | Yes | The name |");
+    });
+
+    it("can be composed with json", () => {
+      const obj = { nested: { data: [1, 2] } };
+      const result = render("{{json (get obj \"nested.data\")}}", { obj });
+      expect(result).toBe(JSON.stringify([1, 2], null, 2));
+    });
+  });
+
+  describe("keys", () => {
+    it("returns keys of an object", () => {
+      const result = render("{{#each (keys obj)}}{{this}},{{/each}}", {
+        obj: { b: 2, a: 1 },
+      });
+      expect(result).toContain("a,");
+      expect(result).toContain("b,");
+    });
+
+    it("returns empty array for null", () => {
+      const result = render("{{#each (keys obj)}}x{{/each}}", { obj: null });
+      expect(result).toBe("");
+    });
+
+    it("returns empty array for arrays", () => {
+      const result = render("{{#each (keys obj)}}x{{/each}}", { obj: [1, 2] });
+      expect(result).toBe("");
+    });
+
+    it("returns empty array for undefined", () => {
+      const result = render("{{#each (keys obj)}}x{{/each}}", {});
+      expect(result).toBe("");
+    });
+  });
+
+  describe("concat", () => {
+    it("concatenates strings", () => {
+      const result = render('{{concat "hello" " " "world"}}', {});
+      expect(result).toBe("hello world");
+    });
+
+    it("converts non-strings to strings", () => {
+      const result = render("{{concat \"count: \" num}}", { num: 42 });
+      expect(result).toBe("count: 42");
+    });
+
+    it("returns empty string with no args", () => {
+      const result = render("{{concat}}", {});
+      expect(result).toBe("");
+    });
+  });
+
+  describe("default", () => {
+    it("returns value when present", () => {
+      const result = render('{{default name "fallback"}}', { name: "real" });
+      expect(result).toBe("real");
+    });
+
+    it("returns fallback when value is undefined", () => {
+      const result = render('{{default name "fallback"}}', {});
+      expect(result).toBe("fallback");
+    });
+
+    it("returns fallback when value is null", () => {
+      const result = render('{{default name "fallback"}}', { name: null });
+      expect(result).toBe("fallback");
+    });
+
+    it("returns empty string (falsy but not nullish)", () => {
+      const result = render('{{default name "fallback"}}', { name: "" });
+      expect(result).toBe("");
+    });
+
+    it("returns 0 (falsy but not nullish)", () => {
+      const result = render('{{default count "fallback"}}', { count: 0 });
+      expect(result).toBe("0");
+    });
+  });
 });
