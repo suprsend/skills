@@ -1,17 +1,22 @@
-# suprsend workflow disable
+# suprsend event get
 
-Disable a workflow
+Get events
 
-Disable a workflow to stop it from processing triggers. Requires a workflow slug as a positional argument.
+Retrieve all events and their schema mappings from a workspace. Returns event definitions including names, descriptions, and payload schemas.
 
 ```
-suprsend workflow disable [flags]
+suprsend event get [flags]
 ```
+
+### Tips
+
+- Use `-o json` for machine-readable JSON output, `-o yaml` for YAML.
 
 ### Options
 
 ```
-  -h, --help   help for disable
+  -h, --help            help for get
+  -o, --output string   Output format: json or yaml (default "json")
 ```
 
 ### Options inherited from parent commands

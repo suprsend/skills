@@ -1,0 +1,73 @@
+name: Update Skills
+
+on:
+  schedule:
+    - cron: "0 9 * * 1" # Every Monday at 9:00 UTC
+  workflow_dispatch: # Allow manual trigger
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-skills:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # Uncomment and set ANTHROPIC_API_KEY secret when adding claude-type sources:
+    # env:
+    #   ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build all skills
+        run: npm run build -- --no-cache
+
+      - name: Check for changes
+        id: changes
+        run: |
+          git config core.fileMode false
+          git add skills/
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create pull request
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="auto/update-skills"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Create or reset the branch
+          git checkout -B "$BRANCH"
+          git commit -m "Update generated skills output"
+          git push --force origin "$BRANCH"
+
+          # Create PR if one doesn't already exist
+          EXISTING=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number')
+          if [ -n "$EXISTING" ]; then
+            echo "PR #$EXISTING already exists — updated branch."
+          else
+            gh pr create \
+              --title "Update generated skills output" \
+              --body "Automated weekly rebuild detected changes in \`skills/\` output.
+
+          This likely means upstream schemas or docs have changed. Please review the diff before merging." \
+              --label "automated" \
+              --head "$BRANCH"
+          fi
