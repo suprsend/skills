@@ -1,17 +1,23 @@
-# suprsend workflow disable
+# suprsend translation get
 
-Disable a workflow
+Get translations
 
-Disable a workflow to stop it from processing triggers. Requires a workflow slug as a positional argument.
+Retrieve all template translations from a workspace. Returns translation content keyed by locale code. Use --mode to switch between draft and live versions.
 
 ```
-suprsend workflow disable [flags]
+suprsend translation get [flags]
 ```
+
+### Tips
+
+- Use `-o json` for machine-readable JSON output, `-o yaml` for YAML.
 
 ### Options
 
 ```
-  -h, --help   help for disable
+  -h, --help            help for get
+      --mode string     Version mode: draft or live (default "live")
+  -o, --output string   Output format: json or yaml (default "json")
 ```
 
 ### Options inherited from parent commands
