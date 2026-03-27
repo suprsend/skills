@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",
-    "handlebars": "^4.7.8",
+    "handlebars": "^4.7.9",
     "yaml": "^2.7.0"
   },
   "devDependencies": {
