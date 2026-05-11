@@ -12,6 +12,7 @@ Use this node to update recipient or actor profile within the workflow. Common u
 
 This functionality is especially powerful for event-based systems. If all updates, including user profile updates, are sent as events from your product or a third-party system, you can skip writing custom user update APIs in your codebase. Simply send events to SuprSend, and let the workflow handle user profile updation.
 
+
 ### Property JSON
 
 User properties are passed in [JSONNET](https://jsonnet.org/ref/language.html) format. You can pass static or dynamic properties. Dynamic properties can refer to all data available at the node's input, including the ones added during workflow execution. e.g., if a profile update node follows a batch, fetch, or webhook node, it can access data modified or added by those nodes. The following data types are supported:

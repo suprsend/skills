@@ -16,6 +16,10 @@ There are 3 types of delay types available: **Fixed** (fixed for all users), **D
   ### Fixed
     Fixed delay is defined in your workflow form as `**d **h **m **s` and it delays the workflow for a fixed duration for all users.
 
+    
+
+    
+
     Some examples of fixed delay are:
 
     * Sending multiple payment or activity reminders at predetermined intervals. For instance, sending three payment reminders spaced 24 hours apart from the last due date.
@@ -25,6 +29,10 @@ There are 3 types of delay types available: **Fixed** (fixed for all users), **D
   ### Dynamic
     In case of dynamic delay, delay duration is computed using the data from trigger payload. Dynamic delays are helpful for reminders where the schedule is dictated by the user or when reminders need to be sent before the event or task due date.
 
+    
+
+    
+
     For instance, you might want to send a reminder one day before an interview date. In such scenarios, the reminder schedule can also be user-defined, resulting in variable delays per user. Consider the example of Google Calendar, where each user sets their own reminder schedule for meetings—some opt for reminders 10 minutes before, while others prefer 30 minutes before. Dynamic delays accommodate these individual preferences seamlessly.
 
     You can add duration key as a [JQ-expression](https://jqlang.github.io/jq/manual/). Below are some examples of how to add duration key in JQ format:
@@ -32,15 +40,15 @@ There are 3 types of delay types available: **Fixed** (fixed for all users), **D
     * General format for duration key at parent level is `.duration_key`
     * If the duration key is a nested event property key like shown below, enter it in the format `.appointment_details.time`
 
-      
-        ```json Trigger Payload theme={"system"}
-        properties = {
-          "appointment_details": {
-            "time": "2024-03-02T20:34:07Z",
-            "location": "1775 Stanford Ave, Menlo Park, CA 94025"
-          }
-        ```
-      
+          
+            ```json Trigger Payload theme={"system"}
+            properties = {
+              "appointment_details": {
+                "time": "2024-03-02T20:34:07Z",
+                "location": "1775 Stanford Ave, Menlo Park, CA 94025"
+              }
+            ```
+          
 
     Your duration key variable can be computed to either:
 

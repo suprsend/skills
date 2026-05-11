@@ -24,6 +24,7 @@ Imagine a workflow that sends alerts when a task status changes. To avoid sendin
 
 In this case, the workflow will wait for 11 hours (until July 23, 9:00 AM Europe/London) before sending the notification.
 
+
 ## Setting up time window
 
 Time window has 3 inputs

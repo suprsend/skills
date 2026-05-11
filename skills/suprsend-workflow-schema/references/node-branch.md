@@ -109,7 +109,7 @@ Condition on message status looks like this `<node slug> IS/ IS_NOT <message sta
 
 You can find node slug below node name in the workflow editor.
 
-```json  theme={"system"}
+```json theme={"system"}
   {
       "op": "IS",
       "ref": "multichannel_1", // node slug
@@ -182,6 +182,13 @@ Following message statuses are currently tracked for each channel:
   ### Where do I find the node reference for Message Status?
     Each node has a unique slug. You can see node slug below node name in the workflow editor. You can also edit node slug by clicking on navigation icon next to node name and selecting "Edit metadata".
 
+    
+
+    
+
+    
+
+    
   
 
 
