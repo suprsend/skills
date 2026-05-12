@@ -71,6 +71,11 @@ sources:
       - "https://docs.suprsend.com/docs/template-variants"
 
   - type: docs
+    key: docs_handlebars_helpers
+    urls:
+      - "https://docs.suprsend.com/docs/handlebars-helpers"
+
+  - type: docs
     key: docs_multi_lingual
     urls:
       - "https://docs.suprsend.com/docs/multi-lingual-template"
@@ -134,6 +139,8 @@ references:
     template: partials/multi-tenant-variants.hbs
   - filename: multi-lingual-variants.md
     template: partials/multi-lingual-variants.hbs
+  - filename: handlebars-helpers.md
+    template: partials/handlebars-helpers.hbs
   - filename: channel-email.md
     template: partials/channel-email.hbs
   - filename: channel-sms.md
