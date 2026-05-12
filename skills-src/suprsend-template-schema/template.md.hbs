@@ -1,0 +1,54 @@
+{{{overview}}}
+
+For a complete guide on the variant envelope and how variants compose into a template, see {{ref-link "template-schema-guide.md" "Template Schema Guide"}}.
+
+## Channels
+
+A variant's `channel` field selects which content schema applies. Pick the reference for the channel you are authoring.
+
+| Channel | Variant `channel` | Reference |
+|---|---|---|
+| Email | `email` | {{ref-link "channel-email.md" "Email content schema"}} |
+| SMS | `sms` | {{ref-link "channel-sms.md" "SMS content schema"}} |
+| WhatsApp | `whatsapp` | {{ref-link "channel-whatsapp.md" "WhatsApp content schema"}} |
+| In-app Inbox | `inbox` | {{ref-link "channel-inbox.md" "Inbox content schema"}} |
+| Slack | `slack` | {{ref-link "channel-slack.md" "Slack content schema"}} |
+| Microsoft Teams | `ms_teams` | {{ref-link "channel-ms-teams.md" "MS Teams content schema"}} |
+| Android Push | `androidpush` | {{ref-link "channel-androidpush.md" "Android push content schema"}} |
+| iOS Push | `iospush` | {{ref-link "channel-iospush.md" "iOS push content schema"}} |
+| Web Push | `webpush` | {{ref-link "channel-webpush.md" "Web push content schema"}} |
+
+## Authoring Variants
+
+Every variant must specify `channel`, `id`, `tenant_id`, `locale`, and `conditions` — even when not using multi-tenant or conditional features (use `null` where applicable). The `content` object is validated against the channel-specific schema.
+
+Minimum shape:
+
+```json
+{
+  "$schema": "https://schema.suprsend.com/template/v2/variant_schema.json",
+  "channel": "email",
+  "id": "default-en",
+  "tenant_id": null,
+  "locale": "en",
+  "conditions": null,
+  "content": { /* channel-specific — see channel reference */ }
+}
+```
+
+See the {{ref-link "template-schema-guide.md" "Template Schema Guide"}} for the variant envelope, selection rules, and complete examples.
+
+For multi-variant patterns, see:
+
+- {{ref-link "multi-tenant-variants.md" "Multi-tenant Variants"}} — different content per tenant/brand
+- {{ref-link "multi-lingual-variants.md" "Multi-lingual Variants"}} — translation keys vs. per-locale variants
+
+For the template syntax used inside content fields, see:
+
+- {{ref-link "handlebars-helpers.md" "Handlebars Helpers"}} — variables, conditionals, comparisons, date/array helpers. Default for every channel.
+- {{ref-link "jsonnet-syntax.md" "JSONNET Syntax"}} — alternative for Slack `body_block` and MS Teams `body_card` when `templating_language: "jsonnet"`.
+
+## Related skills
+
+- **`suprsend-workflow-schema`** — workflow delivery nodes (`send_email`, `send_multi_channel`, etc.) reference variants by `template` slug. Use it for the workflow shape that wraps these variants.
+- **`suprsend-cli`** — `suprsend template push` / `pull` / `commit` / `get` / `list` are the commands that move variant JSON between your editor and a SuprSend workspace.

@@ -1,6 +1,6 @@
 ---
 name: suprsend-docs-support
-description: "How to access SuprSend documentation and get support. Includes docs site, LLM-friendly doc endpoints, in-app chat, AI copilot, Slack community, and email support."
+description: "How to access SuprSend documentation and get support. Includes docs-over-SSH access (ssh suprsend.sh), the .md-suffix URL convention for raw markdown, LLM-friendly bulk endpoints, in-app chat, AI copilot, Slack community, and email support. Use when the user asks where to find SuprSend docs, how to get support, or when the agent needs to look up SuprSend concepts programmatically."
 metadata:
   author: "suprsend"
   category: "support"
@@ -10,13 +10,45 @@ metadata:
 
 ## Documentation
 
-SuprSend docs are available at [docs.suprsend.com](https://docs.suprsend.com).
+SuprSend docs are available at [docs.suprsend.com](https://docs.suprsend.com). For agent access, pick the method that matches the tools available in the environment:
 
-For LLM-optimized access:
+### Preferred: docs over SSH (when `ssh` is available)
+
+If the agent can run shell commands, use the docs-over-SSH service. It exposes the full docs tree as a virtual filesystem under `/suprsend/`, browsable with standard Unix tools:
+
+```bash
+# Search for a topic across all docs
+ssh suprsend.sh grep -rl 'inbox' /suprsend/
+
+# Read a specific guide
+ssh suprsend.sh cat /suprsend/docs/quick-start-guide.md
+
+# Find SDK reference pages
+ssh suprsend.sh find /suprsend/reference -name '*sdk*.md'
+
+# Search the API reference with context
+ssh suprsend.sh grep -r 'workflow' /suprsend/reference/ --include='*.md' -l
+```
+
+The VFS mirrors the live URL structure: `/suprsend/reference/agent-sdk.md` ↔ `https://docs.suprsend.com/reference/agent-sdk`. Any standard Unix tool (`grep`, `find`, `cat`, `head`, `tail`) works.
+
+Run `ssh suprsend.sh agents` to print these instructions in a form you can append to an `AGENTS.md` or similar agent-instruction file.
+
+### Fallback: append `.md` to any docs URL (when `ssh` is not available)
+
+Every page at `https://docs.suprsend.com/<path>` is also served as raw markdown at `https://docs.suprsend.com/<path>.md`. Use this when the agent can fetch URLs but cannot run shell commands:
+
+- HTML page → `https://docs.suprsend.com/docs/quick-start-guide`
+- Markdown for the same page → `https://docs.suprsend.com/docs/quick-start-guide.md`
+
+This works for both `/docs/` (guides) and `/reference/` (API reference) paths.
+
+### Bulk LLM endpoints
+
+For wholesale ingestion rather than targeted lookups:
+
 - **Index**: `https://docs.suprsend.com/llms.txt` — lightweight page listing with descriptions
 - **Full content**: `https://docs.suprsend.com/llms-full.txt` — complete documentation in a single file
-
-Use these endpoints when you need to look up SuprSend concepts, API details, or configuration options programmatically.
 
 ## Getting Help
 

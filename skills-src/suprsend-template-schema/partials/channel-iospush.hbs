@@ -1,0 +1,48 @@
+# iOS Push Content Schema
+
+For variants with `channel: "iospush"`.
+
+**Schema URL:** `https://schema.suprsend.com/template/v2/channel/iospush_schema.json`
+
+## Fields
+
+{{schema-table iospush_schema}}
+
+`header` and `body` are required. All other fields are optional.
+
+- `content_available: 1` enables background app refresh (silent push).
+- `mutable_content: 1` allows a Notification Service Extension to modify the payload before display (used for media attachments).
+- `via_suprsend: true` routes delivery telemetry back through SuprSend.
+
+## Examples
+
+### Simple notification
+
+```json
+{
+  "header": "New message",
+  "body": "\{{ sender.name }}: \{{ message.preview }}",
+  "badge": 1,
+  "sound": "default"
+}
+```
+
+### Rich notification with image attachment
+
+```json
+{
+  "header": "Order shipped",
+  "body": "Your order #\{{ order.id }} is on its way",
+  "image_url": "\{{ order.cover_image }}",
+  "action_url": "acme://orders/\{{ order.id }}",
+  "badge": 1,
+  "mutable_content": 1,
+  "thread_identifier": "orders"
+}
+```
+
+## Documentation
+
+```
+{{{docs_iospush}}}
+```

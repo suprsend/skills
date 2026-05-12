@@ -1,0 +1,61 @@
+# Slack Content Schema
+
+For variants with `channel: "slack"`.
+
+**Schema URL:** `https://schema.suprsend.com/template/v2/channel/slack_schema.json`
+
+## Fields
+
+{{schema-table slack_schema}}
+
+`body_type` is required. When `body_type` is `text`, `body_text` is required. When `body_type` is `block`, `body_block` is required.
+
+### `templating_language` values
+
+{{schema-enum (get slack_schema "properties.templating_language.enum")}}
+
+- `handlebars` — string interpolation in `body_text` / `body_block` content.
+- `jsonnet` — evaluate `body_block` as a Jsonnet expression that produces the Slack `blocks` JSON.
+
+### `body_type` values
+
+{{schema-enum (get slack_schema "properties.body_type.enum")}}
+
+- `text` — `body_text` is a plain message string.
+- `block` — `body_block` is a JSON string conforming to Slack's [Block Kit](https://api.slack.com/block-kit) spec.
+
+## Examples
+
+### Plain text message
+
+```json
+{
+  "body_type": "text",
+  "body_text": "Build failed for \{{ repo }} on branch \{{ branch }} — \{{ commit.author }} broke main"
+}
+```
+
+### Block Kit message
+
+```json
+{
+  "body_type": "block",
+  "body_block": "{\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Build failed* in \{{ repo }}\"}},{\"type\":\"actions\",\"elements\":[{\"type\":\"button\",\"text\":{\"type\":\"plain_text\",\"text\":\"View logs\"},\"url\":\"\{{ build.log_url }}\"}]}]}"
+}
+```
+
+### Jsonnet-templated blocks
+
+```json
+{
+  "templating_language": "jsonnet",
+  "body_type": "block",
+  "body_block": "{ blocks: [{ type: 'section', text: { type: 'mrkdwn', text: '*Build failed* in ' + data.repo } }] }"
+}
+```
+
+## Documentation
+
+```
+{{{docs_slack}}}
+```

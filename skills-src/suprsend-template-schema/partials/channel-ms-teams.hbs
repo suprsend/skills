@@ -1,0 +1,48 @@
+# Microsoft Teams Content Schema
+
+For variants with `channel: "ms_teams"`.
+
+**Schema URL:** `https://schema.suprsend.com/template/v2/channel/ms_teams_schema.json`
+
+## Fields
+
+{{schema-table ms_teams_schema}}
+
+`body_type` is required. When `body_type` is `text`, `body_text` is required. When `body_type` is `card`, `body_card` is required.
+
+### `templating_language` values
+
+{{schema-enum (get ms_teams_schema "properties.templating_language.enum")}}
+
+### `body_type` values
+
+{{schema-enum (get ms_teams_schema "properties.body_type.enum")}}
+
+- `text` — `body_text` is a plain message string.
+- `card` — `body_card` is a JSON string conforming to the [Adaptive Cards](https://learn.microsoft.com/en-us/adaptive-cards/) spec.
+
+## Examples
+
+### Plain text message
+
+```json
+{
+  "body_type": "text",
+  "body_text": "Deployment \{{ deploy.id }} succeeded in \{{ environment }}"
+}
+```
+
+### Adaptive Card
+
+```json
+{
+  "body_type": "card",
+  "body_card": "{\"type\":\"AdaptiveCard\",\"version\":\"1.4\",\"body\":[{\"type\":\"TextBlock\",\"size\":\"Medium\",\"weight\":\"Bolder\",\"text\":\"Deployment succeeded\"},{\"type\":\"TextBlock\",\"text\":\"\{{ deploy.id }} → \{{ environment }}\"}],\"actions\":[{\"type\":\"Action.OpenUrl\",\"title\":\"View deploy\",\"url\":\"\{{ deploy.url }}\"}]}"
+}
+```
+
+## Documentation
+
+```
+{{{docs_ms_teams}}}
+```

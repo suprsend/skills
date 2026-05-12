@@ -1,0 +1,89 @@
+# In-app Inbox Content Schema
+
+For variants with `channel: "inbox"`.
+
+**Schema URL:** `https://schema.suprsend.com/template/v2/channel/inbox_schema.json`
+
+## Fields
+
+{{schema-table inbox_schema}}
+
+Only `body` is required. All other fields are optional and have sensible defaults.
+
+### `importance` values
+
+{{schema-enum (get inbox_schema "properties.importance.enum")}}
+
+## Subtext
+
+Optional secondary line (e.g., username + profile link).
+
+{{schema-table (get inbox_schema "$defs.inbox_subtext_def")}}
+
+## Avatar
+
+Optional avatar image with click-through URL.
+
+{{schema-table (get inbox_schema "$defs.inbox_avatar_def")}}
+
+## Buttons
+
+`buttons[]`:
+
+{{schema-table (get inbox_schema "$defs.inbox_button_def")}}
+
+## Expiry
+
+Auto-expire/dismiss the inbox message after a duration or at an absolute time.
+
+{{schema-table (get inbox_schema "$defs.inbox_expiry_def")}}
+
+### Expiry `format` values
+
+{{schema-enum (get inbox_schema "$defs.inbox_expiry_def.properties.format.enum")}}
+
+### Expiry `expiry_type` values
+
+{{schema-enum (get inbox_schema "$defs.inbox_expiry_def.properties.expiry_type.enum")}}
+
+`value` examples — relative: `7d`, `24h30m`. Absolute: ISO datetime, e.g. `2026-12-31T23:59:59Z`.
+
+## Examples
+
+### Simple text message
+
+```json
+{
+  "header": "New comment on your post",
+  "body": "\{{ actor.name }} replied: \"\{{ comment.text }}\"",
+  "action_url": "https://acme.com/posts/\{{ post.id }}"
+}
+```
+
+### Rich inbox with avatar, button, and expiry
+
+```json
+{
+  "header": "Friend request",
+  "body": "\{{ actor.name }} wants to connect",
+  "avatar": {
+    "image_url": "\{{ actor.avatar_url }}",
+    "url": "https://acme.com/users/\{{ actor.id }}"
+  },
+  "subtext": { "text": "@\{{ actor.handle }}", "url": "https://acme.com/users/\{{ actor.id }}" },
+  "buttons": [
+    { "text": "Accept", "url": "https://acme.com/friends/accept?id=\{{ request.id }}" },
+    { "text": "Decline", "url": "https://acme.com/friends/decline?id=\{{ request.id }}" }
+  ],
+  "importance": "high",
+  "is_pinned": true,
+  "is_expiry_enabled": true,
+  "expiry": { "format": "relative", "expiry_type": "fixed", "value": "7d", "is_expiry_visible": true }
+}
+```
+
+## Documentation
+
+```
+{{{docs_inbox}}}
+```
