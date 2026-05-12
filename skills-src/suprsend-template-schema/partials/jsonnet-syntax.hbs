@@ -1,0 +1,16 @@
+# JSONNET Syntax
+
+JSONNET is an alternative templating language for variants whose `content` schema permits it. In the template-content schemas, this applies to:
+
+- **Slack** — when `templating_language: "jsonnet"`, `body_block` is evaluated as a Jsonnet expression that produces the Slack `blocks` JSON.
+- **MS Teams** — when `templating_language: "jsonnet"`, `body_card` is evaluated as a Jsonnet expression that produces the Adaptive Card JSON.
+
+Other channels (email, sms, whatsapp, inbox, push) use Handlebars only — see {{ref-link "handlebars-helpers.md" "Handlebars Helpers"}}.
+
+Inside Jsonnet, the trigger payload is available as `data`. Access tenant properties via `data["$brand"].<key>`, recipient via `data["$recipient"]`, and so on — using the same namespaces documented for conditions and Handlebars variables.
+
+## Documentation
+
+```
+{{{docs_jsonnet}}}
+```

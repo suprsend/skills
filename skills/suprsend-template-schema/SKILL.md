@@ -56,4 +56,7 @@ For multi-variant patterns, see:
 - [Multi-tenant Variants](references/multi-tenant-variants.md) — different content per tenant/brand
 - [Multi-lingual Variants](references/multi-lingual-variants.md) — translation keys vs. per-locale variants
 
-For the template syntax used inside content fields (variables, conditionals, comparisons, date/array helpers), see [Handlebars Helpers](references/handlebars-helpers.md).
+For the template syntax used inside content fields, see:
+
+- [Handlebars Helpers](references/handlebars-helpers.md) — variables, conditionals, comparisons, date/array helpers. Default for every channel.
+- [JSONNET Syntax](references/jsonnet-syntax.md) — alternative for Slack `body_block` and MS Teams `body_card` when `templating_language: "jsonnet"`.

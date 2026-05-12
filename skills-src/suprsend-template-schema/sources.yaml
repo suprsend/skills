@@ -76,6 +76,11 @@ sources:
       - "https://docs.suprsend.com/docs/handlebars-helpers"
 
   - type: docs
+    key: docs_jsonnet
+    urls:
+      - "https://docs.suprsend.com/docs/jsonnet-templates"
+
+  - type: docs
     key: docs_multi_lingual
     urls:
       - "https://docs.suprsend.com/docs/multi-lingual-template"
@@ -141,6 +146,8 @@ references:
     template: partials/multi-lingual-variants.hbs
   - filename: handlebars-helpers.md
     template: partials/handlebars-helpers.hbs
+  - filename: jsonnet-syntax.md
+    template: partials/jsonnet-syntax.hbs
   - filename: channel-email.md
     template: partials/channel-email.hbs
   - filename: channel-sms.md
