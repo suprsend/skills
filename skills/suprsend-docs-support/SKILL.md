@@ -1,6 +1,6 @@
 ---
 name: suprsend-docs-support
-description: "How to access SuprSend documentation and get support. Includes docs site, LLM-friendly doc endpoints, in-app chat, AI copilot, Slack community, and email support."
+description: "How to access SuprSend documentation and get support. Includes docs-over-SSH access (ssh suprsend.sh), the .md-suffix URL convention for raw markdown, LLM-friendly bulk endpoints, in-app chat, AI copilot, Slack community, and email support. Use when the user asks where to find SuprSend docs, how to get support, or when the agent needs to look up SuprSend concepts programmatically."
 metadata:
   author: "suprsend"
   category: "support"
@@ -52,14 +52,14 @@ For wholesale ingestion rather than targeted lookups:
 
 ## Getting Help
 
-### 1. Kai — AI Agent (instant, in-dashboard)
+### 1. Kai — AI Copilot (instant, in-dashboard)
 
-Kai is SuprSend's built-in AI agent, available inside the dashboard at [app.suprsend.com](https://app.suprsend.com). Access it via the orb in the bottom-right corner, or use the keyboard shortcut:
+Kai is SuprSend's built-in AI copilot, available inside the dashboard at [app.suprsend.com](https://app.suprsend.com). Access it via the orb in the bottom-right corner, or use the keyboard shortcut:
 
 - **macOS**: `Cmd + /`
 - **Windows / Linux**: `Ctrl + /`
 
-Kai Agent can answer questions about SuprSend features, help debug workflow configurations, and guide you through setup steps.
+Kai can answer questions about SuprSend features, help debug workflow configurations, and guide you through setup steps.
 
 ### 2. In-App Chat (fast, human support)
 
@@ -76,3 +76,4 @@ https://join.slack.com/t/suprsendcommunity/shared_invite/zt-3932rw936-XNWY1RC8bs
 For detailed issues, bug reports, or account-specific questions:
 
 **support@suprsend.com**
+

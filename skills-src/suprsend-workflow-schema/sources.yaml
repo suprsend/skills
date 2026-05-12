@@ -2,7 +2,9 @@ name: suprsend-workflow-schema
 description: >
   SuprSend workflow schema reference for creating, modifying, or understanding
   notification workflows. Lists all available workflow nodes with documentation
-  and JSON schema details.
+  and JSON schema details. Use when authoring or editing workflow JSON,
+  choosing node types (delay, batch, digest, branch, delivery, fetch, webhook,
+  transform, etc.), or wiring up batch/digest/branch/delivery logic.
 metadata:
   author: suprsend
   category: workflows

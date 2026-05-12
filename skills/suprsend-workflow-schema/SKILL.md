@@ -1,6 +1,6 @@
 ---
 name: suprsend-workflow-schema
-description: "SuprSend workflow schema reference for creating, modifying, or understanding notification workflows. Lists all available workflow nodes with documentation and JSON schema details."
+description: "SuprSend workflow schema reference for creating, modifying, or understanding notification workflows. Lists all available workflow nodes with documentation and JSON schema details. Use when authoring or editing workflow JSON, choosing node types (delay, batch, digest, branch, delivery, fetch, webhook, transform, etc.), or wiring up batch/digest/branch/delivery logic."
 metadata:
   author: "suprsend"
   category: "workflows"
@@ -12,6 +12,25 @@ Workflows are defined as JSON conforming to the schema at `https://schema.suprse
 
 
 For a complete guide on creating workflows using the JSON schema, see [Workflow Schema Guide](references/workflow-schema-guide.md).
+
+## Minimum workflow
+
+```json
+{
+  "$schema": "https://schema.suprsend.com/workflow/v1/schema.json",
+  "name": "welcome-email",
+  "category": "onboarding",
+  "trigger_type": "event",
+  "trigger_events": ["user_signed_up"],
+  "tree": {
+    "nodes": [
+      { "node_type": "send_email", "properties": { "template": "welcome-email" } }
+    ]
+  }
+}
+```
+
+A workflow needs `name`, `category`, `trigger_type`, and `tree` with at least one delivery node. The `properties.template` field on a delivery node refers to the template slug authored separately.
 
 ## Workflow Nodes
 
@@ -77,3 +96,8 @@ Manage user list memberships and object subscriptions.
 | Unsubscribe from Object | `objectoperation_removesubscription` | Remove user from an object subscription |
 
 See: [List Operations](references/node-list-operations.md), [Object Operations](references/node-object-operations.md)
+
+## Related skills
+
+- **`suprsend-template-schema`** — delivery nodes reference templates by `template` slug. Use it to author the template content (variants per channel/locale/tenant) that the workflow sends.
+- **`suprsend-cli`** — `suprsend workflow push` / `pull` / `commit` / `enable` / `disable` are the commands that move workflow JSON between your editor and a SuprSend workspace.

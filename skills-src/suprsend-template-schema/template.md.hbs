@@ -47,3 +47,8 @@ For the template syntax used inside content fields, see:
 
 - {{ref-link "handlebars-helpers.md" "Handlebars Helpers"}} — variables, conditionals, comparisons, date/array helpers. Default for every channel.
 - {{ref-link "jsonnet-syntax.md" "JSONNET Syntax"}} — alternative for Slack `body_block` and MS Teams `body_card` when `templating_language: "jsonnet"`.
+
+## Related skills
+
+- **`suprsend-workflow-schema`** — workflow delivery nodes (`send_email`, `send_multi_channel`, etc.) reference variants by `template` slug. Use it for the workflow shape that wraps these variants.
+- **`suprsend-cli`** — `suprsend template push` / `pull` / `commit` / `get` / `list` are the commands that move variant JSON between your editor and a SuprSend workspace.

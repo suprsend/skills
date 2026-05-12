@@ -1,6 +1,6 @@
 ---
 name: suprsend-template-schema
-description: "SuprSend template schema reference for creating, modifying, or understanding notification template content. A template is composed of one or more variants — each variant has a channel, locale, optional tenant, optional conditions, and channel-specific content. Lists the variant envelope and per-channel content schemas (email, sms, whatsapp, inbox, slack, ms_teams, androidpush, iospush, webpush)."
+description: "SuprSend template schema reference for creating, modifying, or validating notification template content. A template is a collection of variants (channel + locale + optional tenant + optional conditions + channel-specific content). Covers all 9 channels: email, sms, whatsapp, inbox, slack, ms_teams, androidpush, iospush, webpush. Use when authoring template variants, configuring multi-tenant or multi-lingual content, or working with the variant JSON schema."
 metadata:
   author: "suprsend"
   category: "templates"
@@ -60,3 +60,8 @@ For the template syntax used inside content fields, see:
 
 - [Handlebars Helpers](references/handlebars-helpers.md) — variables, conditionals, comparisons, date/array helpers. Default for every channel.
 - [JSONNET Syntax](references/jsonnet-syntax.md) — alternative for Slack `body_block` and MS Teams `body_card` when `templating_language: "jsonnet"`.
+
+## Related skills
+
+- **`suprsend-workflow-schema`** — workflow delivery nodes (`send_email`, `send_multi_channel`, etc.) reference variants by `template` slug. Use it for the workflow shape that wraps these variants.
+- **`suprsend-cli`** — `suprsend template push` / `pull` / `commit` / `get` / `list` are the commands that move variant JSON between your editor and a SuprSend workspace.
