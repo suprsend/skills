@@ -1,6 +1,6 @@
 ---
 name: suprsend-template-schema
-description: "SuprSend template schema reference for creating, modifying, or validating notification template content. A template is a collection of variants (channel + locale + optional tenant + optional conditions + channel-specific content). Covers all 9 channels: email, sms, whatsapp, inbox, slack, ms_teams, androidpush, iospush, webpush. Use when authoring template variants, configuring multi-tenant or multi-lingual content, or working with the variant JSON schema."
+description: "JSON schema for authoring or editing SuprSend template variants (channel + locale + tenant + content). Loads the variant envelope, per-channel content schemas, and Handlebars/JSONNET syntax references needed to write valid template JSON. Covers all 9 channels: email, sms, whatsapp, inbox, slack, ms_teams, androidpush, iospush, webpush. Use ONLY when the user wants the agent to create, modify, or edit a template variant (e.g. \"build an SMS variant\", \"add a French locale\", \"create a tenant-specific welcome email\"). Do NOT load for documentation, lookup, or conceptual questions (\"what is a variant\", \"how does templating work\", \"explain WhatsApp templates\") — load suprsend-docs-support for those."
 metadata:
   author: "suprsend"
   category: "templates"
