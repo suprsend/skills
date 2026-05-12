@@ -84,6 +84,22 @@ In Handlebars templates, each source's `key` becomes a template variable:
 - `{{concat "a" "b"}}` — Concatenate strings
 - `{{default value "fallback"}}` — Return value, or fallback if null/undefined
 
+## Gotchas
+
+### Escape literal `{{ var }}` in templates
+
+When a `.hbs` template includes example output that uses Handlebars syntax (e.g. JSON examples for the template-schema skill, where SuprSend itself renders `{{ first_name }}` at send time), Handlebars will silently evaluate them during generation and substitute empty strings. Escape with a backslash:
+
+```hbs
+"body": "Hello \{{ first_name }}"   <!-- renders as: "body": "Hello {{ first_name }}" -->
+```
+
+This applies to every `{{ ` (with a space) inside `.hbs` files that you want to appear verbatim in the generated markdown. Helpers like `{{schema-table foo}}`, `{{get obj "..."}}`, `{{ref-link ...}}`, and `{{{docs_*}}}` are not affected because they don't start with `{{ ` (space).
+
+### Fetched docs are dumped raw, not re-evaluated
+
+Strings returned by `docs` sources are inserted via `{{{key}}}` (triple-mustache, no escaping or re-rendering), so `{{ ... }}` already present in the upstream markdown passes through correctly. Only your own `.hbs` content needs the backslash escape.
+
 ## Output File Declarations
 
 In `sources.yaml`, the `references`, `scripts`, and `assets` arrays declare files to include in the generated skill. Each entry supports two modes:
