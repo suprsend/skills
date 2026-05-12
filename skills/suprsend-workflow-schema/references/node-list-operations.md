@@ -12,6 +12,7 @@
 
 You can use this node to dynamically add recipient or actor in the list. This is one of the ways to create user segment based on an event or action. For example, when someone registers for an event, you can send them a confirmation email and at the same time, add them to a list to send them reminder messages or announcements related to the event.
 
+
 ### Creating list dynamically within workflow
 
 You can either add users to an existing list or create the list on the fly using workflow input data. Dynamic list are defined in handlebars format as `{{...}}`.
@@ -43,6 +44,7 @@ One common use case of creating list dynamically is when you need to create diff
 > Dynamically remove users from list within a workflow.
 
 You can use this node to dynamically remove recipient or actor from the list. You can use it for use cases like when someone unsubscribes from an event or completes an action, you can remove them from the notification list to stop sending them further alerts.
+
 
 ### Compute List ID at runtime
 

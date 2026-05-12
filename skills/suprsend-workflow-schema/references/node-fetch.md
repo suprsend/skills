@@ -24,6 +24,7 @@ In a Fetch node, you have to define the endpoint, query params and headers. You 
 | Header       | Any header to be passed in the request can be added as key-value pair with key being the header type and value as header value.                                                                                                                                               |
 | Response key | Response of your `GET` request is appended against response key and merged in the workflow payload. Data is merged at parent level if response key is not set.                                                                                                                |
 
+
 ### Adding variables in Fetch node
 
 Fetch node supports JSONNET rendering language. You can add workflow trigger payload variables as `data.<key>` and internal suprsend data as `data["$brand"].<key>`. Here's a list of variables supported in workflow engine:
@@ -107,7 +108,7 @@ Here's how Fetch function data output would look like with response key and with
 | url | string | Yes | JSONNET script to evaluate url |
 | headers | array | No |  |
 | body_content_type | string | No |  |
-| body | string | No | JSONNET script to evaluate request body |
+| body | string | null | No | JSONNET script to evaluate request body |
 | query_params | array | No |  |
 | output_key | string | null | No | optional key to store the response body of api call |
 

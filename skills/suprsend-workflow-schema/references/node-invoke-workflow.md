@@ -12,6 +12,7 @@ Use this node to trigger a workflow from within another workflow. It is typicall
 
 The payload for the triggered workflow is dynamically computed using data from the current workflow run. All fields support variables in [JSONNET](https://jsonnet.org/ref/language.html) format.
 
+
 ## Constructing Workflow Payload
 
 ### Recipient

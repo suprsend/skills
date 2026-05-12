@@ -1,24 +1,24 @@
-# suprsend translation commit
+# suprsend workflow commit
 
-Commit translation
+Commit workflow from draft to live
 
-Promote template translation changes from draft to live mode. Finalizes all pending translation changes in the workspace.
+Promote a workflow from draft to live mode. Pass the workflow slug as a positional argument or via --slug. Once committed, the workflow changes become active immediately.
 
 ```
-suprsend translation commit [flags]
+suprsend workflow commit [<slug>] [flags]
 ```
 
 ## Examples
 
 ```
-  # Commit all pending translation changes to live
-  suprsend translation commit
+  # Commit a workflow to live (positional slug)
+  suprsend workflow commit welcome
 
-  # Commit in the production workspace
-  suprsend translation commit --workspace production
+  # Commit using the flag form
+  suprsend workflow commit --slug welcome
 
   # Dry run: see what would be committed without making changes
-  suprsend translation commit --dry-run
+  suprsend workflow commit welcome --dry-run
 ```
 
 ### Options
@@ -28,6 +28,7 @@ suprsend translation commit [flags]
   -n, --dry-run                 Print what would be committed without making any changes
   -F, --force                   Skip confirmation prompt
   -h, --help                    help for commit
+  -g, --slug string             Workflow slug
 ```
 
 ### Options inherited from parent commands

@@ -1,33 +1,34 @@
-# suprsend translation commit
+# suprsend template commit
 
-Commit translation
+Commit a template from draft to live
 
-Promote template translation changes from draft to live mode. Finalizes all pending translation changes in the workspace.
+Commit a template from draft to live in a workspace. Pass the template slug as a positional argument or via --slug. Once committed, the template changes become visible to users.
 
 ```
-suprsend translation commit [flags]
+suprsend template commit [<slug>] [flags]
 ```
 
 ## Examples
 
 ```
-  # Commit all pending translation changes to live
-  suprsend translation commit
+  # Commit a template to live (positional slug)
+  suprsend template commit welcome-email
 
-  # Commit in the production workspace
-  suprsend translation commit --workspace production
+  # Commit using the flag form
+  suprsend template commit --slug welcome-email
 
   # Dry run: see what would be committed without making changes
-  suprsend translation commit --dry-run
+  suprsend template commit welcome-email --dry-run
 ```
 
 ### Options
 
 ```
-      --commit-message string   Message describing the changes being committed
+      --commit-message string   Commit message describing the changes
   -n, --dry-run                 Print what would be committed without making any changes
-  -F, --force                   Skip confirmation prompt
+  -F, --force                   Force commit by skipping variants with errors
   -h, --help                    help for commit
+  -g, --slug string             Template slug
 ```
 
 ### Options inherited from parent commands
@@ -39,6 +40,6 @@ suprsend translation commit [flags]
   -q, --quiet                  Suppress info/warn output (errors are still shown)
   -s, --service-token string   Service token (default: $SUPRSEND_SERVICE_TOKEN)
   -v, --verbosity string       Log level (debug, info, warn, error, fatal, panic) (default "info")
-  -w, --workspace string       Workspace name (e.g., staging, production) (default "staging")
+  -w, --workspace string       Workspace to list templates from (default "staging")
 ```
 

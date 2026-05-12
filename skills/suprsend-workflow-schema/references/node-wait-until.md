@@ -34,6 +34,7 @@ Here, the branch condition satisfies when a given event is received during the w
 
 You can define the event name and apply conditions on event properties to filter and identify the exact event associated with the workflow. For instance, in a booking reminder scenario, If a user has multiple bookings, you can match the booking ID of the cancellation event with the booking ID of the original event to ensure the correct reminder is cancelled.
 
+
 ### Adding filter on event properties
 
 Property condition is constructed as key, operator and value. You can add multiple conditions separated by `AND`, `OR`.
@@ -91,6 +92,7 @@ This branch will be executed if none of the condition branches are satisfied. Th
 
 Fixed delay is defined in your workflow form as `**d **h **m **s` and it adds a fixed delay for all users.
 
+
 Some examples of fixed delay are:
 
 * Sending multiple payment or activity reminders at predetermined intervals. For instance, sending three payment reminders spaced 2 days apart from the last due date.
@@ -102,6 +104,7 @@ Some examples of fixed delay are:
 
 In case of dynamic delay, delay duration is computed using the data from your event properties. Dynamic delays are helpful for reminders where the schedule is dictated by the user or when notification needs to be sent before the event or task due date.
 
+
 Imagine you need to send task completion reminders, where users can specify a reminder frequency, such as every 6 hours until the task is finished. This frequency can differ for each task and user. Dynamic wait times effortlessly adapt to these unique preferences.
 
 You can add duration key as a [JQ-expression](https://jqlang.github.io/jq/manual/). Below are some examples of how to add duration key in JQ format:
@@ -110,7 +113,7 @@ You can add duration key as a [JQ-expression](https://jqlang.github.io/jq/manual
 2. If the duration key is a nested event property key like shown below, enter it in the format `.reminder.frequency`
 
 
-  ```json  theme={"system"}
+  ```json theme={"system"}
   {
     "reminder": {
       "frequency": "6h"
