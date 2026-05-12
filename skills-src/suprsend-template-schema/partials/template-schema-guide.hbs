@@ -1,0 +1,228 @@
+# Template Schema Guide
+
+A SuprSend template is a collection of **variants**. Each variant is a self-contained JSON document conforming to the variant schema, with its `content` validated against a per-channel schema chosen by the variant's `channel` field.
+
+**Variant schema URL:** `https://schema.suprsend.com/template/v2/variant_schema.json`
+
+## When is one variant enough?
+
+If the template only needs to send to one channel, in one language, with no per-tenant or per-segment customization, you have **one variant**. Set `tenant_id: null`, pick a `locale` (typically `"en"`), and set `conditions: null`. The variant is still required — there is no schema for a "single content blob" outside the variant envelope.
+
+You add more variants when:
+
+- **Multiple channels** — one variant per channel (email + sms + inbox for the same template each gets its own variant).
+- **Multiple locales** — one variant per `locale` per channel for translations.
+- **Multi-tenant** — set `tenant_id` to a tenant slug to customize content per tenant/brand.
+- **Conditional content** — use `conditions` to choose a variant based on recipient or payload attributes.
+
+## Variant Envelope
+
+{{schema-table variant_schema}}
+
+### `channel` values
+
+{{schema-enum (get variant_schema "properties.channel.enum")}}
+
+The `channel` selects which schema validates the `content` object. See the per-channel references for `content` structure.
+
+### `id`
+
+A unique identifier for the variant within the template — `^[a-zA-Z0-9_\-.]+$`, max 128 chars. Each variant must have a distinct `id`.
+
+### `tenant_id`
+
+`null` for non-tenant variants, or a tenant slug (`^[a-zA-Z0-9_\-]+$`, max 64 chars). When the template is rendered for a specific tenant, SuprSend prefers a matching `tenant_id` variant over the `null` (default) variant for the same channel/locale.
+
+### `locale`
+
+A 2–6 character locale code (e.g., `en`, `en-us`, `fr`, `hi-in`). At least one variant per channel should target the default locale you ship.
+
+### `conditions`
+
+`null` or an array of `expression_v1` clauses. When non-null, the variant is only used if all conditions evaluate to true for the current send. Useful for segmentation (e.g., a different subject line for enterprise users).
+
+Each condition follows:
+
+```json
+{
+  "type": "expression_v1",
+  "expression_v1": {
+    "op": "AND",
+    "args": [
+      { "variable_ns": "$recipient", "variable": "plan", "op": "==", "value": "enterprise" }
+    ]
+  }
+}
+```
+
+#### Variable namespaces
+
+| Namespace | Source |
+|---|---|
+| *(empty / omitted)* | Trigger event payload |
+| `$actor` | Properties of the user who performed the action |
+| `$recipient` | Properties of the user receiving the notification |
+| `$brand` | Properties of the tenant/brand |
+| `$organization` | Organization-level properties |
+
+#### Comparison operators
+
+{{schema-enum (get variant_schema "$defs.variant_condition_expr_v1_def.properties.expression_v1.properties.args.items.properties.op.enum")}}
+
+### `needs_vendor_approval` / `vendor_approvals`
+
+Used for channels where the underlying vendor reviews content before send (notably SMS DLT and WhatsApp). When `needs_vendor_approval: true`, the template cannot be delivered until at least one `vendor_approvals` entry has `approval_status: "approved"`.
+
+The `vendor_approvals` array entries follow:
+
+{{schema-table (get variant_schema "$defs.variant_vendor_approval_def")}}
+
+For SMS variants, `needs_vendor_approval` is **required** (see the channel reference for details on DLT compliance).
+
+### `seq_no`
+
+Optional positive integer. When multiple variants match the same recipient (e.g., overlapping conditions), `seq_no` is used to order priority — lower numbers win.
+
+## Variant Selection
+
+When a workflow sends a template, SuprSend picks one variant per channel using:
+
+1. **Channel match** — must equal the channel being sent.
+2. **Tenant match** — prefer the variant whose `tenant_id` equals the send's tenant; otherwise fall back to `tenant_id: null`.
+3. **Locale match** — prefer the recipient's locale; otherwise fall back to the template's default locale.
+4. **Condition match** — only variants whose `conditions` evaluate to true are eligible.
+5. **`seq_no` tiebreaker** — among remaining eligible variants, the lowest `seq_no` wins.
+
+## Multi-tenant Variants
+
+```
+{{{docs_tenant_templates}}}
+```
+
+## Multi-lingual Variants
+
+```
+{{{docs_multi_lingual}}}
+```
+
+## Variants Reference
+
+```
+{{{docs_template_variants}}}
+```
+
+## Examples
+
+### Minimal email variant (no tenant, no conditions)
+
+```json
+{
+  "$schema": "https://schema.suprsend.com/template/v2/variant_schema.json",
+  "channel": "email",
+  "id": "welcome-default-en",
+  "tenant_id": null,
+  "locale": "en",
+  "conditions": null,
+  "content": {
+    "subject": "Welcome to Acme, \{{ first_name }}",
+    "body": {
+      "type": "plain_text",
+      "plain_text": { "text": "Thanks for signing up." }
+    }
+  }
+}
+```
+
+### Locale variant (French)
+
+```json
+{
+  "channel": "email",
+  "id": "welcome-default-fr",
+  "tenant_id": null,
+  "locale": "fr",
+  "conditions": null,
+  "content": {
+    "subject": "Bienvenue chez Acme, \{{ first_name }}",
+    "body": { "type": "plain_text", "plain_text": { "text": "Merci pour votre inscription." } }
+  }
+}
+```
+
+### Tenant-specific variant
+
+```json
+{
+  "channel": "email",
+  "id": "welcome-acme-eu-en",
+  "tenant_id": "acme-eu",
+  "locale": "en",
+  "conditions": null,
+  "content": {
+    "subject": "Welcome to Acme EU",
+    "body": { "type": "plain_text", "plain_text": { "text": "GDPR-compliant onboarding email." } }
+  }
+}
+```
+
+### Conditional variant (enterprise plan)
+
+```json
+{
+  "channel": "email",
+  "id": "welcome-enterprise-en",
+  "tenant_id": null,
+  "locale": "en",
+  "conditions": [
+    {
+      "type": "expression_v1",
+      "expression_v1": {
+        "op": "AND",
+        "args": [
+          { "variable_ns": "$recipient", "variable": "plan", "op": "==", "value": "enterprise" }
+        ]
+      }
+    }
+  ],
+  "seq_no": 1,
+  "content": {
+    "subject": "Welcome to Acme Enterprise",
+    "body": { "type": "plain_text", "plain_text": { "text": "Your dedicated CSM will reach out shortly." } }
+  }
+}
+```
+
+### SMS variant requiring DLT approval
+
+```json
+{
+  "channel": "sms",
+  "id": "otp-en",
+  "tenant_id": null,
+  "locale": "en",
+  "conditions": null,
+  "needs_vendor_approval": true,
+  "content": {
+    "type": "dlt",
+    "category": "transactional",
+    "header": "ACMECO",
+    "body": "Your verification code is \{{ otp }}. Valid for 5 minutes."
+  },
+  "vendor_approvals": [
+    {
+      "vendor_slug": "msg91-sms",
+      "vendor_uid": "msg91-prod",
+      "vendor_template_name": "otp_v1",
+      "approval_status": "approved",
+      "vendor_template_id": "1707169876543210",
+      "provider_template_id": "210987654321"
+    }
+  ]
+}
+```
+
+## Templates Overview
+
+```
+{{{docs_templates}}}
+```

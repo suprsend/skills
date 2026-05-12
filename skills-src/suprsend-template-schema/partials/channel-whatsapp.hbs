@@ -1,0 +1,98 @@
+# WhatsApp Content Schema
+
+For variants with `channel: "whatsapp"`.
+
+**Schema URL:** `https://schema.suprsend.com/template/v2/channel/whatsapp_basic_interactive_schema.json`
+
+> **Note.** WhatsApp templates require Meta approval before they can be sent. Like SMS DLT, configure the variant-level `vendor_approvals` array with the vendor and the approved `vendor_template_name` / `vendor_template_id`.
+
+## Fields
+
+{{schema-table whatsapp_schema}}
+
+`category`, `subcategory`, and `body` are required. `subcategory` is fixed to `basic_interactive`.
+
+### `category` values
+
+{{schema-enum (get whatsapp_schema "properties.category.enum")}}
+
+### `button_type` values
+
+{{schema-enum (get whatsapp_schema "properties.button_type.enum")}}
+
+When `button_type` is `CALL_TO_ACTION` or `QUICK_REPLY`, at least one entry in `buttons` is required.
+
+## Header
+
+Header is optional; when present:
+
+{{schema-table (get whatsapp_schema "$defs.whatsapp_basic_interactive_header_def")}}
+
+### Header `format` values
+
+{{schema-enum (get whatsapp_schema "$defs.whatsapp_basic_interactive_header_def.properties.format.enum")}}
+
+- `TEXT` — requires `text`.
+- `DOCUMENT` / `IMAGE` / `VIDEO` — require `media_url`.
+
+## Body
+
+{{schema-table (get whatsapp_schema "$defs.whatsapp_basic_interactive_body_def")}}
+
+## Footer
+
+Optional.
+
+{{schema-table (get whatsapp_schema "$defs.whatsapp_basic_interactive_footer_def")}}
+
+## Buttons
+
+`buttons[]` is a discriminated union on `type`:
+
+### `URL` button
+
+{{schema-table (get whatsapp_schema "$defs.UrlButton")}}
+
+`url_type: "dynamic"` requires `url_dynamic_part` (appended to `url_static_part` at send time).
+
+### `PHONE_NUMBER` button
+
+{{schema-table (get whatsapp_schema "$defs.PhoneNumberButton")}}
+
+### `QUICK_REPLY` button
+
+{{schema-table (get whatsapp_schema "$defs.QuickReplyButton")}}
+
+## Examples
+
+### Text-only utility message
+
+```json
+{
+  "category": "UTILITY",
+  "subcategory": "basic_interactive",
+  "body": { "text": "Your order \{{ order.id }} has shipped. Tracking: \{{ order.tracking_url }}" }
+}
+```
+
+### Header image + call-to-action button
+
+```json
+{
+  "category": "MARKETING",
+  "subcategory": "basic_interactive",
+  "header": { "format": "IMAGE", "media_url": "https://cdn.acme.com/promo.jpg" },
+  "body": { "text": "Flash sale ends tonight. Tap to shop." },
+  "footer": { "text": "Acme Co" },
+  "button_type": "CALL_TO_ACTION",
+  "buttons": [
+    { "type": "URL", "text": "Shop now", "url_type": "static", "url_static_part": "https://acme.com/sale" }
+  ]
+}
+```
+
+## Documentation
+
+```
+{{{docs_whatsapp}}}
+```

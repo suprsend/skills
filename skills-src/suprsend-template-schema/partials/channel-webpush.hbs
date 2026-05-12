@@ -1,0 +1,60 @@
+# Web Push Content Schema
+
+For variants with `channel: "webpush"`.
+
+**Schema URL:** `https://schema.suprsend.com/template/v2/channel/webpush_schema.json`
+
+## Fields
+
+{{schema-table webpush_schema}}
+
+`header` and `body` are required.
+
+### `dir` values
+
+{{schema-enum (get webpush_schema "properties.dir.enum")}}
+
+`vibrate` is an array of positive integers (alternating vibration / pause durations in ms — service worker reads it directly).
+
+## Buttons
+
+Up to 2 entries in `buttons[]`:
+
+{{schema-table (get webpush_schema "$defs.webpush_button_def")}}
+
+## Examples
+
+### Simple notification
+
+```json
+{
+  "header": "Build complete",
+  "body": "\{{ repo }} – \{{ branch }} built in \{{ duration }}",
+  "icon_url": "\{{ $brand.logo }}",
+  "action_url": "https://acme.com/builds/\{{ build.id }}"
+}
+```
+
+### Notification with actions and badge
+
+```json
+{
+  "header": "\{{ sender.name }} sent a message",
+  "body": "\{{ message.preview }}",
+  "icon_url": "\{{ sender.avatar_url }}",
+  "badge_url": "https://cdn.acme.com/badge.png",
+  "action_url": "https://acme.com/chat/\{{ thread.id }}",
+  "buttons": [
+    { "id": "reply",   "text": "Reply",   "url": "https://acme.com/chat/\{{ thread.id }}?reply=1" },
+    { "id": "dismiss", "text": "Dismiss", "url": "https://acme.com/chat/\{{ thread.id }}?dismiss=1" }
+  ],
+  "renotify": true,
+  "group": "chat-\{{ thread.id }}"
+}
+```
+
+## Documentation
+
+```
+{{{docs_webpush}}}
+```

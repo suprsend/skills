@@ -1,0 +1,155 @@
+name: suprsend-template-schema
+description: >
+  SuprSend template schema reference for creating, modifying, or understanding
+  notification template content. A template is composed of one or more
+  variants — each variant has a channel, locale, optional tenant, optional
+  conditions, and channel-specific content. Lists the variant envelope and
+  per-channel content schemas (email, sms, whatsapp, inbox, slack, ms_teams,
+  androidpush, iospush, webpush).
+metadata:
+  author: suprsend
+  category: templates
+
+sources:
+  - type: static
+    key: overview
+    path: overview.md
+
+  # ── Variant envelope ─────────────────────────────────────────────────────
+  # A SuprSend template is a collection of variants. Even single-channel,
+  # single-locale templates are modeled as one variant. The variant schema
+  # defines the envelope (channel, id, tenant_id, locale, conditions) plus
+  # a channel-specific `content` object.
+
+  - type: schema
+    key: variant_schema
+    url: "https://schema.suprsend.com/template/v2/variant_schema.json"
+
+  # ── Per-channel content schemas ──────────────────────────────────────────
+
+  - type: schema
+    key: email_schema
+    url: "https://schema.suprsend.com/template/v2/channel/email_schema.json"
+
+  - type: schema
+    key: sms_schema
+    url: "https://schema.suprsend.com/template/v2/channel/sms_schema.json"
+
+  - type: schema
+    key: whatsapp_schema
+    url: "https://schema.suprsend.com/template/v2/channel/whatsapp_basic_interactive_schema.json"
+
+  - type: schema
+    key: inbox_schema
+    url: "https://schema.suprsend.com/template/v2/channel/inbox_schema.json"
+
+  - type: schema
+    key: slack_schema
+    url: "https://schema.suprsend.com/template/v2/channel/slack_schema.json"
+
+  - type: schema
+    key: ms_teams_schema
+    url: "https://schema.suprsend.com/template/v2/channel/ms_teams_schema.json"
+
+  - type: schema
+    key: androidpush_schema
+    url: "https://schema.suprsend.com/template/v2/channel/androidpush_schema.json"
+
+  - type: schema
+    key: iospush_schema
+    url: "https://schema.suprsend.com/template/v2/channel/iospush_schema.json"
+
+  - type: schema
+    key: webpush_schema
+    url: "https://schema.suprsend.com/template/v2/channel/webpush_schema.json"
+
+  # ── Docs ─────────────────────────────────────────────────────────────────
+
+  - type: docs
+    key: docs_templates
+    urls:
+      - "https://docs.suprsend.com/docs/templates"
+
+  - type: docs
+    key: docs_template_variants
+    urls:
+      - "https://docs.suprsend.com/docs/template-variants"
+
+  - type: docs
+    key: docs_multi_lingual
+    urls:
+      - "https://docs.suprsend.com/docs/multi-lingual-template"
+
+  - type: docs
+    key: docs_tenant_templates
+    urls:
+      - "https://docs.suprsend.com/docs/tenant-templates"
+
+  - type: docs
+    key: docs_email
+    urls:
+      - "https://docs.suprsend.com/docs/email-template"
+
+  - type: docs
+    key: docs_sms
+    urls:
+      - "https://docs.suprsend.com/docs/sms-template"
+
+  - type: docs
+    key: docs_whatsapp
+    urls:
+      - "https://docs.suprsend.com/docs/whatsapp-template"
+
+  - type: docs
+    key: docs_inbox
+    urls:
+      - "https://docs.suprsend.com/docs/in-app-inbox-template"
+
+  - type: docs
+    key: docs_slack
+    urls:
+      - "https://docs.suprsend.com/docs/slack-template"
+
+  - type: docs
+    key: docs_ms_teams
+    urls:
+      - "https://docs.suprsend.com/docs/ms-teams-template"
+
+  - type: docs
+    key: docs_androidpush
+    urls:
+      - "https://docs.suprsend.com/docs/android-push-template"
+
+  - type: docs
+    key: docs_iospush
+    urls:
+      - "https://docs.suprsend.com/docs/ios-push-template"
+
+  - type: docs
+    key: docs_webpush
+    urls:
+      - "https://docs.suprsend.com/docs/web-push-template"
+
+# ── Output references ────────────────────────────────────────────────────
+
+references:
+  - filename: template-schema-guide.md
+    template: partials/template-schema-guide.hbs
+  - filename: channel-email.md
+    template: partials/channel-email.hbs
+  - filename: channel-sms.md
+    template: partials/channel-sms.hbs
+  - filename: channel-whatsapp.md
+    template: partials/channel-whatsapp.hbs
+  - filename: channel-inbox.md
+    template: partials/channel-inbox.hbs
+  - filename: channel-slack.md
+    template: partials/channel-slack.hbs
+  - filename: channel-ms-teams.md
+    template: partials/channel-ms-teams.hbs
+  - filename: channel-androidpush.md
+    template: partials/channel-androidpush.hbs
+  - filename: channel-iospush.md
+    template: partials/channel-iospush.hbs
+  - filename: channel-webpush.md
+    template: partials/channel-webpush.hbs

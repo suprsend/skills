@@ -1,0 +1,64 @@
+# Android Push Content Schema
+
+For variants with `channel: "androidpush"`.
+
+**Schema URL:** `https://schema.suprsend.com/template/v2/channel/androidpush_schema.json`
+
+## Fields
+
+{{schema-table androidpush_schema}}
+
+`header` and `body` are required.
+
+### `channel_lock_screen_visibility` values
+
+{{schema-enum (get androidpush_schema "properties.channel_lock_screen_visibility.enum")}}
+
+### `channel_importance` values
+
+{{schema-enum (get androidpush_schema "properties.channel_importance.enum")}}
+
+### `priority` values
+
+{{schema-enum (get androidpush_schema "properties.priority.enum")}}
+
+## Buttons
+
+Up to 3 entries in `buttons[]`:
+
+{{schema-table (get androidpush_schema "$defs.androidpush_button_def")}}
+
+## Examples
+
+### Simple notification
+
+```json
+{
+  "header": "New message",
+  "body": "\{{ sender.name }} sent you a message"
+}
+```
+
+### Rich notification with action buttons
+
+```json
+{
+  "header": "Friend request",
+  "body": "\{{ actor.name }} wants to connect",
+  "image_url": "\{{ actor.avatar_url }}",
+  "action_url": "acme://users/\{{ actor.id }}",
+  "channel_importance": "HIGH",
+  "priority": "HIGH",
+  "buttons": [
+    { "id": "accept", "text": "Accept", "url": "acme://friends/accept?id=\{{ request.id }}" },
+    { "id": "decline", "text": "Decline", "url": "acme://friends/decline?id=\{{ request.id }}" }
+  ],
+  "extra_payload": { "request_id": "\{{ request.id }}" }
+}
+```
+
+## Documentation
+
+```
+{{{docs_androidpush}}}
+```

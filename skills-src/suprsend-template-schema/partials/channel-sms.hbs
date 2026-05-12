@@ -1,0 +1,52 @@
+# SMS Content Schema
+
+For variants with `channel: "sms"`.
+
+**Schema URL:** `https://schema.suprsend.com/template/v2/channel/sms_schema.json`
+
+> **Note on DLT compliance.** SMS variants must set the variant-level `needs_vendor_approval` field (true for DLT-regulated traffic, e.g. India; false otherwise). See the variant envelope guide for `vendor_approvals` shape.
+
+## Fields
+
+{{schema-table sms_schema}}
+
+`type` and `body` are required. When `type` is `dlt`, `category` and `header` are also required.
+
+### `type` values
+
+{{schema-enum (get sms_schema "properties.type.enum")}}
+
+- `basic` — standard SMS, no regulatory metadata.
+- `dlt` — India's DLT framework. Requires registered `header` (sender ID) and `category`.
+
+### `category` values (DLT only)
+
+{{schema-enum (get sms_schema "properties.category.enum")}}
+
+## Examples
+
+### Basic SMS
+
+```json
+{
+  "type": "basic",
+  "body": "Your code is \{{ otp }}"
+}
+```
+
+### DLT-compliant transactional SMS
+
+```json
+{
+  "type": "dlt",
+  "category": "transactional",
+  "header": "ACMECO",
+  "body": "Your verification code is \{{ otp }}. Valid for 5 minutes. -Acme"
+}
+```
+
+## Documentation
+
+```
+{{{docs_sms}}}
+```

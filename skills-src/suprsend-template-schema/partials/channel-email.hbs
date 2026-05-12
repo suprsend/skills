@@ -1,0 +1,99 @@
+# Email Content Schema
+
+For variants with `channel: "email"`.
+
+**Schema URL:** `https://schema.suprsend.com/template/v2/channel/email_schema.json`
+
+## Top-level fields
+
+{{schema-table email_schema}}
+
+`subject` and `body` are required. `templating_language` is fixed to `handlebars` — use `\{{ variable }}` and standard Handlebars helpers inside string fields.
+
+## Body
+
+`body` is an object whose shape depends on its `type`:
+
+{{schema-table (get email_schema "$defs.email_body_def")}}
+
+### `type` values
+
+{{schema-enum (get email_schema "$defs.email_body_def.properties.type.enum")}}
+
+- `designer` — content authored in the SuprSend visual designer; serialized HTML + optional `design_json`.
+- `raw` — hand-authored HTML (with optional fallback text).
+- `plain_text` — text-only email.
+
+### `designer` body
+
+{{schema-table (get email_schema "$defs.designer_body_def")}}
+
+`html` is required. `design_json` round-trips the visual designer state. `merge_tags` lists the data references used by the design so the editor can validate them:
+
+{{schema-table (get email_schema "$defs.designer_body_merge_tag_def")}}
+
+### `raw` body
+
+{{schema-table (get email_schema "$defs.raw_body_def")}}
+
+### `plain_text` body
+
+{{schema-table (get email_schema "$defs.plain_text_body_def")}}
+
+## Examples
+
+### Plain text email
+
+```json
+{
+  "subject": "Welcome, \{{ first_name }}",
+  "body": {
+    "type": "plain_text",
+    "plain_text": { "text": "Thanks for joining Acme." }
+  }
+}
+```
+
+### Raw HTML email
+
+```json
+{
+  "subject": "Your receipt #\{{ order.id }}",
+  "from_name": "Acme Billing",
+  "from_address": "billing@acme.com",
+  "reply_to": "support@acme.com",
+  "body": {
+    "type": "raw",
+    "preheader": "Order summary attached",
+    "raw": {
+      "html": "<h1>Thanks for your order</h1><p>Total: $\{{ order.total }}</p>",
+      "text": "Thanks for your order. Total: $\{{ order.total }}"
+    }
+  }
+}
+```
+
+### Designer email with merge tags
+
+```json
+{
+  "subject": "\{{ campaign.subject }}",
+  "body": {
+    "type": "designer",
+    "designer": {
+      "html": "<table>...rendered html...</table>",
+      "text": "...plain fallback...",
+      "design_json": { "version": 1, "rows": [] },
+      "merge_tags": [
+        { "id": "first_name", "expression": "\{{ first_name }}" }
+      ]
+    }
+  }
+}
+```
+
+## Documentation
+
+```
+{{{docs_email}}}
+```
