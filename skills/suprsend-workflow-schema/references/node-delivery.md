@@ -25,6 +25,7 @@ Send via one specific channel. Each uses a different `node_type` but shares the 
 
 You can use single-channel delivery nodes - Email, SMS, Whatsapp, Inbox, Slack, MS Teams, MobilePush and Webpush to send notification on a particular user channel. The content of the notification is designed with [templates](/docs/templates).
 
+
 ## How the delivery node is executed?
 
 Delivery node is successfully executed if all of the below checks hold true:
@@ -67,6 +68,7 @@ Sends across multiple channels simultaneously.
 
 You can use multi-channel delivery node to notify users on multiple channels at once. If you want to send multi-channel notifications, we recommend using [smart channel routing](/docs/smart-delivery) to ensure that notifications are delivered sequentially on multiple channels rather than bombarding users on all channels at once.
 
+
 The content of the notification is designed with [templates](/docs/templates). In SuprSend, you can design the content of multiple channels within a single template group.
 
 ## How the delivery node is executed?
@@ -99,6 +101,7 @@ You can use this field to pass channel list dynamically using data in your event
 For more consistent channel preferences, like user wanting to receive all communication via email only, or defining preferred communication channel for a notifications category (like booking updates), we recommend updating it using [user preferences](/docs/user-preferences).
 
 To override channels, include the channels array in event property and add the corresponding key in the override channels field on SuprSend workflow form.
+
 
 The expected channel values are: `["email", "sms", "whatsapp", "androidpush", "iospush", "webpush", "slack", "inbox", "ms_teams"]`
 
@@ -141,94 +144,130 @@ Sends sequentially across channels with delays until the user engages on one cha
 
 # Smart Channel Routing
 
-> Send multi-channel notifications sequentially with a delay between each channel to reduce bombarding.
+> Send notifications across multiple channels sequentially — with a delay between each — so users aren't bombarded, and you stop sending the moment they engage.
 
-Smart Channel Routing is an optimal way of sending multi-channel notifications without bombarding your users. In case of smart routing, you send notification sequentially on channels with a delay rather than bombarding users on all channels at once. Example, If you have a template with 4 channels, the delivery on rest of the channels are skipped if the user sees or interacts with the message on 1 channel. This way, you can achieve the uptick in engagement (delivery, seen and interaction rate) without unnecessary noise and also save cost of paid notification channels.
+Instead of sending a notification on all channels at once, Smart Channel Routing delivers them **one channel at a time**, with a delay in between. The moment a user engages (opens, clicks, or triggers a custom event), delivery on remaining channels stops — reducing noise for users and cutting cost on paid channels.
 
-The content of the notification is designed with [templates](/docs/templates). In SuprSend, you can design the content of multiple channels within a single template group.
+***
 
-## How Smart Channel Routing node is executed?
+## How It Works
 
+Smart Channel Routing follows three steps when a workflow is triggered:
 
-  **Identify Applicable Channels**
-    The First step is to identify applicable channels for delivery in user profile. Applicable channels are the subset of the following:
+### 1. Identify eligible channels
 
-    * **Active channels on template**
+SuprSend checks which channels qualify for delivery by intersecting:
 
-      Active channels are published and live channels in the template. For WhatsApp and SMS (Indian vendors), templates become live upon approval by the respective provider.
-    * **Active channels in user profile**
+* **Channels active on the template** — published and live. For WhatsApp and SMS (Indian vendors), this means provider approval is complete.
+* **Channels active in the user profile** — not removed, unset, or marked inactive. See [managing user channels](/docs/users#via-sdk).
+* **User opt-in preference** — if you use SuprSend's preference centre, the user must be `opt-in` for the channel and notification category. Verify with the [get user preference API](/reference/get-user-category-preferences).
 
-      Available channels in user profile which are not marked inactive. A set channel becomes inactive in case the channel is`removed `or`unset`using [SDK or API](/docs/users#via-sdk) or it is marked inactive by SuprSend.
-    * **Channels where user preference is set as opt-in**
+### 2. Order outside-app channels
 
-      If you are using SuprSend preference centre to take user preferences, check if the user preference is`opt-in`for the given channel and notification category (defined in workflow settings). You can check user preference using [get user preference API](/reference/get-user-category-preferences).
-  
+Routing logic **only applies to outside-app channels** — Email, SMS, WhatsApp, Slack, MS teams and Push. SuprSend orders these based on your chosen [optimize-on](#optimize-on) setting (default: lowest to highest cost).
 
-  **Finalize channel order using routing rule**
-    Currently, the order of channel is defined to [optimize on](/docs/smart-delivery#optimize-on) cost (channels are tried from low to high cost picked from their vendor form). We'll also be introducing options to optimize on engagement so that notifications is sent on the channel with higher chances of open and click first.
-  
-
-  **Send notification with delay between each trigger using time to live**
-    Now, the **notification will be delivered on each channel in the order with** [time-interval](/docs/smart-delivery#time-to-live) **\[time_to_live / (number_of_channels - 1)] apart** . e.g., if you have 3 active channels with time to live of 1 hour, notification will be delivered to each channel at 30 minutes apart till the [success metric](/docs/smart-delivery#success-metric) is not achieved. Once success metric is achieved, notification delivery on further channels is skipped.
-  
+> **Note:**
+  **Inbox is always delivered at T+0** — it is exempt from channel routing entirely. Regardless of the optimize-on setting, channel order, or cost, Inbox fires immediately alongside the first outside-app channel whenever it is active on the template and user profile. It does not count toward the outside-app channel sequence or interval calculation.
 
 
-## Setting routing rules
+### 3. Deliver sequentially with a delay
 
-Routing rules define how the notifications will be routed across channels.
+Notifications go out in this sequence:
 
-### Optimize on
+| Time         | What's sent                                 |
+| ------------ | ------------------------------------------- |
+| T+0          | Inbox (if active) + 1st outside-app channel |
+| T+interval   | 2nd outside-app channel                     |
+| T+interval×2 | 3rd outside-app channel                     |
+| ...          | continues until success metric is achieved  |
 
-This is used to define the order of channels based on the metric that you want to optimize. e.g., if you want to optimize on cost, SuprSend will internally set the order of channel in the ascending order of cost where the lowest cost channel is tried first.
+The interval between each outside-app channel is:
 
-> We'll be introducing the option to manually set the channel order and optimize on other metrics like engagement.
+`interval = time_to_live ÷ (number of outside-app channels − 1)`
 
-### Time to live
+**Example:** Template with Inbox + Email + SMS + WhatsApp, time-to-live = 1 hour:
 
-Time to live defines the delay in delivery between 2 subsequent channels. Notification will be delivered on each channel in the order with time-interval of \[time_to_live / (number_of_channels - 1)] apart. e.g., if you 3 channels with time to live of 1 hour, notification will be delivered to each channel at 20 minutes apart till the success metric is achieved.
+* **T+0** → Inbox + Email
+* **T+30min** → SMS (skipped if success metric already achieved)
+* **T+60min** → WhatsApp (skipped if success metric already achieved)
 
-### Must send to
+If a user sees the in-app notification at T+0, only **SMS and WhatsApp are skipped** — Email has already been sent alongside Inbox.
 
-These are the channels on which notification has to be sent immediately, irrespective of the channel order.
+Once the success metric is achieved at any point, all remaining channel deliveries are cancelled immediately.
+
+<Info>
+  **Routing is per channel identity, not per channel.** If a user has multiple identities on the same channel (e.g., two email addresses), each identity is treated as a separate step in the sequence. SuprSend sends to the first email address, waits for the configured interval, then sends to the second.
+</Info>
+
+***
+
+## Configuration
+
+### Optimize On
+
+Sets the order in which outside-app channels are attempted. The default is **cost** — channels are tried from lowest to highest cost based on your vendor settings.
+
+### Time to Live
+
+The total time window across which outside-app channels are attempted. This determines the interval between each channel.
+
+**Example:** 3 outside-app channels, time-to-live = 1 hour → channels are tried **30 minutes** apart.
+
+### Must Send To
+
+Channels listed here are delivered to **immediately at T+0**, outside of routing order. Use this for channels that must always receive the notification regardless of sequencing.
 
 ### Success Metric
 
-Success Metric can be any event which defines the target user activity that you want to drive with your sent notification. In case of channel routing, it stops delivery on further channels when success metric is achieved. You can define 2 types of success metrics:
+Defines what counts as "user engaged." Once this is met, SuprSend stops delivering to further channels.
 
-1. **Notification Status**
+**Notification Status** — a status reached on any sent channel:
 
-   Success Metric can be notification status (delivery, seen, interaction / click) of any of the sent channels. e.g., if the target of your notification is user opening the notification, you can set your success metric as `Notification Status - Seen`.
-2. **Custom Event**
+| Status              | When it triggers                                     |
+| ------------------- | ---------------------------------------------------- |
+| Delivered           | Notification is delivered to the device or inbox     |
+| Seen                | User opens or views the notification                 |
+| Interaction / Click | User clicks a CTA or interacts with the notification |
 
-   It can be any other custom event that you want your user to perform on the platform in response to the sent notification. e.g., in case of payment reminder notification, you can set the success metric as`Invoice Paid`.
+**Custom Event** — any event your platform fires in response to the notification. For example, `invoice_paid` for a payment reminder, or `appointment_confirmed` for a booking flow.
+
+> **Note:**
+  **Vendor routing is independent.** If you have vendor routing enabled, it operates independently of channel routing and does not add to the delay between channels.
+
+
+***
 
 ## Override Channels
 
-You can use this field to pass channel list dynamically using data in your event property. This feature comes in handy when user channels are dynamically defined at the user level for each workflow. For instance, when booking an appointment, your users are dynamically defining their preferred channel to receive booking updates for each appointment.
+Pass a channel list dynamically at runtime via an event property. Useful when a user's preferred channel changes per workflow trigger — for example, a user selecting their preferred channel when booking an appointment.
 
-For more consistent channel preferences, like user wanting to receive all communication via email only, or defining preferred communication channel for a notifications category (like booking updates), we recommend updating it using [user preferences](/docs/user-preferences).
+> For persistent preferences (e.g., a user who always wants email only), use [User Preferences](/docs/user-preferences) instead — it's the more appropriate tool.
 
-To override channels, include the channels array in event property and add the corresponding key in the override channels field on SuprSend workflow form.
-
-The expected channel values are: `["email", "sms", "whatsapp", "androidpush", "iospush", "webpush", "slack", "inbox", "ms_teams"]`
-
-You can add channel array as a [JQ-expression](https://jqlang.github.io/jq/manual/). So, in case your channel values do not match with the one mentioned in the above table, you can transform it using the JQ-expression. Below are some examples of how to add duration key in JQ format:
-
-1. General format for duration key at parent level is`.channels`
-2. If channel is a nested event property key like shown below, enter it in the format `.user.channels`.
+**Setup:** Add a `channels` array to your event properties, then reference the key in the **Override Channels** field in the workflow form.
 
 
-  ```json json theme={"system"}
-  properties = {
-    "user": {
-      "name": "Steve",
-      "channels": ["email","inbox]
-    }
-  ```
+Accepted channel values:
 
+```
+"email" | "sms" | "whatsapp" | "androidpush" | "iospush" | "webpush" | "slack" | "inbox" | "ms_teams"
+```
+
+You can use a [JQ expression](https://jqlang.github.io/jq/manual/) to map your event data to the expected format:
+
+* Top-level key: `.channels`
+* Nested key: `.user.channels`
+
+```json theme={"system"}
+{
+  "user": {
+    "name": "Steve",
+    "channels": ["email", "inbox"]
+  }
+}
+```
 
 > **Warning:**
-  When the channel key specified is missing, or resolves to an invalid value, workflow execution will stop and corresponding error will be logged in the logs
+  If the channel key is missing or resolves to an invalid value, workflow execution stops and the error is logged.
 
 
 ***
@@ -236,16 +275,17 @@ You can add channel array as a [JQ-expression](https://jqlang.github.io/jq/manua
 ## Frequently Asked Questions
 
 
-  ### How channel routing works when a user has multiple identities of the same channel. e.g., if there are multiple email ids in a user profile?
-    Routing happens at channel identity level. So, if there are multiple email ids, notification will be sent to one email id and then on another after a delay.
+  ### Why am I receiving Inbox and Email at the same time?
+    This is expected. Inbox is exempt from routing logic and always fires at T+0 — alongside the first outside-app channel (Email, in this case). The time-to-live delay only applies to the 2nd, 3rd, and subsequent outside-app channels.
+
+    So with Inbox + Email + SMS and a 10-minute time-to-live:
+
+    * **T+0** → Inbox + Email
+    * **T+10min** → SMS (only if success metric not yet met)
   
 
-  ### How does channel routing work if I have vendor routing enabled as well?
-    Vendor routing is independent of channel routing and doesn't add to the delay in channel routing.
-  
-
-
-***
+  ### Do I need a 'Wait Until' node before this node?
+    No. The delay between channels is managed by the **Time to Live** setting inside the Smart Channel Routing node. A Wait Until node is not required.
 
 ## Schema Properties (shared by all delivery nodes)
 
@@ -253,7 +293,7 @@ You can add channel array as a [JQ-expression](https://jqlang.github.io/jq/manua
 | --- | --- | --- | --- |
 | template | string | Yes | slug of template used for notification content |
 | channels | array | No | specific channels to use when sending multi-channel notification |
-| channels_expr | string | No | jq-expression for preparing channel list, if channels are to be derived at runtime using payload |
+| channels_expr | string | null | No | jq-expression for preparing channel list, if channels are to be derived at runtime using payload |
 | success | string | No | success metric (delivered/seen/interaction/<user-event>) |
 | mandatory_channels | array | No | applicable for smart-channel-routing, notification on mandatory channels will be sent immediately |
 | ttl_value | string | No | Duration format ([xx]d[xx]h[xx]m[xx]s) examples [30s, 1m, 1m30s, 1d3h45m] |

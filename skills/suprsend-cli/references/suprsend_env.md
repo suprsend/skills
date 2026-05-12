@@ -1,27 +1,25 @@
-# suprsend category
+# suprsend env
 
-Manage preference categories
+Show recognized environment variables and their current values
 
-Manage notification preference categories. Categories organize notification preferences into a hierarchy of root categories, sections, and individual preference items.
+Print all environment variables recognized by suprsend, their current values,
+and how each one affects the CLI. Values for sensitive variables (tokens) are
+redacted. Useful for verifying configuration in CI/CD pipelines and agent contexts.
 
 ```
-suprsend category [flags]
+suprsend env [flags]
 ```
 
 ## Examples
 
 ```
-  suprsend category list
-  suprsend category get --output json
-  suprsend category pull --dir ./suprsend/categories
-  suprsend category push --commit
+  suprsend env
 ```
 
 ### Options
 
 ```
-  -h, --help               help for category
-  -w, --workspace string   Workspace name (e.g., staging, production) (default "staging")
+  -h, --help   help for env
 ```
 
 ### Options inherited from parent commands

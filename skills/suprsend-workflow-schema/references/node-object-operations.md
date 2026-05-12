@@ -14,6 +14,7 @@ You can use this node to dynamically add recipient or actor in [object subscript
 
 If you have event-based data coming from third-party systems, you don’t need to write custom object subscription APIs in your codebase. Simply send events to SuprSend, and let the workflow handle object subscriptions. For example, when someone subscribes to a topic (like a tournament), you can automatically add them as a subscriber to the corresponding object. This ensures they receive all relevant notifications about topic-related activities without manual intervention.
 
+
 ### Compute and create objects at runtime
 
 You can either add users to a pre-defined object or compute object on the fly using workflow input data. While defining object, both ID and type are mandatory. Type defines the group that object belong to (example, teams, departments). Dynamic object are defined in handlebars format as `{{...}}`.
@@ -45,6 +46,7 @@ Subscription properties are the set of variables defining relationship between a
 You can use this node to dynamically remove recipient or actor from [object subscription](/docs/object-subscriptions) based on an event or action.
 
 If you have event-based data coming from third-party systems, you don’t need to write custom object subscription APIs in your codebase. Simply send events to SuprSend, and let the workflow handle object subscriptions. For example, when someone unsubscribes from a topic (like a tournament), you can automatically remove their subscription from the corresponding object. This ensures they receive all relevant notifications about topic-related activities without manual intervention.
+
 
 ### Compute objects at runtime
 

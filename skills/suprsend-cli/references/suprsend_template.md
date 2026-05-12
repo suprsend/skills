@@ -1,27 +1,27 @@
-# suprsend category
+# suprsend template
 
-Manage preference categories
+Manage templates
 
-Manage notification preference categories. Categories organize notification preferences into a hierarchy of root categories, sections, and individual preference items.
+Manage notification templates. Templates define the content and structure of notifications across channels (email, SMS, push, in-app, etc.). Subcommands let you list, get details, pull to local files, push from local files, and commit templates.
 
 ```
-suprsend category [flags]
+suprsend template [flags]
 ```
 
 ## Examples
 
 ```
-  suprsend category list
-  suprsend category get --output json
-  suprsend category pull --dir ./suprsend/categories
-  suprsend category push --commit
+  suprsend template list
+  suprsend template get welcome-email
+  suprsend template pull --dir ./suprsend/templates
+  suprsend template push welcome-email --commit
 ```
 
 ### Options
 
 ```
-  -h, --help               help for category
-  -w, --workspace string   Workspace name (e.g., staging, production) (default "staging")
+  -h, --help               help for template
+  -w, --workspace string   Workspace to list templates from (default "staging")
 ```
 
 ### Options inherited from parent commands

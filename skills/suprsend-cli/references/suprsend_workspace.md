@@ -1,27 +1,25 @@
-# suprsend category
+# suprsend workspace
 
-Manage preference categories
+Manage workspaces
 
-Manage notification preference categories. Categories organize notification preferences into a hierarchy of root categories, sections, and individual preference items.
+Manage SuprSend workspaces. Workspaces isolate notification resources (templates, workflows, categories) and can run in sandbox or live mode.
 
 ```
-suprsend category [flags]
+suprsend workspace [flags]
 ```
 
 ## Examples
 
 ```
-  suprsend category list
-  suprsend category get --output json
-  suprsend category pull --dir ./suprsend/categories
-  suprsend category push --commit
+  suprsend workspace list
+  suprsend workspace list --limit 5
+  suprsend workspace list --output json
 ```
 
 ### Options
 
 ```
-  -h, --help               help for category
-  -w, --workspace string   Workspace name (e.g., staging, production) (default "staging")
+  -h, --help   help for workspace
 ```
 
 ### Options inherited from parent commands

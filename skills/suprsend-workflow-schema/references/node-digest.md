@@ -44,6 +44,7 @@ A workflow sends a summary of task status changes daily at 7:00 PM for a workflo
 
 In this case, the workflow will batch all triggers for 11 hours (until July 30, 7:00 PM Europe/London) and the email will be sent at the same time as soon as batch is closed.
 
+
 ## Configuring Digest schedule
 
 It is the recurring schedule when an open digest should be closed. This schedule might differ from the time notifications are actually sent. e.g., if you want to send a daily digest summarizing activities from the previous day at 9:00 AM, you would set the Digest schedule to close daily at midnight and follow it with Time Window or Delay node to send the notification at 9:00 AM.
@@ -285,11 +286,13 @@ This is how you'll add the variable in your template to render the desired notif
   ```
 
 
-You can also test this behaviour via `Enable batching` option in [Mock data](/docs/templates#adding-dynamic-content) button on template details page. Once enabled, you'll start getting `$batched_events` variable in auto suggestion on typing `{{` in template editor. The variables in mock data will be treated as event properties and `Event Count` will imitate the number of times this event will be triggered in the batch.
+You can also test this behaviour via `Enable batching` option in [Mock data](/docs/templates#the-variables-panel) button on template details page. Once enabled, you'll start getting `$batched_events` variable in auto suggestion on typing `{{` in template editor. The variables in mock data will be treated as event properties and `Event Count` will imitate the number of times this event will be triggered in the batch.
+
 
 ## Transforming Digest variable output
 
 There can be cases where you need to split the digest output variables into multiple arrays based on keys in your input data. e.g., to send a message like `You have got 5 comments and 3 likes on your post today` where post and likes are interaction_type in your input payload. You can use [data transform node](/docs/data-transform) and generate relevant variables using **JSONNET editor** to handle this use case.
+
 
 Let's take below example. There are 3 post interactions, 2 comments and 1 like and this is your workflow trigger.
 

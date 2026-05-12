@@ -38,9 +38,9 @@ A workflow JSON has top-level metadata and a `tree` containing an array of `node
 | tags | array | null | No | optional tags for workflow |
 | ratelimit | object | null | No | ratelimit for a workflow/recipient. [count=2 in window=30d] |
 | conditions | array | null | No | trigger workflow only if these conditions satisfy |
-| override_recipients_type | string | No | override recipients using trigger payload. (applicable only if trigger_type=event) |
+| override_recipients_type | string | null | No | override recipients using trigger payload. (applicable only if trigger_type=event) |
 | override_recipients_user_expr | string | null | No | a jq-expression to evaluate new recipients of type user (if override_recipients_type=user) |
-| override_recipients_single_object_fields_expr | object | No | overrides original recipient with an object. object-type and id are evaluated using jq-expr (if override_recipients_type=single_object_fields) |
+| override_recipients_single_object_fields_expr | object | null | No | overrides original recipient with an object. object-type and id are evaluated using jq-expr (if override_recipients_type=single_object_fields) |
 | override_actor_user_expr | string | null | No | a jq-expression to evaluate actor. (applicable only if trigger_type=event) |
 | override_tenant_expr | string | null | No | a jq-expression to evaluate tenant. (applicable only if trigger_type=event) |
 | tree | object | Yes |  |
