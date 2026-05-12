@@ -1,6 +1,6 @@
 ---
 name: suprsend-docs-support
-description: "How to access SuprSend documentation and get support. Includes docs-over-SSH access (ssh suprsend.sh), the .md-suffix URL convention for raw markdown, LLM-friendly bulk endpoints, in-app chat, AI copilot, Slack community, and email support. Use when the user asks where to find SuprSend docs, how to get support, or when the agent needs to look up SuprSend concepts programmatically."
+description: "Default skill for any SuprSend question that isn't strictly authoring JSON or running a CLI command. Fetch, search, read, and explain SuprSend documentation; answer \"how does X work\", \"what is X\", \"show me the docs for X\". Provides docs-over-SSH (ssh suprsend.sh), the .md-suffix raw markdown URL convention, LLM-friendly bulk endpoints, in-app chat, AI copilot, Slack community, and email support. Examples that should load this skill: \"fetch batching documentation\", \"explain digest nodes\", \"show me the inbox channel docs\", \"what fields does an email variant have\", \"how do conditions work in templates\"."
 metadata:
   author: "suprsend"
   category: "support"
