@@ -93,19 +93,12 @@ When a workflow sends a template, SuprSend picks one variant per channel using:
 4. **Condition match** — only variants whose `conditions` evaluate to true are eligible.
 5. **`seq_no` tiebreaker** — among remaining eligible variants, the lowest `seq_no` wins.
 
-## Multi-tenant Variants
+## When to add more variants
 
-```
-{{{docs_tenant_templates}}}
-```
+- **Per-tenant content** — see {{ref-link "multi-tenant-variants.md" "Multi-tenant Variants"}} for how `tenant_id` lets you customize a template per tenant/brand.
+- **Per-language content** — see {{ref-link "multi-lingual-variants.md" "Multi-lingual Variants"}} for the trade-off between translation keys (one variant, many languages) vs. one variant per `locale`.
 
-## Multi-lingual Variants
-
-```
-{{{docs_multi_lingual}}}
-```
-
-## Variants Reference
+## Variants Concept
 
 ```
 {{{docs_template_variants}}}
@@ -221,8 +214,3 @@ When a workflow sends a template, SuprSend picks one variant per channel using:
 }
 ```
 
-## Templates Overview
-
-```
-{{{docs_templates}}}
-```

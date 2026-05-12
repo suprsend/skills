@@ -49,4 +49,9 @@ Minimum shape:
 }
 ```
 
-See the [Template Schema Guide](references/template-schema-guide.md) for tenant-, locale-, and condition-based variant selection, plus complete examples.
+See the [Template Schema Guide](references/template-schema-guide.md) for the variant envelope, selection rules, and complete examples.
+
+For multi-variant patterns, see:
+
+- [Multi-tenant Variants](references/multi-tenant-variants.md) — different content per tenant/brand
+- [Multi-lingual Variants](references/multi-lingual-variants.md) — translation keys vs. per-locale variants

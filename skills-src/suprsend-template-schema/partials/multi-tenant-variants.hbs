@@ -1,0 +1,13 @@
+# Multi-tenant Variants
+
+Use a per-tenant variant when a template needs different content (subject line, copy, branding, attachments) for different tenants of the same workflow. Set the variant's `tenant_id` to the tenant slug; leave it `null` for the default fallback.
+
+Selection: when a template is sent for a specific `tenant_id`, SuprSend prefers the variant matching that `tenant_id` over the `tenant_id: null` variant (for the same channel + locale + condition match). If no tenant-specific variant exists, the `null` variant is used.
+
+For tenant *variables* (logo, colors, properties) that just need substituting into shared content, prefer using `\{{$brand.<property>}}` inside a single variant — see the doc below for the full variable set.
+
+## Documentation
+
+```
+{{{docs_tenant_templates}}}
+```

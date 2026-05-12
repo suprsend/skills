@@ -66,8 +66,8 @@ For variants with `channel: "email"`.
     "type": "raw",
     "preheader": "Order summary attached",
     "raw": {
-      "html": "<h1>Thanks for your order</h1><p>Total: $\{{ order.total }}</p>",
-      "text": "Thanks for your order. Total: $\{{ order.total }}"
+      "html": "<h1>Thanks for your order</h1><p>Total: \{{ order.total_formatted }}</p>",
+      "text": "Thanks for your order. Total: \{{ order.total_formatted }}"
     }
   }
 }

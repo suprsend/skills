@@ -66,11 +66,6 @@ sources:
   # ── Docs ─────────────────────────────────────────────────────────────────
 
   - type: docs
-    key: docs_templates
-    urls:
-      - "https://docs.suprsend.com/docs/templates"
-
-  - type: docs
     key: docs_template_variants
     urls:
       - "https://docs.suprsend.com/docs/template-variants"
@@ -135,6 +130,10 @@ sources:
 references:
   - filename: template-schema-guide.md
     template: partials/template-schema-guide.hbs
+  - filename: multi-tenant-variants.md
+    template: partials/multi-tenant-variants.hbs
+  - filename: multi-lingual-variants.md
+    template: partials/multi-lingual-variants.hbs
   - filename: channel-email.md
     template: partials/channel-email.hbs
   - filename: channel-sms.md
