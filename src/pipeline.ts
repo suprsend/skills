@@ -94,7 +94,7 @@ async function resolveSource(
     case "static":
       return resolveStatic(skillName, source);
 case "docs":
-      return resolveDocs(source);
+      return resolveDocs(skillName, source);
     case "schema":
       return resolveSchema(source);
     case "claude":

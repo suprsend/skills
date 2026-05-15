@@ -1,6 +1,10 @@
+import { readFile } from "node:fs/promises";
+import { resolve } from "node:path";
 import { fetchText } from "../utils/fetch.js";
 import type { DocsSource } from "./types.js";
+import { SKILLS_SRC_DIR } from "../config.js";
 import { logger } from "../utils/logger.js";
+import { assertWithinDir } from "../utils/path-safety.js";
 import { extractSection as extractSectionUtil } from "../utils/markdown.js";
 
 function extractSection(markdown: string, selector: string): string {
@@ -81,8 +85,73 @@ export function cleanMintlifyMarkdown(content: string): string {
   return result;
 }
 
-export async function resolveDocs(source: DocsSource): Promise<string> {
+async function readOverrideFile(
+  skillName: string,
+  relPath: string,
+  key: string,
+): Promise<string> {
+  const baseDir = resolve(SKILLS_SRC_DIR, skillName);
+  const filePath = resolve(baseDir, relPath);
+  assertWithinDir(filePath, baseDir, `docs "${key}" override path`);
+  return readFile(filePath, "utf-8");
+}
+
+async function resolveReplacementStrings(
+  skillName: string,
+  replacements: DocsSource["replacements"],
+  key: string,
+): Promise<{ find: string; replace: string }[]> {
+  if (!replacements?.length) return [];
+  const resolved: { find: string; replace: string }[] = [];
+  for (const [i, r] of replacements.entries()) {
+    const hasFind = typeof r.find === "string";
+    const hasFindFile = typeof r.findFile === "string";
+    if (hasFind === hasFindFile) {
+      throw new Error(
+        `docs source "${key}" replacement #${i + 1}: provide exactly one of \`find\` or \`findFile\`.`,
+      );
+    }
+    const hasReplace = typeof r.replace === "string";
+    const hasReplaceFile = typeof r.replaceFile === "string";
+    if (hasReplace === hasReplaceFile) {
+      throw new Error(
+        `docs source "${key}" replacement #${i + 1}: provide exactly one of \`replace\` or \`replaceFile\`.`,
+      );
+    }
+    const find = hasFind ? r.find! : await readOverrideFile(skillName, r.findFile!, key);
+    const replace = hasReplace ? r.replace! : await readOverrideFile(skillName, r.replaceFile!, key);
+    resolved.push({ find, replace });
+  }
+  return resolved;
+}
+
+function applyReplacements(
+  content: string,
+  replacements: { find: string; replace: string }[],
+  key: string,
+): string {
+  if (!replacements.length) return content;
+  let result = content;
+  for (const [i, { find, replace }] of replacements.entries()) {
+    const idx = result.indexOf(find);
+    if (idx === -1) {
+      throw new Error(
+        `docs source "${key}" replacement #${i + 1} did not match — upstream content may have changed. Looking for:\n${find}`,
+      );
+    }
+    if (result.indexOf(find, idx + find.length) !== -1) {
+      throw new Error(
+        `docs source "${key}" replacement #${i + 1} matched more than once — make the \`find\` string more specific.`,
+      );
+    }
+    result = result.slice(0, idx) + replace + result.slice(idx + find.length);
+  }
+  return result;
+}
+
+export async function resolveDocs(skillName: string, source: DocsSource): Promise<string> {
   const parts: string[] = [];
+  const replacements = await resolveReplacementStrings(skillName, source.replacements, source.key);
 
   for (const url of source.urls) {
     // Mintlify docs: try appending .md if the URL doesn't already end with it
@@ -100,6 +169,7 @@ export async function resolveDocs(source: DocsSource): Promise<string> {
       }
 
       content = cleanMintlifyMarkdown(content);
+      content = applyReplacements(content, replacements, source.key);
 
       parts.push(content);
     } catch (err) {
@@ -112,6 +182,7 @@ export async function resolveDocs(source: DocsSource): Promise<string> {
             content = extractSection(content, source.selector);
           }
           content = cleanMintlifyMarkdown(content);
+          content = applyReplacements(content, replacements, source.key);
           parts.push(content);
         } catch (retryErr) {
           throw new Error(`Failed to fetch docs from ${url}: ${retryErr}`);

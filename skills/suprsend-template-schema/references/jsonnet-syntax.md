@@ -115,6 +115,8 @@ Or use string concatenation with `+`:
 "text": "Order " + data.order_id + " has shipped to " + data['$recipient'].name
 ```
 
+> **Critical rule for Slack:** All Slack JSONNET templates MUST be wrapped in `{ "blocks": [...] }`. The bare-array format `[{...}, {...}]` will fail — Slack's API rejects unwrapped arrays.
+
 ## Slack Block Kit examples
 
 Design visually in the [Slack Block Kit Builder](https://app.slack.com/block-kit-builder/), then adapt the JSON into JSONNET by replacing hardcoded values with `data.key` references.
@@ -127,30 +129,32 @@ Design visually in the [Slack Block Kit Builder](https://app.slack.com/block-kit
 
     
       ```json JSONNET Template theme={"system"}
-      [
-        {
-          "type": "section",
-          "text": {
-            "type": "mrkdwn",
-            "text": "New Signup on ABC company"
-          }
-        },
-        {
-          "type": "section",
-          "text": {
-            "type": "mrkdwn",
-            "text": ">_UserName_: *%(user_name)s*\n>_Email_: *%(email)s*\n>_Organization_: *%(org_name)s*\n>_Domain_: *%(domain)s*" % {
-              user_name: data.user_name, 
-              email: data.user_email, 
-              org_name: data.org.name, 
-              domain: data.org.domain
+      {
+        "blocks": [
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": "New Signup on ABC company"
             }
+          },
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": ">_UserName_: *%(user_name)s*\n>_Email_: *%(email)s*\n>_Organization_: *%(org_name)s*\n>_Domain_: *%(domain)s*" % {
+                user_name: data.user_name, 
+                email: data.user_email, 
+                org_name: data.org.name, 
+                domain: data.org.domain
+              }
+            }
+          },
+          {
+            "type": "divider"
           }
-        },
-        {
-          "type": "divider"
-        }
-      ]
+        ]
+      }
       ```
 
       ```json Mock Data theme={"system"}
@@ -173,52 +177,54 @@ Design visually in the [Slack Block Kit Builder](https://app.slack.com/block-kit
 
     
       ```json Template theme={"system"}
-      [
-        {
-          "type": "section",
-          "text": {
-            "type": "mrkdwn",
-            "text": "Share access requested for *<%(document_link)s|%(document_name)s>*" % {
-              document_link: data.document_link,
-              document_name: data.document_name
+      {
+        "blocks": [
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": "Share access requested for *<%(document_link)s|%(document_name)s>*" % {
+                document_link: data.document_link,
+                document_name: data.document_name
+              }
             }
+          },
+          {
+            "type": "section",
+            "fields": [
+              {
+                "type": "mrkdwn",
+                "text": "*Requested by:*\n" + data.requester_name
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*When:*\n" + data.submitted_at
+              },
+              {
+                "type": "mrkdwn",
+                "text": "*Reason:*\n" + data.access_reason
+              }
+            ]
+          },
+          {
+            "type": "actions",
+            "elements": [
+              {
+                "type": "button",
+                "text": { "type": "plain_text", "text": "Approve" },
+                "style": "primary",
+                "value": "approve_access"
+              },
+              {
+                "type": "button",
+                "text": { "type": "plain_text", "text": "Deny" },
+                "style": "danger",
+                "value": "deny_access"
+              }
+            ]
           }
-        },
-        {
-          "type": "section",
-          "fields": [
-            {
-              "type": "mrkdwn",
-              "text": "*Requested by:*\n" + data.requester_name
-            },
-            {
-              "type": "mrkdwn",
-              "text": "*When:*\n" + data.submitted_at
-            },
-            {
-              "type": "mrkdwn",
-              "text": "*Reason:*\n" + data.access_reason
-            }
-          ]
-        },
-        {
-          "type": "actions",
-          "elements": [
-            {
-              "type": "button",
-              "text": { "type": "plain_text", "text": "Approve" },
-              "style": "primary",
-              "value": "approve_access"
-            },
-            {
-              "type": "button",
-              "text": { "type": "plain_text", "text": "Deny" },
-              "style": "danger",
-              "value": "deny_access"
-            }
-          ]
-        }
-      ]
+        ]
+      }
       ```
 
       ```json Mock Data theme={"system"}
@@ -241,37 +247,39 @@ Design visually in the [Slack Block Kit Builder](https://app.slack.com/block-kit
 
     
       ```json Template theme={"system"}
-      [
-        {
-          "type": "section",
-          "text": {
-            "type": "mrkdwn",
-            "text": ":warning: *High Error Rate Detected*\nOur system has experienced a spike in errors over the last *30 minutes*."
-          }
-        },
-        {
-          "type": "image",
-          "title": { "type": "plain_text", "text": "Request vs Failure Trend (Last 6 Hours)" },
-          "image_url": data.image_url,
-          "alt_text": "Graph showing high error rate spike"
-        },
-        {
-          "type": "section",
-          "fields": [
-            { "type": "mrkdwn", "text": "*Impacted Services:*\n" + data.impacted_services },
-            { "type": "mrkdwn", "text": "*Error Rate:*\n" + data.error_rate }
-          ]
-        },
-        {
-          "type": "context",
-          "elements": [
-            {
+      {
+        "blocks": [
+          {
+            "type": "section",
+            "text": {
               "type": "mrkdwn",
-              "text": ":mag: View logs: <%(log_url)s|Open in Monitoring Tool>" % { log_url: data.log_url }
+              "text": ":warning: *High Error Rate Detected*\nOur system has experienced a spike in errors over the last *30 minutes*."
             }
-          ]
-        }
-      ]
+          },
+          {
+            "type": "image",
+            "title": { "type": "plain_text", "text": "Request vs Failure Trend (Last 6 Hours)" },
+            "image_url": data.image_url,
+            "alt_text": "Graph showing high error rate spike"
+          },
+          {
+            "type": "section",
+            "fields": [
+              { "type": "mrkdwn", "text": "*Impacted Services:*\n" + data.impacted_services },
+              { "type": "mrkdwn", "text": "*Error Rate:*\n" + data.error_rate }
+            ]
+          },
+          {
+            "type": "context",
+            "elements": [
+              {
+                "type": "mrkdwn",
+                "text": ":mag: View logs: <%(log_url)s|Open in Monitoring Tool>" % { log_url: data.log_url }
+              }
+            ]
+          }
+        ]
+      }
       ```
 
       ```json Mock Data theme={"system"}
@@ -292,43 +300,45 @@ Design visually in the [Slack Block Kit Builder](https://app.slack.com/block-kit
 
     
       ```json Template theme={"system"}
-      [
-        {
-          "type": "section",
-          "text": {
-            "type": "mrkdwn",
-            "text": "Hi " + data["$recipient"].name + " :wave:\nYou have " + data["$batched_events_count"] + " *pending tasks* for today:"
+      {
+        "blocks": [
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": "Hi " + data["$recipient"].name + " :wave:\nYou have " + data["$batched_events_count"] + " *pending tasks* for today:"
+            }
+          },
+          {
+            "type": "rich_text",
+            "elements": [
+              {
+                "type": "rich_text_list",
+                "style": "bullet",
+                "elements": [
+                  {
+                    "type": "rich_text_section",
+                    "elements": [
+                      { "type": "text", "text": task.title + " (" + task.status + ")" }
+                    ]
+                  }
+                  for task in data["$batched_events"]
+                ]
+              }
+            ]
+          },
+          {
+            "type": "actions",
+            "elements": [
+              {
+                "type": "button",
+                "text": { "type": "plain_text", "text": "View Pending tasks" },
+                "url": "https://app.company.com/tasks"
+              }
+            ]
           }
-        },
-        {
-          "type": "rich_text",
-          "elements": [
-            {
-              "type": "rich_text_list",
-              "style": "bullet",
-              "elements": [
-                {
-                  "type": "rich_text_section",
-                  "elements": [
-                    { "type": "text", "text": task.title + " (" + task.status + ")" }
-                  ]
-                }
-                for task in data["$batched_events"]
-              ]
-            }
-          ]
-        },
-        {
-          "type": "actions",
-          "elements": [
-            {
-              "type": "button",
-              "text": { "type": "plain_text", "text": "View Pending tasks" },
-              "url": "https://app.company.com/tasks"
-            }
-          ]
-        }
-      ]
+        ]
+      }
       ```
 
       ```json Mock Data theme={"system"}
@@ -344,6 +354,8 @@ Design visually in the [Slack Block Kit Builder](https://app.slack.com/block-kit
     
   
 
+
+> **Critical rule for Teams:** In SuprSend, `body_type: "card"` requires `templating_language: "jsonnet"`. Using Handlebars (`{{ }}`) inside Adaptive Card JSON will break rendering — always use `data.key` syntax. Every Adaptive Card must include `"$schema": "http://adaptivecards.io/schemas/adaptive-card.json"` at the top.
 
 ## MS Teams Adaptive Card examples
 

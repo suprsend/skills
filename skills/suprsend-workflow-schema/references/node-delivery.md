@@ -47,7 +47,7 @@ Delivery node is successfully executed if all of the below checks hold true:
 
 ## Success Metric
 
-Success Metric can be any event which defines the target user activity you aim to drive with your sent notification. e.g., if the objective of your notification is to prompt users to open it, such as in the case of newsletters, you can set your success metric as `Notification Status - Seen`. If your goal is for users to perform any custom event, like complete payment in case of payment reminder notification, then you can set that event as your success metric.
+Success Metric can be any event which defines the target user activity you aim to drive with your sent notification. for example, if the objective of your notification is to prompt users to open it, such as in the case of newsletters, you can set your success metric as `Notification Status - Seen`. If your goal is for users to perform any custom event, like complete payment in case of payment reminder notification, then you can set that event as your success metric.
 
 
 In the context of single-channel delivery, the success metric is utilized solely to track conversion numbers for display in workflow analytics. However, in the case of [smart channel routing](/docs/smart-delivery), the same success metric serves to halt delivery on further channels once the success metric is achieved.
@@ -127,7 +127,7 @@ You can add channel array as a [JQ-expression](https://jqlang.github.io/jq/manua
 
 ## Success Metric
 
-Success Metric can be any event which defines the target user activity you aim to drive with your sent notification. e.g., if the objective of your notification is to prompt users to open it, such as in the case of newsletters, you can set your success metric as `Notification Status - Seen`. If your goal is for users to perform any custom event, like complete payment in case of payment reminder notification, then you can set that event as your success metric.
+Success Metric can be any event which defines the target user activity you aim to drive with your sent notification. for example, if the objective of your notification is to prompt users to open it, such as in the case of newsletters, you can set your success metric as `Notification Status - Seen`. If your goal is for users to perform any custom event, like complete payment in case of payment reminder notification, then you can set that event as your success metric.
 
 
 In the context of multi-channel delivery, the success metric is utilized solely to track conversion numbers for display in workflow analytics. However, in the case of [smart channel routing](/docs/smart-delivery), the same success metric serves to halt delivery on further channels once the success metric is achieved.
@@ -196,7 +196,7 @@ If a user sees the in-app notification at T+0, only **SMS and WhatsApp are skipp
 Once the success metric is achieved at any point, all remaining channel deliveries are cancelled immediately.
 
 <Info>
-  **Routing is per channel identity, not per channel.** If a user has multiple identities on the same channel (e.g., two email addresses), each identity is treated as a separate step in the sequence. SuprSend sends to the first email address, waits for the configured interval, then sends to the second.
+  **Routing is per channel identity, not per channel.** If a user has multiple identities on the same channel (for example, two email addresses), each identity is treated as a separate step in the sequence. SuprSend sends to the first email address, waits for the configured interval, then sends to the second.
 </Info>
 
 ***
@@ -241,7 +241,7 @@ Defines what counts as "user engaged." Once this is met, SuprSend stops deliveri
 
 Pass a channel list dynamically at runtime via an event property. Useful when a user's preferred channel changes per workflow trigger — for example, a user selecting their preferred channel when booking an appointment.
 
-> For persistent preferences (e.g., a user who always wants email only), use [User Preferences](/docs/user-preferences) instead — it's the more appropriate tool.
+> For persistent preferences (for example, a user who always wants email only), use [User Preferences](/docs/user-preferences) instead — it's the more appropriate tool.
 
 **Setup:** Add a `channels` array to your event properties, then reference the key in the **Override Channels** field in the workflow form.
 
