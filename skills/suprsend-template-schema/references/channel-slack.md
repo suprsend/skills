@@ -32,6 +32,58 @@ For variants with `channel: "slack"`.
 - `text` — `body_text` is a plain message string.
 - `block` — `body_block` is a JSON string conforming to Slack's [Block Kit](https://api.slack.com/block-kit) spec.
 
+## Default mode: JSONNET (Block Kit)
+
+**For all new Slack templates, generate JSONNET by default.** Block Kit is Slack's native rich format — text mode wastes channel capabilities.
+
+Use Text mode ONLY when:
+
+- User explicitly asks for "plain text" or "simple text"
+- Notification is a true one-liner with no CTA
+- Migrating an existing text template
+
+Use JSONNET if ANY of these are present:
+
+- CTA / action link → button block
+- 2+ sections → section blocks + divider
+- Key-value data → fields array
+- Recipient/tenant personalization
+- Batched/digest events → rich_text_list
+
+### Critical format rule
+
+JSONNET output MUST be wrapped in `{ "blocks": [...] }`. The bare-array format `[{...}, {...}]` will fail — Slack's API rejects unwrapped arrays.
+
+✅ Correct:
+
+```jsonnet
+{
+  "blocks": [
+    { "type": "section", "text": { "type": "mrkdwn", "text": "Hello" } }
+  ]
+}
+```
+
+❌ Incorrect:
+
+```jsonnet
+[
+  { "type": "section", "text": { "type": "mrkdwn", "text": "Hello" } }
+]
+```
+
+## Co-pilot output rules
+
+When generating JSONNET for Slack, ALWAYS output:
+
+1. The JSONNET template wrapped in `{ "blocks": [...] }`
+2. Mock data JSON in a separate code block
+3. The variant config: `{ "templating_language": "jsonnet", "body_type": "block" }`
+
+NEVER output bare-array format `[ {...} ]`.
+
+NEVER mix Handlebars `{{ }}` and JSONNET in the same template.
+
 ## Examples
 
 ### Plain text message
@@ -58,7 +110,7 @@ For variants with `channel: "slack"`.
 {
   "templating_language": "jsonnet",
   "body_type": "block",
-  "body_block": "{ blocks: [{ type: 'section', text: { type: 'mrkdwn', text: '*Build failed* in ' + data.repo } }] }"
+  "body_block": "{ \"blocks\": [ { \"type\": \"section\", \"text\": { \"type\": \"mrkdwn\", \"text\": \"*Build failed* in \" + data.repo } }, { \"type\": \"actions\", \"elements\": [ { \"type\": \"button\", \"text\": { \"type\": \"plain_text\", \"text\": \"View logs\" }, \"url\": data.build.log_url } ] } ] }"
 }
 ```
 
@@ -140,7 +192,7 @@ Click **Commit** in the top bar to publish the current draft as a new live versi
   
 
   ### Emoji
-    Use `:emoji_name:` syntax (e.g., `:white_check_mark:`, `:warning:`).
+    Use `:emoji_name:` syntax (for example, `:white_check_mark:`, `:warning:`).
   
 
 
@@ -148,11 +200,16 @@ Click **Commit** in the top bar to publish the current draft as a new live versi
 
 
   ### Text or JSONNET — which should I use?
-    Start with Text for simple alerts and status updates. Switch to JSONNET when you need buttons, images, structured layouts, or batched event lists.
+    **Default to JSONNET.** Use Text only for one-liner alerts with no CTA; use JSONNET for everything else.
   
 
   ### How do I validate my Block Kit JSON?
-    Click **View on Slack Builder** in the JSONNET editor. Slack silently drops invalid blocks instead of showing errors — always validate before committing.
+    **JSONNET is not valid JSON — you cannot paste it directly into Block Kit Builder.** Use one of these:
+
+  1. Click **Load Preview** in the SuprSend JSONNET editor.
+  2. For external review: replace every `data.key` with its mock value, resolve all `+` concatenations, ensure output is wrapped in `{ "blocks": [...] }`, then paste into Block Kit Builder.
+
+  Slack silently drops invalid blocks — always validate before committing.
   
 
   ### What's the message length limit?

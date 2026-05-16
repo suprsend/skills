@@ -83,6 +83,26 @@ sources:
     key: docs_jsonnet
     urls:
       - "https://docs.suprsend.com/docs/jsonnet-templates"
+    replacements:
+      - find: "## Slack Block Kit examples"
+        replace: |-
+          > **Critical rule for Slack:** All Slack JSONNET templates MUST be wrapped in `{ "blocks": [...] }`. The bare-array format `[{...}, {...}]` will fail — Slack's API rejects unwrapped arrays.
+
+          ## Slack Block Kit examples
+      - find: "## MS Teams Adaptive Card examples"
+        replace: |-
+          > **Critical rule for Teams:** In SuprSend, `body_type: "card"` requires `templating_language: "jsonnet"`. Using Handlebars (`{{ }}`) inside Adaptive Card JSON will break rendering — always use `data.key` syntax. Every Adaptive Card must include `"$schema": "http://adaptivecards.io/schemas/adaptive-card.json"` at the top.
+
+          ## MS Teams Adaptive Card examples
+      # Slack examples 1-4: wrap bare arrays in { "blocks": [...] }
+      - findFile: overrides/jsonnet/slack-ex1-find.txt
+        replaceFile: overrides/jsonnet/slack-ex1-replace.txt
+      - findFile: overrides/jsonnet/slack-ex2-find.txt
+        replaceFile: overrides/jsonnet/slack-ex2-replace.txt
+      - findFile: overrides/jsonnet/slack-ex3-find.txt
+        replaceFile: overrides/jsonnet/slack-ex3-replace.txt
+      - findFile: overrides/jsonnet/slack-ex4-find.txt
+        replaceFile: overrides/jsonnet/slack-ex4-replace.txt
 
   - type: docs
     key: docs_multi_lingual
@@ -118,6 +138,20 @@ sources:
     key: docs_slack
     urls:
       - "https://docs.suprsend.com/docs/slack-template"
+    replacements:
+      - find: |2
+            Start with Text for simple alerts and status updates. Switch to JSONNET when you need buttons, images, structured layouts, or batched event lists.
+        replace: |2
+            **Default to JSONNET.** Use Text only for one-liner alerts with no CTA; use JSONNET for everything else.
+      - find: |2
+            Click **View on Slack Builder** in the JSONNET editor. Slack silently drops invalid blocks instead of showing errors — always validate before committing.
+        replace: |2
+            **JSONNET is not valid JSON — you cannot paste it directly into Block Kit Builder.** Use one of these:
+
+            1. Click **Load Preview** in the SuprSend JSONNET editor.
+            2. For external review: replace every `data.key` with its mock value, resolve all `+` concatenations, ensure output is wrapped in `{ "blocks": [...] }`, then paste into Block Kit Builder.
+
+            Slack silently drops invalid blocks — always validate before committing.
 
   - type: docs
     key: docs_ms_teams

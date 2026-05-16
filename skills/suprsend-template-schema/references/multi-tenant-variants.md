@@ -53,11 +53,10 @@ Use `{{$brand.<property>}}` in handlebars templates and `data["$brand"].<propert
 
 **Basic**
 
-| Variable             | Description                       |
-| -------------------- | --------------------------------- |
-| `$brand.tenant_id`   | Tenant identifier (max 64 chars). |
-| `$brand.tenant_name` | Display name for the tenant.      |
-| `$brand.logo`        | URL of the tenant’s logo image.   |
+| Variable            | Description                     |
+| ------------------- | ------------------------------- |
+| `$brand.brand_name` | Display name for the tenant.    |
+| `$brand.logo`       | URL of the tenant’s logo image. |
 
 **Colors**
 
@@ -78,7 +77,7 @@ Use `{{$brand.<property>}}` in handlebars templates and `data["$brand"].<propert
 
 **Custom properties**
 
-| Variable                  | Description                                                                     |
-| ------------------------- | ------------------------------------------------------------------------------- |
-| `$brand.properties.<key>` | Any custom property set on the tenant (e.g. `$brand.properties.support_email`). |
+| Variable                  | Description                                                                            |
+| ------------------------- | -------------------------------------------------------------------------------------- |
+| `$brand.properties.<key>` | Any custom property set on the tenant (for example `$brand.properties.support_email`). |
 ```

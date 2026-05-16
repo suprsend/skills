@@ -1,0 +1,46 @@
+      [
+        {
+          "type": "section",
+          "text": {
+            "type": "mrkdwn",
+            "text": "Share access requested for *<%(document_link)s|%(document_name)s>*" % {
+              document_link: data.document_link,
+              document_name: data.document_name
+            }
+          }
+        },
+        {
+          "type": "section",
+          "fields": [
+            {
+              "type": "mrkdwn",
+              "text": "*Requested by:*\n" + data.requester_name
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*When:*\n" + data.submitted_at
+            },
+            {
+              "type": "mrkdwn",
+              "text": "*Reason:*\n" + data.access_reason
+            }
+          ]
+        },
+        {
+          "type": "actions",
+          "elements": [
+            {
+              "type": "button",
+              "text": { "type": "plain_text", "text": "Approve" },
+              "style": "primary",
+              "value": "approve_access"
+            },
+            {
+              "type": "button",
+              "text": { "type": "plain_text", "text": "Deny" },
+              "style": "danger",
+              "value": "deny_access"
+            }
+          ]
+        }
+      ]

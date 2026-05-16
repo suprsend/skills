@@ -1,0 +1,26 @@
+      {
+        "blocks": [
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": "New Signup on ABC company"
+            }
+          },
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": ">_UserName_: *%(user_name)s*\n>_Email_: *%(email)s*\n>_Organization_: *%(org_name)s*\n>_Domain_: *%(domain)s*" % {
+                user_name: data.user_name, 
+                email: data.user_email, 
+                org_name: data.org.name, 
+                domain: data.org.domain
+              }
+            }
+          },
+          {
+            "type": "divider"
+          }
+        ]
+      }

@@ -36,6 +36,20 @@ export interface DocsSource {
   key: string;
   urls: string[];
   selector?: string;
+  /**
+   * Post-fetch string replacements applied after Mintlify cleanup.
+   * Each `find` (or `findFile`) must match exactly once in the fetched content
+   * (build fails otherwise), to guarantee overrides stay aligned with upstream changes.
+   *
+   * Use `findFile`/`replaceFile` (paths relative to the skill source dir) when the
+   * content is large or contains characters awkward to express in YAML.
+   */
+  replacements?: {
+    find?: string;
+    replace?: string;
+    findFile?: string;
+    replaceFile?: string;
+  }[];
 }
 
 /** Schema source — fetch JSON Schema */

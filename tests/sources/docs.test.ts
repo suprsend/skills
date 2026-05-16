@@ -23,7 +23,7 @@ describe("resolveDocs", () => {
       key: "doc",
       urls: ["https://docs.example.com/page.md"],
     };
-    const result = await resolveDocs(source);
+    const result = await resolveDocs("test-skill", source);
     expect(result).toBe("# Hello\n\nContent here.");
   });
 
@@ -38,7 +38,7 @@ describe("resolveDocs", () => {
         key: "doc",
         urls: ["https://docs.example.com/page"],
       };
-      await resolveDocs(source);
+      await resolveDocs("test-skill", source);
       expect(fetch).toHaveBeenCalledWith("https://docs.example.com/page.md", expect.anything());
     });
 
@@ -52,7 +52,7 @@ describe("resolveDocs", () => {
         key: "doc",
         urls: ["https://docs.example.com/page.md"],
       };
-      await resolveDocs(source);
+      await resolveDocs("test-skill", source);
       expect(fetch).toHaveBeenCalledWith("https://docs.example.com/page.md", expect.anything());
     });
 
@@ -66,7 +66,7 @@ describe("resolveDocs", () => {
         key: "doc",
         urls: ["https://docs.example.com/page.mdx"],
       };
-      await resolveDocs(source);
+      await resolveDocs("test-skill", source);
       expect(fetch).toHaveBeenCalledWith("https://docs.example.com/page.mdx", expect.anything());
     });
 
@@ -84,7 +84,7 @@ describe("resolveDocs", () => {
         key: "doc",
         urls: ["https://docs.example.com/page"],
       };
-      const result = await resolveDocs(source);
+      const result = await resolveDocs("test-skill", source);
       expect(result).toBe("original content");
       // First call with .md, second call with original
       expect(fetch).toHaveBeenCalledTimes(2);
@@ -128,7 +128,7 @@ describe("resolveDocs", () => {
         urls: ["https://docs.example.com/page.md"],
         selector: "## Configuration",
       };
-      const result = await resolveDocs(source);
+      const result = await resolveDocs("test-skill", source);
       expect(result).toContain("## Configuration");
       expect(result).toContain("Config content line 1.");
       expect(result).toContain("Config content line 2.");
@@ -147,7 +147,7 @@ describe("resolveDocs", () => {
         urls: ["https://docs.example.com/page.md"],
         selector: "## Deployment",
       };
-      const result = await resolveDocs(source);
+      const result = await resolveDocs("test-skill", source);
       expect(result).toContain("## Deployment");
       expect(result).toContain("Deploy content.");
     });
@@ -163,7 +163,7 @@ describe("resolveDocs", () => {
         urls: ["https://docs.example.com/page.md"],
         selector: "## Nonexistent",
       };
-      const result = await resolveDocs(source);
+      const result = await resolveDocs("test-skill", source);
       expect(result).toBe("");
     });
 
@@ -178,7 +178,7 @@ describe("resolveDocs", () => {
         urls: ["https://docs.example.com/page.md"],
         selector: "not a heading",
       };
-      await expect(resolveDocs(source)).rejects.toThrow("Invalid section selector");
+      await expect(resolveDocs("test-skill", source)).rejects.toThrow("Invalid section selector");
     });
 
     it("respects heading level boundaries", async () => {
@@ -200,7 +200,7 @@ describe("resolveDocs", () => {
         urls: ["https://docs.example.com/page.md"],
         selector: "## Section A",
       };
-      const result = await resolveDocs(source);
+      const result = await resolveDocs("test-skill", source);
       expect(result).toContain("### Subsection");
       expect(result).toContain("sub content");
       expect(result).not.toContain("Section B");
@@ -221,7 +221,7 @@ describe("resolveDocs", () => {
           "https://docs.example.com/b.md",
         ],
       };
-      const result = await resolveDocs(source);
+      const result = await resolveDocs("test-skill", source);
       expect(result).toContain("Content A");
       expect(result).toContain("---");
       expect(result).toContain("Content B");
@@ -254,7 +254,7 @@ describe("resolveDocs", () => {
         urls: ["https://docs.example.com/page"],
         selector: "## Config",
       };
-      const result = await resolveDocs(source);
+      const result = await resolveDocs("test-skill", source);
       expect(result).toContain("## Config");
       expect(result).toContain("Config content here.");
       expect(result).not.toContain("## Other");
@@ -272,7 +272,7 @@ describe("resolveDocs", () => {
         key: "doc",
         urls: ["https://docs.example.com/page.md"],
       };
-      await expect(resolveDocs(source)).rejects.toThrow("HTTP 500");
+      await expect(resolveDocs("test-skill", source)).rejects.toThrow("HTTP 500");
     });
 
     it("throws when both .md and original URL fail", async () => {
@@ -289,7 +289,7 @@ describe("resolveDocs", () => {
         key: "doc",
         urls: ["https://docs.example.com/page"],
       };
-      await expect(resolveDocs(source)).rejects.toThrow();
+      await expect(resolveDocs("test-skill", source)).rejects.toThrow();
     });
   });
 
@@ -318,7 +318,7 @@ describe("resolveDocs", () => {
         key: "doc",
         urls: ["https://docs.example.com/page.md"],
       };
-      const result = await resolveDocs(source);
+      const result = await resolveDocs("test-skill", source);
       expect(result).not.toContain("Documentation Index");
       expect(result).not.toContain("Mintlify");
       expect(result).toContain("# Delay");

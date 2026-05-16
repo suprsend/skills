@@ -1,0 +1,39 @@
+      {
+        "blocks": [
+          {
+            "type": "section",
+            "text": {
+              "type": "mrkdwn",
+              "text": "Hi " + data["$recipient"].name + " :wave:\nYou have " + data["$batched_events_count"] + " *pending tasks* for today:"
+            }
+          },
+          {
+            "type": "rich_text",
+            "elements": [
+              {
+                "type": "rich_text_list",
+                "style": "bullet",
+                "elements": [
+                  {
+                    "type": "rich_text_section",
+                    "elements": [
+                      { "type": "text", "text": task.title + " (" + task.status + ")" }
+                    ]
+                  }
+                  for task in data["$batched_events"]
+                ]
+              }
+            ]
+          },
+          {
+            "type": "actions",
+            "elements": [
+              {
+                "type": "button",
+                "text": { "type": "plain_text", "text": "View Pending tasks" },
+                "url": "https://app.company.com/tasks"
+              }
+            ]
+          }
+        ]
+      }
