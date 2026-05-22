@@ -15,7 +15,7 @@ For tenant *variables* (logo, colors, properties) that just need substituting in
 
 ## Overview
 
-Use tenant properties in templates to dynamically render tenant-specific content. One template works for all tenants—SuprSend replaces variables with tenant-specific values at runtime.
+Use tenant properties in templates to dynamically render tenant-specific content. One template works for all tenants-SuprSend replaces variables with tenant-specific values at runtime.
 
 ## Email Template Design
 

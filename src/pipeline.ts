@@ -267,31 +267,32 @@ export async function build(options: BuildOptions): Promise<void> {
     ? [options.skill]
     : await discoverSkills();
 
+  const localErrors: Array<{ skill: string; error: Error }> = [];
+
   if (skills.length > 0) {
     logger.info(`Building ${skills.length} skill(s): ${skills.join(", ")}`);
 
-    const errors: Array<{ skill: string; error: Error }> = [];
     for (const skill of skills) {
       try {
         await buildSkill(skill, options);
       } catch (err) {
-        errors.push({ skill, error: err as Error });
+        localErrors.push({ skill, error: err as Error });
         logger.error(`Failed to build "${skill}": ${(err as Error).message}`);
       }
-    }
-
-    if (errors.length > 0) {
-      throw new Error(
-        `${errors.length} skill(s) failed to build: ${errors.map((e) => e.skill).join(", ")}`,
-      );
     }
   } else {
     logger.info("No local skills found in skills-src/");
   }
 
-  // Pull external skills (unless --no-external)
+  // Pull external skills unconditionally — independent of local skill builds.
   if (options.pullExternal !== false) {
     await pullExternalSkills();
+  }
+
+  if (localErrors.length > 0) {
+    throw new Error(
+      `${localErrors.length} skill(s) failed to build: ${localErrors.map((e) => e.skill).join(", ")}`,
+    );
   }
 
   logger.info("Build complete.");

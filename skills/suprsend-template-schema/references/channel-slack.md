@@ -130,16 +130,20 @@ The Slack editor supports two modes: a **Text** editor for simple messages, and 
 
 ## Slack fields
 
-**Text mode** — a single text field. Supports [Handlebars](/docs/handlebars-helpers) variables (`{{variable_name}}`). Use triple braces `{{{url}}}` for URLs with special characters.
+**Text mode** - a single text field. Supports [Handlebars](/docs/handlebars-helpers) variables (`{{variable_name}}`). Use triple braces `{{{url}}}` for URLs with special characters.
 
-**JSONNET mode** — a code editor that outputs [Slack Block Kit](https://api.slack.com/block-kit) JSON. Variables use `data.key` syntax (not Handlebars). Design visually in the [Block Kit Builder](https://app.slack.com/block-kit-builder/) first, then adapt the JSON into JSONNET. See the full [JSONNET reference](/docs/jsonnet-templates) for syntax, examples, and debugging.
+**JSONNET mode** - a code editor that outputs [Slack Block Kit](https://api.slack.com/block-kit) JSON. Variables use `data.key` syntax (not Handlebars). Design visually in the [Block Kit Builder](https://app.slack.com/block-kit-builder/) first, then adapt the JSON into JSONNET. See the full [JSONNET reference](/docs/jsonnet-templates) for syntax, examples, and debugging.
+
+> **Warning:**
+  Slack JSONNET templates must be wrapped in `{"blocks": [...]}`. A bare array of blocks will not render - see the [JSONNET reference](/docs/jsonnet-templates#slack-block-kit-examples) for the correct shape.
+
 
 <Tip>
-  **AI prompt — convert text to Block Kit:** *"Convert this Slack notification into Block Kit JSON: \[paste message]. Variables: \[list]. Return valid JSON I can adapt into JSONNET for SuprSend (replacing values with data.key)."*
+  **AI prompt - convert text to Block Kit:** *"Convert this Slack notification into Block Kit JSON: \[paste message]. Variables: \[list]. Return valid JSON I can adapt into JSONNET for SuprSend (replacing values with data.key)."*
 </Tip>
 
 <Tip>
-  **AI prompt — debug JSONNET:** *"Fix this JSONNET error from the SuprSend Slack editor. Error: \[paste error]. Code: \[paste JSONNET]. Variables are accessed as data.key or data\['\$special_key']."*
+  **AI prompt - debug JSONNET:** *"Fix this JSONNET error from the SuprSend Slack editor. Error: \[paste error]. Code: \[paste JSONNET]. Variables are accessed as data.key or data\['\$special_key']."*
 </Tip>
 
 <Info>
@@ -148,15 +152,15 @@ The Slack editor supports two modes: a **Text** editor for simple messages, and 
 
 ## Adding dynamic content
 
-**In Text mode** — type `{{` for auto-suggestions. Standard Handlebars syntax:
+**In Text mode** - type `{{` for auto-suggestions. Standard Handlebars syntax:
 
-* `{{order_id}}` — top-level variable
-* `{{order.address.city}}` — nested variable
-* `{{{tracking_url}}}` — URL (avoid escaping)
-* `{{$recipient.name}}` — recipient property
-* `{{$brand.brand_name}}` — tenant property
+* `{{order_id}}` - top-level variable
+* `{{order.address.city}}` - nested variable
+* `{{{tracking_url}}}` - URL (avoid escaping)
+* `{{$recipient.name}}` - recipient property
+* `{{$brand.brand_name}}` - tenant property
 
-**In JSONNET mode** — variables use `data.key` syntax. See [JSONNET variable reference](/docs/jsonnet-templates#variable-syntax) for the full table.
+**In JSONNET mode** - variables use `data.key` syntax. See [JSONNET variable reference](/docs/jsonnet-templates#variable-syntax) for the full table.
 
 For conditionals, loops, and helpers in Text mode, see [Handlebars Helpers](/docs/handlebars-helpers).
 
@@ -166,11 +170,11 @@ For conditionals, loops, and helpers in Text mode, see [Handlebars Helpers](/doc
 
 ## Preview and test
 
-**Text mode** — the right panel shows a Slack message preview. It does not update automatically — **refresh the page** to see the latest changes.
+**Text mode** - the right panel shows a Slack message preview. It does not update automatically - **refresh the page** to see the latest changes.
 
-**JSONNET mode** — preview is not available in the editor. Click **View on Slack Builder** to render and validate your Block Kit output in Slack's [Block Kit Builder](https://app.slack.com/block-kit-builder/).
+**JSONNET mode** - preview is not available in the editor. Click **View on Slack Builder** to render and validate your Block Kit output in Slack's [Block Kit Builder](https://app.slack.com/block-kit-builder/).
 
-Click **Test** in the top-right corner to send a real Slack message. This uses the **live version** — commit your changes before testing. See [Testing a Template](/docs/templates#test) for the full guide.
+Click **Test** in the top-right corner to send a real Slack message. This uses the **live version** - commit your changes before testing. See [Testing a Template](/docs/templates#test) for the full guide.
 
 ## Commit
 
@@ -199,7 +203,7 @@ Click **Commit** in the top bar to publish the current draft as a new live versi
 ## Frequently asked questions
 
 
-  ### Text or JSONNET — which should I use?
+  ### Text or JSONNET - which should I use?
     **Default to JSONNET.** Use Text only for one-liner alerts with no CTA; use JSONNET for everything else.
   
 
@@ -210,6 +214,10 @@ Click **Commit** in the top bar to publish the current draft as a new live versi
   2. For external review: replace every `data.key` with its mock value, resolve all `+` concatenations, ensure output is wrapped in `{ "blocks": [...] }`, then paste into Block Kit Builder.
 
   Slack silently drops invalid blocks — always validate before committing.
+  
+
+  ### Why isn't my Slack template rendering?
+    The most common reason is missing the `{"blocks": [...]}` wrapper. The SuprSend JSONNET editor only accepts the object form - a bare array (`[{...}]`) will not work. Wrap all your blocks inside a top-level object with a `blocks` key.
   
 
   ### What's the message length limit?

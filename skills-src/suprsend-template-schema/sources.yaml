@@ -94,15 +94,6 @@ sources:
           > **Critical rule for Teams:** In SuprSend, `body_type: "card"` requires `templating_language: "jsonnet"`. Using Handlebars (`{{ }}`) inside Adaptive Card JSON will break rendering — always use `data.key` syntax. Every Adaptive Card must include `"$schema": "http://adaptivecards.io/schemas/adaptive-card.json"` at the top.
 
           ## MS Teams Adaptive Card examples
-      # Slack examples 1-4: wrap bare arrays in { "blocks": [...] }
-      - findFile: overrides/jsonnet/slack-ex1-find.txt
-        replaceFile: overrides/jsonnet/slack-ex1-replace.txt
-      - findFile: overrides/jsonnet/slack-ex2-find.txt
-        replaceFile: overrides/jsonnet/slack-ex2-replace.txt
-      - findFile: overrides/jsonnet/slack-ex3-find.txt
-        replaceFile: overrides/jsonnet/slack-ex3-replace.txt
-      - findFile: overrides/jsonnet/slack-ex4-find.txt
-        replaceFile: overrides/jsonnet/slack-ex4-replace.txt
 
   - type: docs
     key: docs_multi_lingual
@@ -144,7 +135,7 @@ sources:
         replace: |2
             **Default to JSONNET.** Use Text only for one-liner alerts with no CTA; use JSONNET for everything else.
       - find: |2
-            Click **View on Slack Builder** in the JSONNET editor. Slack silently drops invalid blocks instead of showing errors — always validate before committing.
+            Click **View on Slack Builder** in the JSONNET editor. Slack silently drops invalid blocks instead of showing errors - always validate before committing.
         replace: |2
             **JSONNET is not valid JSON — you cannot paste it directly into Block Kit Builder.** Use one of these:
 
