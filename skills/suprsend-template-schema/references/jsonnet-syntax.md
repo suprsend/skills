@@ -14,7 +14,7 @@ Inside Jsonnet, the trigger payload is available as `data`. Access tenant proper
 ```
 # JSONNET
 
-> JSONNET syntax reference for Slack Block Kit and MS Teams Adaptive Card templates in SuprSend — variables, conditionals, arrays, and batched events.
+> JSONNET syntax reference for Slack Block Kit and MS Teams Adaptive Card templates in SuprSend - variables, conditionals, arrays, and batched events.
 
 [JSONNET](https://jsonnet.org/) is a data templating language that extends JSON with variables, conditionals, and functions. SuprSend uses JSONNET as the templating language for rich [Slack Block Kit](https://api.slack.com/block-kit) and [MS Teams Adaptive Card](https://adaptivecards.io/) templates.
 
@@ -35,7 +35,7 @@ All trigger payload data, recipient properties, tenant properties, and batched e
 | Batched event item                  | `data['$batched_events'][0].key` | `data['$batched_events'][0].title`                    |
 
 > **Warning:**
-  The `{{variable}}` Handlebars syntax does **not** work in JSONNET editors. Use `data.key` syntax only. Similarly, the Adaptive Card `${variable}` syntax is not supported — use `data.key` instead.
+  The `{{variable}}` Handlebars syntax does **not** work in JSONNET editors. Use `data.key` syntax only. Similarly, the Adaptive Card `${variable}` syntax is not supported - use `data.key` instead.
 
 
 ## Iterating over arrays
@@ -43,35 +43,39 @@ All trigger payload data, recipient properties, tenant properties, and batched e
 Use JSONNET `for` loops to repeat blocks for each item in an array:
 
 ```json theme={"system"}
-[
-  {
-    "type": "section",
-    "fields": [
-      {
-        "type": "plain_text",
-        "text": item.name + ": " + item.description
-      }
-      for item in data.items
-    ]
-  }
-]
+{
+  "blocks": [
+    {
+      "type": "section",
+      "fields": [
+        {
+          "type": "plain_text",
+          "text": item.name + ": " + item.description
+        }
+        for item in data.items
+      ]
+    }
+  ]
+}
 ```
 
 For batched events (from [batch](/docs/batch) or [digest](/docs/digest) nodes):
 
 ```json theme={"system"}
-[
-  {
-    "type": "section",
-    "fields": [
-      {
-        "type": "plain_text",
-        "text": event.title + " (" + event.status + ")"
-      }
-      for event in data["$batched_events"]
-    ]
-  }
-]
+{
+  "blocks": [
+    {
+      "type": "section",
+      "fields": [
+        {
+          "type": "plain_text",
+          "text": event.title + " (" + event.status + ")"
+        }
+        for event in data["$batched_events"]
+      ]
+    }
+  ]
+}
 ```
 
 ## Conditional logic
@@ -120,6 +124,13 @@ Or use string concatenation with `+`:
 ## Slack Block Kit examples
 
 Design visually in the [Slack Block Kit Builder](https://app.slack.com/block-kit-builder/), then adapt the JSON into JSONNET by replacing hardcoded values with `data.key` references.
+
+> **Warning:**
+  **Slack templates must be wrapped in `{"blocks": [...]}`.**
+
+  The SuprSend JSONNET editor for Slack only accepts the `{"blocks": [...]}` object format. A bare array (e.g., `[{"type": "section", ...}]`) will not render - wrap your blocks inside a top-level object with a `blocks` key.
+
+  The [Block Kit Builder](https://app.slack.com/block-kit-builder/) also outputs this `{"blocks": [...]}` shape by default, so you can copy its output directly and replace hardcoded values with `data.key` references.
 
 
   ### Simple text notification
@@ -416,12 +427,13 @@ Design visually in the [Adaptive Cards Designer](https://adaptivecards.io/design
 
 ## Debugging
 
-* **Preview not loading** — ensure all `data.key` variables have values in the Variables panel. Missing mock data causes render errors.
-* **Syntax error in preview** — check for missing commas, unmatched brackets, or using `{{}}` instead of `data.key`.
-* **Slack silently drops blocks** — validate your output in the [Block Kit Builder](https://app.slack.com/block-kit-builder/) before committing.
-* **Teams renders differently than designer** — always test in an actual Teams chat. The [Adaptive Cards Designer](https://adaptivecards.io/designer/) is an approximation, not exact.
+* **Preview not loading** - ensure all `data.key` variables have values in the Variables panel. Missing mock data causes render errors.
+* **Syntax error in preview** - check for missing commas, unmatched brackets, or using `{{}}` instead of `data.key`.
+* **Slack message not rendering** - make sure your template is wrapped in `{"blocks": [...]}`. A bare array (`[...]`) is not valid for the SuprSend Slack JSONNET editor.
+* **Slack silently drops blocks** - validate your output in the [Block Kit Builder](https://app.slack.com/block-kit-builder/) before committing.
+* **Teams renders differently than designer** - always test in an actual Teams chat. The [Adaptive Cards Designer](https://adaptivecards.io/designer/) is an approximation, not exact.
 
 <Tip>
-  **AI prompt — debug JSONNET:** *"Fix this JSONNET error from the SuprSend editor. Error: \[paste error]. Code: \[paste JSONNET]. Variables are accessed as data.key or data\['\$special_key']."*
+  **AI prompt - debug JSONNET:** *"Fix this JSONNET error from the SuprSend editor. Error: \[paste error]. Code: \[paste JSONNET]. Variables are accessed as data.key or data\['\$special_key']."*
 </Tip>
 ```

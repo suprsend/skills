@@ -62,7 +62,7 @@ For variants with `channel: "sms"`.
 ```
 # SMS
 
-> Design SMS notification content — a single body field with Handlebars variables and a live phone preview.
+> Design SMS notification content - a single body field with Handlebars variables and a live phone preview.
 
 The SMS editor is a text editor with a live phone preview on the right. Content is personalised with [Handlebars](/docs/handlebars-helpers) variables (`{{variable_name}}`).
 
@@ -77,7 +77,7 @@ The SMS editor is a text editor with a live phone preview on the right. Content 
 
 The SMS editor has a single field:
 
-**Body** — the full text of the SMS message. This is everything the recipient sees. Aim for one segment (160 GSM-7 characters) — each extra segment doubles cost. Front-load the key info, include one clear CTA, and avoid shortened URLs (some carriers flag them as spam; use a branded domain if needed). Supports Handlebars variables and emoji.
+**Body** - the full text of the SMS message. This is everything the recipient sees. Aim for one segment (160 GSM-7 characters) - each extra segment doubles cost. Front-load the key info, include one clear CTA, and avoid shortened URLs (some carriers flag them as spam; use a branded domain if needed). Supports Handlebars variables and emoji.
 
 ## Adding dynamic content
 
@@ -89,7 +89,7 @@ You can add variables in the template to personalise it for each recipient. Vari
   
 
   **Use variables in the template**
-    Type `{{` in the body field — matching variables appear as auto-suggestions. You can also type variable names manually following [Handlebars syntax](https://handlebarsjs.com/guide/#what-is-handlebars).
+    Type `{{` in the body field - matching variables appear as auto-suggestions. You can also type variable names manually following [Handlebars syntax](https://handlebarsjs.com/guide/#what-is-handlebars).
 
     **Examples using this sample data:**
 
@@ -130,7 +130,7 @@ For conditionals and helpers, see [Handlebars Helpers](/docs/handlebars-helpers)
 
 The right panel shows a live phone preview, updated in real time as you type. Variables render using data from the **Variables panel**.
 
-Click **Test** in the top-right corner to send a real SMS to a real phone number. This uses the **live version** — commit your changes before testing. See [Testing a Template](/docs/templates#test) for the full guide.
+Click **Test** in the top-right corner to send a real SMS to a real phone number. This uses the **live version** - commit your changes before testing. See [Testing a Template](/docs/templates#test) for the full guide.
 
 ## Commit
 
@@ -150,7 +150,7 @@ India requires all SMS templates to be registered and approved through a DLT (Di
   
 
   **Enable SMS template approval**
-    Toggle on **SMS Template Approval Required**. This enables the DLT workflow — the SMS editor will now show three fields instead of one.
+    Toggle on **SMS Template Approval Required**. This enables the DLT workflow - the SMS editor will now show three fields instead of one.
 
     
 
@@ -162,11 +162,11 @@ India requires all SMS templates to be registered and approved through a DLT (Di
 
 With DLT enabled, the SMS editor shows:
 
-**Message Type** — select the type: **Transactional** (triggered by a user action — delivery updates, OTPs), **Promotional** (marketing messages without explicit consent), or **Engagement** (re-engagement messages to existing users — feature promotions, discount offers).
+**Message Type** - select the type: **Transactional** (triggered by a user action - delivery updates, OTPs), **Promotional** (marketing messages without explicit consent), or **Engagement** (re-engagement messages to existing users - feature promotions, discount offers).
 
-**Header** — the sender ID (6 alphanumeric characters) registered with DLT. Separate headers exist for each message type.
+**Header** - the sender ID (6 alphanumeric characters) registered with DLT. Separate headers exist for each message type.
 
-**Body** — the SMS content. Must exactly match the template registered on the DLT portal. Variables must align with the DLT placeholder format.
+**Body** - the SMS content. Must exactly match the template registered on the DLT portal. Variables must align with the DLT placeholder format.
 
 ### DLT approval flow
 
@@ -191,7 +191,7 @@ Templates pending approval are visible in the **Approvals** tab on the [template
 
 
 <Tip>
-  **AI prompt — DLT compliance check:** *"Convert this SMS body to DLT format. Header: \[6-char sender ID]. Category: \[transactional/promotional]. Body: \[paste text]. Convert Handlebars variables to DLT placeholder format, verify category match, and flag rejection risks."*
+  **AI prompt - DLT compliance check:** *"Convert this SMS body to DLT format. Header: \[6-char sender ID]. Category: \[transactional/promotional]. Body: \[paste text]. Convert Handlebars variables to DLT placeholder format, verify category match, and flag rejection risks."*
 </Tip>
 
 ***
@@ -204,7 +204,7 @@ Templates pending approval are visible in the **Approvals** tab on the [template
     | ----- | ----------------------------------------------------------------------------------------------------------------------- |
     | Body  | `Your verification code is {{otp_code}}. It expires in {{expiry_minutes}} minutes. Do not share this code with anyone.` |
 
-    Keep OTP messages under one segment (160 characters). No URLs needed — just the code and expiry.
+    Keep OTP messages under one segment (160 characters). No URLs needed - just the code and expiry.
   
 
   ### Order / delivery update
@@ -234,15 +234,15 @@ Templates pending approval are visible in the **Approvals** tab on the [template
 
 ## Best practices
 
-* **Identify yourself** — start with your brand name or use a registered sender ID so recipients know who the message is from.
-* **Time-sensitive messages** — pair SMS with a [delay node](/docs/delay) or [time window](/docs/time-window) to avoid sending at inconvenient hours.
-* **DLT (India)** — ensure your template body exactly matches the DLT-registered content, including punctuation and variable placeholders.
+* **Identify yourself** - start with your brand name or use a registered sender ID so recipients know who the message is from.
+* **Time-sensitive messages** - pair SMS with a [delay node](/docs/delay) or [time window](/docs/time-window) to avoid sending at inconvenient hours.
+* **DLT (India)** - ensure your template body exactly matches the DLT-registered content, including punctuation and variable placeholders.
 
 ## Frequently asked questions
 
 
   ### What is DLT and when do I need it?
-    DLT (Distributed Ledger Technology) is a regulatory requirement in India. All SMS templates sent in India must be registered with a DLT portal, have an approved header (sender ID), and go through an approval process before going live. If you're sending SMS outside India, you don't need DLT — templates go live immediately on commit.
+    DLT (Distributed Ledger Technology) is a regulatory requirement in India. All SMS templates sent in India must be registered with a DLT portal, have an approved header (sender ID), and go through an approval process before going live. If you're sending SMS outside India, you don't need DLT - templates go live immediately on commit.
   
 
   ### Why was my DLT template rejected?
@@ -261,11 +261,11 @@ Templates pending approval are visible in the **Approvals** tab on the [template
   
 
   ### How do I add URLs in SMS without them breaking?
-    Use triple curly braces `{{{url}}}` instead of double. Double braces HTML-escape characters like `&`, `?`, `=` — which breaks URLs. Triple braces output the raw value.
+    Use triple curly braces `{{{url}}}` instead of double. Double braces HTML-escape characters like `&`, `?`, `=` - which breaks URLs. Triple braces output the raw value.
   
 
   ### Can I send SMS in different languages?
-    Yes — use [template variants](/docs/template-variants). Create a variant for each language with a locale condition. Set the user's preferred language via `$locale` on their profile — SuprSend auto-selects the matching variant. The default variant acts as the English fallback.
+    Yes - use [template variants](/docs/template-variants). Create a variant for each language with a locale condition. Set the user's preferred language via `$locale` on their profile - SuprSend auto-selects the matching variant. The default variant acts as the English fallback.
   
 
   ### Can I test a DLT template before approval?
