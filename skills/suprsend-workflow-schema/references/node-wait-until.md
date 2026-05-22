@@ -2,6 +2,8 @@
 
 **Schema `node_type`:** `branch_waituntil`
 
+> **Use `branch_waituntil` (not `delay`) whenever the wait depends on a real-world event.** Natural-language signals: *"after completion"*, *"after the call ends"*, *"once the user submits / finishes / pays / confirms"*, *"when X is done"*, *"after they sign up / verify / approve"*. In every case, the right pattern is a `branch_waituntil` on a `future_event` matching the completion event (and a timeout branch for the case where the event never arrives). Do not approximate the wait with a fixed or relative `delay` — the action's duration is variable and the message will fire mid-action.
+
 ## Documentation
 
 # Wait Until
@@ -207,3 +209,65 @@ The default branch uses a delay condition with the same schema as the delay node
   ]
 }
 ```
+
+## Example: send a follow-up only after the action completes
+
+The post-delivery sends fire only after `order_delivered` arrives, never before. The terminal timeout branch ends the workflow cleanly if delivery never confirms.
+
+```json
+{
+  "node_type": "branch_waituntil",
+  "name": "Wait for order_delivered",
+  "properties": {},
+  "branches": [
+    {
+      "name": "Delivered",
+      "ref": "delivered",
+      "is_default": false,
+      "conditions": [
+        {
+          "type": "future_event",
+          "event_name": "order_delivered",
+          "event_conditions": [
+            {
+              "type": "expression_v1",
+              "expression_v1": {
+                "op": "AND",
+                "args": [
+                  { "variable_ns": "$future_event", "variable": "order_id", "op": "==", "value": "order_id" }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "nodes": [ /* post-delivery sends go here */ ]
+    },
+    {
+      "name": "Timeout",
+      "ref": "delivery_timeout",
+      "is_default": true,
+      "is_terminal": true,
+      "conditions": [ { "type": "delay", "delay_properties": { "delay_type": "fixed", "value": "7d" } } ],
+      "nodes": []
+    }
+  ]
+}
+```
+
+## Terminating on timeout
+
+The default branch in `branch_waituntil` represents the "event never arrived" path. In most flows, this is also where the workflow should end — there is no point continuing the post-event sequence for a user who never completed the action. Set `is_terminal: true` on the timeout branch to make this explicit.
+
+```json
+{
+  "name": "Timeout",
+  "ref": "no_response_timeout",
+  "is_default": true,
+  "is_terminal": true,
+  "conditions": [ { "type": "delay", "delay_properties": { "delay_type": "fixed", "value": "24h" } } ],
+  "nodes": [ /* optional last-ditch notification, then exit */ ]
+}
+```
+
+Without `is_terminal: true`, the workflow falls through to whatever follows the `branch_waituntil` node — usually the post-completion sequence — which fires for users who timed out, contrary to intent.

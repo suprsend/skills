@@ -4,6 +4,8 @@ Most text-bearing fields in a variant's `content` are rendered with Handlebars a
 
 This applies to every channel where `templating_language` is `handlebars` (the default for all channels). Slack and MS Teams additionally support `jsonnet` — for those, see the channel reference.
 
+> **Brand variables:** the tenant display name is `\{{$brand.brand_name}}`, not `\{{$brand.name}}`. Custom tenant properties always go under `\{{$brand.properties.<key>}}`. There is no `$brand.<custom_key>` shorthand — `\{{$brand.address}}`, `\{{$brand.support_url}}`, `\{{$brand.unsubscribe_url}}` will not resolve. See {{ref-link "multi-tenant-variants.md" "Multi-tenant Variants"}} for the full reserved-key list and the per-recipient `\{{$hosted_preference_url}}` / `\{{$embedded_preference_url}}` variables.
+
 ## Documentation
 
 ```

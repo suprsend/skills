@@ -176,7 +176,7 @@ There will always be the case where you would be required to add dynamic content
             "state": "KA"
           },
           "order_id": "11200123",
-          "first_name": "Nikita"
+          "first_name": "Emma"
         },
         "product_page": "https://www.suprsend.com"
       }

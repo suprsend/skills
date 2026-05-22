@@ -2,6 +2,8 @@
 
 **Schema `node_type`:** `delay`
 
+> **Use `delay` only for known time offsets.** A `delay` node is correct when the wait is a fixed duration, a dynamic value from payload, or relative to a timestamp already in the payload. It is the **wrong node** when the wait depends on a real-world event finishing — e.g., *"after completion"*, *"after the call ends"*, *"once the user submits / finishes / pays / confirms"*. In those cases use [`branch_waituntil`](node-wait-until.md) on the completion event. Anchoring a delay to a start time when the user meant *after the event ends* causes downstream sends to fire mid-action, because actions have variable durations.
+
 ## Documentation
 
 {{{docs_delay}}}

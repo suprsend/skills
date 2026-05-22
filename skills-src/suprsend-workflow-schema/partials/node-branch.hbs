@@ -59,3 +59,45 @@ Each branch has 2-10 items: up to 9 conditional branches and 1 default branch (m
   ]
 }
 ```
+
+## Terminating the workflow on a branch
+
+Set `is_terminal: true` on a branch object to end the workflow run when that branch finishes. Nodes that appear *after* the parent `branch` (or `branch_waituntil`) node in the tree are skipped for runs that exited through a terminal branch.
+
+Use it when the branch represents a clean exit from the journey:
+
+- Rejection / decline paths in approval flows
+- Timeout / no-response paths in `branch_waituntil` — see [Wait Until → Terminating on timeout](node-wait-until.md)
+- Failure paths where no further notifications should fire
+- Any branch after which the rest of the parent tree would be incorrect to execute (e.g., a post-resolution sequence that should not run if the request was rejected)
+
+Default: `is_terminal: false` — i.e., after the branch's `nodes` finish, the workflow continues with whatever node follows the parent branch construct. Forgetting to set `is_terminal: true` on a rejection / timeout branch causes the post-success sequence to run for users who rejected or timed out.
+
+### Example: terminate the workflow on rejection
+
+With `is_terminal: true` on the Rejected branch, the workflow stops after the rejection notice fires — any nodes that appear after this `branch` in the parent tree are skipped for rejected requests.
+
+```json
+{
+  "node_type": "branch",
+  "name": "Approval Outcome",
+  "ref": "approval_outcome",
+  "branches": [
+    {
+      "name": "Approved",
+      "ref": "approved",
+      "is_default": false,
+      "conditions": [ /* approval condition */ ],
+      "nodes": [ /* post-approval sends */ ]
+    },
+    {
+      "name": "Rejected",
+      "ref": "rejected",
+      "is_default": true,
+      "is_terminal": true,
+      "conditions": [],
+      "nodes": [ /* rejection notice send, then workflow ends */ ]
+    }
+  ]
+}
+```

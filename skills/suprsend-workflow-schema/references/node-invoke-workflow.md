@@ -2,6 +2,19 @@
 
 **Schema `node_type`:** `invokeworkflow`
 
+## When to use
+
+Use `invokeworkflow` to trigger a workflow from within another workflow. The two primary use cases are:
+
+1. **Multi-recipient flows** — the parent workflow sends to recipient A, and at one or more points needs to also notify recipient B (e.g., a buyer-triggered order workflow that also alerts the seller; a comment workflow that also notifies the resource owner). The invoked workflow runs in parallel for the second recipient, so the parent keeps running for the first.
+2. **Escalation** — if a team member doesn't take action within a window, invoke a separate workflow with the manager as recipient.
+
+`invokeworkflow` is **required** (not `override_recipients_*`) when:
+
+- The workflow is `trigger_type=api` — overrides are event-only.
+- The same run needs to send to multiple distinct recipients — overrides re-point the whole run, not individual nodes.
+- A digest / batch needs to aggregate across a key other than the parent's trigger recipient — see [Digest](node-digest.md).
+
 ## Documentation
 
 # Invoke Workflow
@@ -84,7 +97,7 @@ We use a shallow merge strategy to combine extra input data (defined in data JSO
 - `actor`
 - `expression`
 
-## Example
+## Example: escalation
 
 ```json
 {
@@ -94,6 +107,23 @@ We use a shallow merge strategy to combine extra input data (defined in data JSO
     "recipient_selection": "expression",
     "recipient_expression": "data.manager_id",
     "actor_selection": "recipient",
+    "append_current_run_data": true
+  }
+}
+```
+
+## Example: notify a different recipient mid-flow
+
+The parent workflow keeps running for the original (buyer) recipient. The `order-seller-alert` workflow runs independently with `seller_id` as its recipient.
+
+```json
+{
+  "node_type": "invokeworkflow",
+  "name": "Notify Order Seller",
+  "properties": {
+    "workflow": "order-seller-alert",
+    "recipient_selection": "expression",
+    "recipient_expression": "data.seller_id",
     "append_current_run_data": true
   }
 }
