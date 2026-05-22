@@ -57,6 +57,8 @@ Route notifications through different paths based on conditions.
 | Branch | `branch` | If/else routing based on conditions |
 | Wait Until | `branch_waituntil` | Pause until condition is met or timeout expires |
 
+> When a branch is a terminal exit (rejection, timeout, no-response, failure), set `is_terminal: true` on the branch object. Without it, the workflow continues past the branch construct for that path — post-approval sends will fire for users who rejected, post-completion sends will fire for users who timed out. See {{ref-link "node-branch.md" "Branch"}} → Terminating the workflow on a branch and {{ref-link "node-wait-until.md" "Wait Until"}} → Terminating on timeout.
+
 See: {{ref-link "node-branch.md" "Branch"}}, {{ref-link "node-wait-until.md" "Wait Until"}}
 
 ### Data Nodes

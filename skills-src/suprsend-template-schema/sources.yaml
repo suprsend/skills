@@ -109,11 +109,19 @@ sources:
     key: docs_email
     urls:
       - "https://docs.suprsend.com/docs/email-template"
+    replacements:
+      # Per-recipient preference URL — upstream has a broken `$brand.$hosted_preference_url` form.
+      - find: '* `{{$brand.$hosted_preference_url}}` - unsubscribe link'
+        replace: '* `{{$hosted_preference_url}}` — per-recipient unsubscribe / preference URL (top-level, not under `$brand`)'
 
   - type: docs
     key: docs_sms
     urls:
       - "https://docs.suprsend.com/docs/sms-template"
+    replacements:
+      # US-context sample data — upstream uses a non-US first name placeholder.
+      - find: '"first_name": "Nikita"'
+        replace: '"first_name": "Emma"'
 
   - type: docs
     key: docs_whatsapp
@@ -124,6 +132,9 @@ sources:
     key: docs_inbox
     urls:
       - "https://docs.suprsend.com/docs/in-app-inbox-template"
+    replacements:
+      - find: '"first_name": "Nikita"'
+        replace: '"first_name": "Emma"'
 
   - type: docs
     key: docs_slack
@@ -153,6 +164,9 @@ sources:
     key: docs_androidpush
     urls:
       - "https://docs.suprsend.com/docs/android-push-template"
+    replacements:
+      - find: '"first_name": "Nikita"'
+        replace: '"first_name": "Emma"'
 
   - type: docs
     key: docs_iospush
@@ -163,6 +177,9 @@ sources:
     key: docs_webpush
     urls:
       - "https://docs.suprsend.com/docs/web-push-template"
+    replacements:
+      - find: '"first_name": "Nikita"'
+        replace: '"first_name": "Emma"'
 
 # ── Output references ────────────────────────────────────────────────────
 

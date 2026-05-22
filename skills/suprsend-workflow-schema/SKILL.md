@@ -10,6 +10,20 @@ SuprSend workflows define notification logic as a sequence of nodes. Each workfl
 
 Workflows are defined as JSON conforming to the schema at `https://schema.suprsend.com/workflow/v1/schema.json`.
 
+## Recipient model
+
+A workflow runs for exactly one recipient — the `distinct_id` from the API trigger, or from the event's `distinct_id` (or its `override_recipients_*` override). Every delivery node in the workflow sends to that recipient. **Delivery nodes have no per-node recipient field.**
+
+If a workflow needs to send to someone other than the trigger recipient, use one of these patterns:
+
+| Need | Use | Notes |
+| --- | --- | --- |
+| Re-point the *entire* workflow to a different recipient based on event payload (e.g., approval flows where the actor should receive resolution updates instead of the approver) | `override_recipients_type` + `override_recipients_user_expr` (or `override_recipients_single_object_fields_expr`) at the workflow root | **Event-triggered workflows only** (`trigger_type=event`). Not available for `trigger_type=api`. See [Workflow Schema Guide](references/workflow-schema-guide.md) → Recipient overrides. |
+| Send to a different recipient *mid-flow*, while continuing the parent flow for the original recipient (e.g., a buyer-triggered order workflow that also alerts the seller at one step) | `invokeworkflow` node with `recipient_selection: "expression"` and `recipient_expression` pointing at the new recipient | Works for both `event` and `api` triggers. The invoked workflow runs in parallel with its own recipient. See [Invoke Workflow](references/node-invoke-workflow.md). |
+| Aggregate across recipients different from the workflow's trigger recipient (e.g., one digest per seller across many buyer-triggered orders) | A separate workflow triggered with the digest key as its recipient, invoked from the parent via `invokeworkflow` | Digest nodes batch on `(recipient, workflow_slug)`. A digest inside a buyer-triggered workflow will always batch per-buyer. See [Digest](references/node-digest.md). |
+
+If a generated workflow sends to multiple distinct recipients across nodes and uses neither `override_recipients_*` nor `invokeworkflow`, it is wrong — every send will route to the trigger recipient.
+
 
 For a complete guide on creating workflows using the JSON schema, see [Workflow Schema Guide](references/workflow-schema-guide.md).
 
@@ -67,6 +81,8 @@ Route notifications through different paths based on conditions.
 |---|---|---|
 | Branch | `branch` | If/else routing based on conditions |
 | Wait Until | `branch_waituntil` | Pause until condition is met or timeout expires |
+
+> When a branch is a terminal exit (rejection, timeout, no-response, failure), set `is_terminal: true` on the branch object. Without it, the workflow continues past the branch construct for that path — post-approval sends will fire for users who rejected, post-completion sends will fire for users who timed out. See [Branch](references/node-branch.md) → Terminating the workflow on a branch and [Wait Until](references/node-wait-until.md) → Terminating on timeout.
 
 See: [Branch](references/node-branch.md), [Wait Until](references/node-wait-until.md)
 

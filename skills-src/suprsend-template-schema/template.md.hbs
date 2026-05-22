@@ -18,6 +18,60 @@ A variant's `channel` field selects which content schema applies. Pick the refer
 | iOS Push | `iospush` | {{ref-link "channel-iospush.md" "iOS push content schema"}} |
 | Web Push | `webpush` | {{ref-link "channel-webpush.md" "Web push content schema"}} |
 
+## Brand variables
+
+Templates can reference tenant/brand properties. There are three shapes — use the right one for each case:
+
+### 1. Reserved `$brand.*` keys
+
+These are the only keys valid directly under `$brand.`. Any other key under `$brand.` will not resolve and will break preview rendering — put it under `$brand.properties.` instead (see below).
+
+| Variable | Renders |
+| --- | --- |
+| `\{{$brand.brand_id}}` | Tenant slug / id |
+| `\{{$brand.brand_name}}` | Tenant display name. **The key is `brand_name`, not `name`.** |
+| `\{{$brand.logo}}` | Tenant logo URL |
+| `\{{$brand.primary_color}}` | Primary brand color |
+| `\{{$brand.secondary_color}}` | Secondary brand color |
+| `\{{$brand.tertiary_color}}` | Tertiary brand color |
+| `\{{$brand.timezone}}` | Tenant timezone |
+| `\{{$brand.embedded_preference_url}}` | Brand-level embedded preference URL |
+| `\{{$brand.hosted_preference_domain}}` | Brand-level hosted preference domain |
+| `\{{$brand.blocked_channels}}` | List of channels blocked at the brand level |
+| `\{{$brand.social_links.<network>}}` | Brand social link. Built-in `<network>` keys: `x`, `twitter`, `facebook`, `instagram`, `linkedin`, `youtube`, `tiktok`, `discord`, `telegram`, `medium`, `website` |
+
+### 2. Custom tenant properties — `$brand.properties.<key>`
+
+Any property the customer adds on the tenant object that is **not** in the reserved list above is a custom property, and the correct shape is `\{{$brand.properties.<key>}}`. Common examples:
+
+- `\{{$brand.properties.address}}`
+- `\{{$brand.properties.unsubscribe_url}}`
+- `\{{$brand.properties.support_url}}`
+- `\{{$brand.properties.support_email}}`
+
+If you don't recognise the key from the reserved list, default to `$brand.properties.<key>`.
+
+### 3. Per-recipient preference URLs (top-level `$`, not under `$brand`)
+
+These are generated per recipient at run-time. They are top-level, not nested under `$brand`:
+
+- `\{{$embedded_preference_url}}`
+- `\{{$hosted_preference_url}}`
+
+Do not write `\{{$brand.$hosted_preference_url}}` or `\{{$brand.embedded_preference_url}}` when you mean the per-recipient URL — those are different variables (the `$brand.embedded_preference_url` form refers to the brand-level config, not the recipient-specific URL).
+
+### Common anti-patterns — never emit these
+
+| Wrong | Correct |
+| --- | --- |
+| `\{{$brand.name}}` | `\{{$brand.brand_name}}` |
+| `\{{$brand.support_url}}` | `\{{$brand.properties.support_url}}` |
+| `\{{$brand.unsubscribe_url}}` | `\{{$brand.properties.unsubscribe_url}}` |
+| `\{{$brand.address}}` | `\{{$brand.properties.address}}` |
+| `\{{$brand.$hosted_preference_url}}` | `\{{$hosted_preference_url}}` (per-recipient) *or* `\{{$brand.hosted_preference_domain}}` (brand config) — pick based on intent |
+
+For the full multi-tenant variant model and per-tenant overrides, see {{ref-link "multi-tenant-variants.md" "Multi-tenant Variants"}}.
+
 ## Authoring Variants
 
 Every variant must specify `channel`, `id`, `tenant_id`, `locale`, and `conditions` — even when not using multi-tenant or conditional features (use `null` where applicable). The `content` object is validated against the channel-specific schema.

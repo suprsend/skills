@@ -2,6 +2,8 @@
 
 **Schema `node_type`:** `digest`
 
+> **Grouping is fixed.** A digest node aggregates events keyed on `(workflow recipient, workflow slug)`. There is no `group_by` field. If a digest needs to batch across a key other than the workflow's trigger recipient — for example, one digest per seller across many buyer-triggered orders — the digest must live in a **separate workflow** whose trigger recipient is the digest key, invoked from the parent via [`invokeworkflow`](node-invoke-workflow.md). A digest placed inside a workflow triggered for recipient A will always produce per-A digests, never per-B.
+
 ## Documentation
 
 {{{docs_digest}}}

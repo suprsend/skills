@@ -55,6 +55,41 @@ A workflow JSON has top-level metadata and a `tree` containing an array of `node
 - `event`
 - `api`
 
+### Recipient overrides
+
+For `trigger_type=event` workflows, the workflow's recipient, actor, and tenant can be re-derived from the event payload at trigger time. This is the standard pattern when the user who initiates the event is not the one who should receive the notification (for example: `comment_added` events where the actor commented and the recipient is the resource owner). See the [Override Recipient docs page](https://docs.suprsend.com/docs/override-recipient-list) for the full reference.
+
+| Field | When to use |
+| --- | --- |
+| `override_recipients_type: "user"` + `override_recipients_user_expr` | Re-point recipient to a user identified by a jq-expression against the event payload (e.g., `.recipient` or `.resource.owner_id`). |
+| `override_recipients_type: "single_object_fields"` + `override_recipients_single_object_fields_expr` | Re-point recipient to an object (object_type + id) identified by jq-expressions. |
+| `override_actor_user_expr` | Re-derive the actor from event payload. |
+| `override_tenant_expr` | Re-derive the tenant from event payload. |
+
+**Constraint:** All `override_*` fields apply only when `trigger_type=event`. They are ignored on API-triggered workflows.
+
+**Scope:** These fields re-point the *entire* workflow run. They cannot send some nodes to recipient A and others to recipient B in the same run — for that, use [`invokeworkflow`](node-invoke-workflow.md).
+
+#### Example: notify the resource owner, not the commenter
+
+```json
+{
+  "$schema": "https://schema.suprsend.com/workflow/v1/schema.json",
+  "name": "comment-added-owner-notice",
+  "category": "collaboration",
+  "trigger_type": "event",
+  "trigger_events": ["comment_added"],
+  "override_recipients_type": "user",
+  "override_recipients_user_expr": ".resource.owner_id",
+  "override_actor_user_expr": ".commenter_id",
+  "tree": {
+    "nodes": [
+      { "node_type": "send_email", "properties": { "template": "comment-added-owner" } }
+    ]
+  }
+}
+```
+
 ## Node Types
 
 Every node in the `tree.nodes` array has a `node_type` field. Valid types:

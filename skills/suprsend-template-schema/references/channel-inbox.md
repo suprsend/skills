@@ -177,7 +177,7 @@ We use [Handlebars](https://handlebarsjs.com/guide/#what-is-handlebars) as the t
             "state": "KA"
           },
           "order_id": "11200123",
-          "first_name": "Nikita"
+          "first_name": "Emma"
         },
         "product_page": "https://www.suprsend.com"
       }

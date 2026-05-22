@@ -102,7 +102,7 @@ You can add variables in the template to personalise it for each recipient. Vari
             "state": "KA"
           },
           "order_id": "11200123",
-          "first_name": "Nikita"
+          "first_name": "Emma"
         },
         "tracking_url": "https://yourapp.com/track/11200123"
       }

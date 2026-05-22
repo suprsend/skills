@@ -260,7 +260,7 @@ For custom control beyond the Tenant block, use `$brand` variables directly:
 
 * `{{$brand.logo}}`, `{{$brand.primary_color}}`, `{{$brand.secondary_color}}`
 * `{{$brand.brand_name}}`, `{{$brand.properties.address}}`
-* `{{$brand.$hosted_preference_url}}` - unsubscribe link
+* `{{$hosted_preference_url}}` — per-recipient unsubscribe / preference URL (top-level, not under `$brand`)
 
 ***
 
