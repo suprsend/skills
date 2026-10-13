@@ -15,6 +15,15 @@ Use `invokeworkflow` to trigger a workflow from within another workflow. The two
 - The same run needs to send to multiple distinct recipients — overrides re-point the whole run, not individual nodes.
 - A digest / batch needs to aggregate across a key other than the parent's trigger recipient — see [Digest](node-digest.md).
 
+## Verified behaviour (overrides the docs below)
+
+- **`append_current_run_data` defaults to `false`** — the child run gets only the rendered `data` (or `{}`). Set it to `true` to forward the current run's data, including `$batched_events` / `$batched_events_count` from an earlier batch or digest; keys in `data` override it (shallow merge).
+- **`workflow` is a literal slug**, not JSONNET. An unknown slug is logged and the parent run continues without invoking anything.
+- **`recipient_selection: "recipient"` fails if the parent run's recipient is an object** (logged; the parent run continues). Use `"expression"` to pick a user instead.
+- **`recipient_expression`** may return a `distinct_id` string, a recipient object (`{ "distinct_id": ... }` or `{ "object_type": ..., "id": ... }`), or an array of these to invoke the workflow for several recipients.
+- **`tenant_id` is always inherited** from the parent run; it can't be set on this node.
+- **`data`** must evaluate to a JSON object; anything else is replaced with `{}`.
+
 ## Documentation
 
 # Invoke Workflow
@@ -23,7 +32,7 @@ Use `invokeworkflow` to trigger a workflow from within another workflow. The two
 
 Use this node to trigger a workflow from within another workflow. It is typically used when the recipient list or data context changes between workflow steps. A common example is escalation workflows, where if a team member doesn't take action, the workflow escalates to notify their manager.
 
-The payload for the triggered workflow is dynamically computed using data from the current workflow run. All fields support variables in [JSONNET](https://jsonnet.org/ref/language.html) format.
+The payload for the triggered workflow is dynamically computed using data from the current workflow run. Recipient, actor, data and cancellation key support variables in [JSONNET](https://jsonnet.org/ref/language.html) format. The `workflow` slug is a literal string, not an expression.
 
 
 ## Constructing workflow payload
@@ -37,7 +46,7 @@ Recipient refers to the recipient of the target workflow. It can be:
 * Any key from the node's **input data**, including data added or modified during the workflow run (for example from fetch or webhook nodes).
 
 > **Note:**
-  📘 Please note Data modifications after a batch or digest node will not affect the invoke node's variables, which means `$batched...` variables will not be available in this node's input.
+  Variables added by an earlier batch or digest node (`$batched_events`, `$batched_events_count`) are part of this node's input: you can use them in expressions, and they are forwarded to the invoked workflow when `append_current_run_data` is `true`.
 
 
 You can refer to input data variables in JSONNET format, prefixed by `data` key. The same format is followed for adding variable in actor and data field as well. Following data types are available in workflow:
@@ -59,9 +68,9 @@ The actor defines the user who performed the action in the target workflow. It c
 
 ### Data
 
-This defines the data context for the target workflow, which is used to render templates and workflow variables. By default, data from the current workflow run is passed.
+This defines the data context for the target workflow, which is used to render templates and workflow variables. By default (`append_current_run_data: false`) only the data JSON field is passed (or `{}` if empty) — the current run's data is **not** included.
 
-* To exclude the current workflow data, uncheck the `Append current workflow execution data` option.
+* To include the current workflow data, set `append_current_run_data: true` (the `Append current workflow execution data` option).
 
 * Additional data can be provided in the data JSON field, using the node's input data in JSONNET format, referred in the same format as in the [recipient](/docs/invoke-workflow#recipient) field.
 

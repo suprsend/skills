@@ -86,9 +86,15 @@ export function registerHelpers(hbs: typeof Handlebars): void {
   });
 
   // {{ref-link "file.md" "Label"}} — Link to references/ file
-  hbs.registerHelper("ref-link", (filename: string, label: unknown) => {
+  // Resolves relative to the file being rendered: SKILL.md (no outputSubdir),
+  // a sibling inside references/, or ../references/ from scripts/ or assets/.
+  hbs.registerHelper("ref-link", (filename: string, ...rest: unknown[]) => {
+    const options = rest[rest.length - 1] as Handlebars.HelperOptions;
+    const label = rest.length > 1 ? rest[0] : undefined;
     const displayLabel = typeof label === "string" ? label : filename;
-    return new hbs.SafeString(`[${displayLabel}](references/${filename})`);
+    const subdir = options?.data?.outputSubdir;
+    const prefix = !subdir ? "references/" : subdir === "references" ? "" : "../references/";
+    return new hbs.SafeString(`[${displayLabel}](${prefix}${filename})`);
   });
 
   // {{truncate text 500}} — Truncate text to N chars

@@ -12,6 +12,25 @@
 
 {{schema-table digest_schema}}
 
+**Field rules** (these override the table and the docs above):
+
+- `schedule_type` decides which field is **required**: `static` → `schedule`, `dynamic` → `dynamic_schedule_expr`, `category_digest_schedule` → neither.
+- `category_digest_schedule` uses the digest schedule of the workflow's preference category, always in the recipient's timezone. Publishing fails if that category has no digest schedule. At runtime, if the category schedule is missing, invalid or set to "instantly", the digest doesn't wait and the run continues at once. `$batched_events` / `$batched_events_count` are not set in that case.
+- `trigger_min_count` (digest only; ignore the schema's "in batch" note): integer 1–1,000,000, default 1. If fewer events than this have arrived when the schedule fires, the run ends without executing later nodes.
+- `retain_count`: 1–100, default 10. `retain_order`: `first` (default) keeps the oldest N in arrival order; `last` keeps the newest N, **newest first**.
+- Recipient timezone (`tz_selection: "recipient"`) resolves as user `$timezone` → tenant timezone → account timezone → UTC.
+
+### Schedule object rules
+
+These rules apply to the static `schedule` and to the value a `dynamic_schedule_expr` resolves to.
+
+- `frequency` (required): `minutely` | `hourly` | `daily` | `weekly_mo2fr` | `weekly` | `monthly`.
+- `interval`: integer ≥ 1, default 1. Max: `minutely` 1440, `hourly` 100, `daily` 100, `weekly_mo2fr` 25, `weekly` 25, `monthly` 6.
+- `time` (`HH:MM`): **required** for `daily`, `weekly_mo2fr`, `weekly` and `monthly`. It has no default. A static schedule without it is rejected on save, and a dynamic schedule without it stops the run with an error.
+- `weekdays` is required for `weekly`. `monthdays` is required for `monthly`: `pos` is 1–31 or −31…−1 for a day of the month, or ±1…5 together with a weekday `day`.
+- `dtstart` (optional ISO-8601; any offset is ignored and the value is read in the schedule's timezone): must be on or after `2024-01-01T00:00:00` and at most 6 months in the future. A static schedule's `dtstart` may be missing when you read or pull the workflow back. Re-add it before pushing an edited copy.
+- `tz_selection`: `fixed` (default; uses `tz_fixed`, default `UTC`) or `recipient`.
+
 ### Schedule type values
 
 {{schema-enum (get digest_schema "properties.schedule_type.enum")}}

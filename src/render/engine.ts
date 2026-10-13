@@ -69,6 +69,7 @@ export async function renderOutputFile(
   skillName: string,
   templateRelPath: string,
   context: TemplateContext,
+  outputSubdir?: string,
 ): Promise<string> {
   ensureInit();
   await registerPartials(skillName);
@@ -78,7 +79,7 @@ export async function renderOutputFile(
   assertWithinDir(templatePath, skillDir, "Output template path");
   const templateSource = await readFile(templatePath, "utf-8");
   const template = Handlebars.compile(templateSource, { noEscape: true });
-  return template(context);
+  return template(context, { data: { outputSubdir } });
 }
 
 /**

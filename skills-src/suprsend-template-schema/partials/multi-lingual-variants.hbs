@@ -2,13 +2,27 @@
 
 SuprSend offers two ways to localize a template:
 
-1. **Translation keys** (recommended) — keep **one variant** and reference text via `\{{t "key"}}`. SuprSend resolves the key from your uploaded translation files against the recipient's `$locale`. Use this when only the text changes across languages.
-2. **Language variants** — create one variant per language with its own `locale`. Use this when the entire content differs per language (different layouts, images, buttons, structure).
+1. **Translation keys** (recommended when available) — keep **one variant** and reference text via `\{{t "key"}}` (JSONNET: `t("key")`). SuprSend resolves the key from your published translation files against the recipient's locale. Use this when only the text changes across languages.
+2. **Language variants** — create one variant per language with its own `locale`. Use this when the entire content differs per language (different layouts, images, buttons, structure), or when translations aren't enabled for the account.
+
+## Before using translation keys
+
+`\{{t "key"}}` / `t("key")` render only when **all** of these hold — otherwise the render fails at send time (saving the template does not catch it):
+
+- Translations are **enabled for the account**. They are off by default on every plan; if they aren't on, use language variants instead.
+- A translation version has been **published** (draft files are not used).
+- The key exists in the recipient's locale file, its base language, or `en`.
+
+**Namespaces:** `\{{t "key"}}` reads only the `common` namespace — files named `{locale}.json` (e.g. `en.json`, `fr.json`). Keys in a namespaced file `{ns}.{locale}.json` (e.g. `billing.en.json`) need the prefix: `\{{t "billing:key"}}`.
+
+## Language variants
+
+Put the language in the variant's `locale` field — not in `conditions`. The recipient's locale is read from the user's `$locale` property, falling back to `$preferred_language`, then `en`. There is no built-in `language` property.
 
 Selection: SuprSend tries locales in order — the recipient's locale, then its base language, then `en` (e.g. `fr-CA` → `fr` → `en`). The first variant (in that order, for the matched channel + tenant) whose conditions match is used; the `en` `default` variant is the final fallback. Locale codes are case-sensitive (`fr-CA`, not `fr-ca`).
 
+With tenants, locale is checked first: if the tenant has no variant in the recipient's language, a tenant-less variant in that language beats the tenant's `en` variant. If the tenant has any variant for a base language, the tenant-less variants for that language are skipped (except `default`). See {{ref-link "template-schema-guide.md" "Template Schema Guide"}} → Variant Selection.
+
 ## Documentation
 
-```
 {{{docs_multi_lingual}}}
-```

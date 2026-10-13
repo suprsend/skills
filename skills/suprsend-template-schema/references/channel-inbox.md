@@ -28,6 +28,10 @@ For variants with `channel: "inbox"`.
 
 Only `body` is required. All other fields are optional and have sensible defaults.
 
+- **`image_url`** (top level) is *not* an action URL, despite the table's description: it's an image URL passed through with the message. Use `action_url` for the card's click target and `avatar.image_url` for the avatar image.
+- **`extra_data`** must be a JSON-encoded **string**, not an object — e.g. `"extra_data": "{\"order_id\": \"42\", \"deep_link\": \"/orders/42\"}"`. Passing an object is rejected on save.
+- **Updates merge top-level keys:** keys you omit keep their stored values; a key you send replaces the stored value entirely (e.g. sending `avatar` replaces the whole avatar object). To clear a field, send it explicitly as `""`, `[]` or `null`.
+
 ### `importance` values
 
 - `default`
@@ -35,7 +39,7 @@ Only `body` is required. All other fields are optional and have sensible default
 
 ## Subtext
 
-Optional secondary line (e.g., username + profile link).
+Optional secondary line (e.g., username + profile link). Dropped at send time unless `text` renders to a non-empty value.
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -44,7 +48,7 @@ Optional secondary line (e.g., username + profile link).
 
 ## Avatar
 
-Optional avatar image with click-through URL.
+Optional avatar image with click-through URL. Dropped at send time unless `image_url` renders to a non-empty value.
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -60,6 +64,8 @@ Optional avatar image with click-through URL.
 | text | string | No |  |
 | url | string | No |  |
 | open_in_new_tab | boolean | No |  |
+
+A button is dropped at send time unless **both** `text` and `url` render to non-empty values. The API doesn't cap the number of buttons, but the docs below describe the inbox card as supporting up to 2 — keep it to 2.
 
 ## Expiry
 
@@ -82,7 +88,13 @@ Auto-expire/dismiss the inbox message after a duration or at an absolute time.
 - `fixed`
 - `dynamic`
 
-`value` examples — relative: `7d`, `24h30m`. Absolute: ISO datetime, e.g. `2026-12-31T23:59:59Z`.
+`expiry` only takes effect when `is_expiry_enabled` is `true`; otherwise it is cleared on save.
+
+`value` formats:
+
+- **Relative** (`format: "relative"`, `expiry_type: "fixed"`): duration `XdYhZmWs` with **no spaces**, e.g. `7d`, `1d30m`, `2d6h`. Validated on save: hours 0–23, minutes and seconds 0–59 (write `1d6h`, not `30h`), and a zero duration is rejected.
+- **Absolute** (`format: "absolute"`, `expiry_type: "fixed"`): ISO-8601 datetime **with timezone**, e.g. `2026-12-31T23:59:59Z` or `2026-12-31T23:59:59+05:30`. A past datetime is not rejected — check it yourself.
+- **Dynamic** (`expiry_type: "dynamic"`): a variable such as `{{ expiry_time }}` that must render to either an ISO-8601 datetime with timezone, a duration without spaces (`2d6h30m`), or an integer number of seconds. Anything else — including a duration with spaces like `2d 6h` — fails at send time.
 
 ## Examples
 
@@ -120,7 +132,6 @@ Auto-expire/dismiss the inbox message after a duration or at an absolute time.
 
 ## Documentation
 
-```
 # In-App Inbox
 
 > Design rich In-App Inbox notification cards in SuprSend with action buttons, avatars, pinning, expiry, tags, dynamic variables, and Handlebars personalization.
@@ -198,7 +209,7 @@ URL the user is redirected to on card click. Toggle **Open in new tab** if neede
 
 ### Action Buttons
 
-Up to 2 buttons with text + URL. Use it for click actions like "View", "Approve", or other inline actions. You can use it to redirect users to a webpage or handle inline actions using [custom click handlers](https://github.com/suprsend/suprsend-react-inbox/blob/main/docs/customization.md#action-button-custom-click-handlers).
+Up to 2 buttons with text + URL (the API doesn't enforce this limit). A button whose text or URL renders empty is dropped at send time. Use it for click actions like "View", "Approve", or other inline actions. You can use it to redirect users to a webpage or handle inline actions using [custom click handlers](https://github.com/suprsend/suprsend-react-inbox/blob/main/docs/customization.md#action-button-custom-click-handlers).
 
 ### Tags
 
@@ -221,11 +232,11 @@ Expiry auto-deletes the notification once the set period elapses. It deletes the
 * **Absolute**
   Set a fixed date and time. The timestamp uses your local timezone.
 * **Relative**
-  Set a duration relative to when the notification is sent — for example, `2 days 6 hours`.
+  Set a duration relative to when the notification is sent — for example, 2 days 6 hours (`2d6h` in template JSON: no spaces, hours 0–23, minutes and seconds 0–59).
 * **Dynamic**
   For expiry computed from your event or user data, use a Handlebars variable — for example, `{{expiry_time}}`. The value can be:
-  * An ISO-8601 timestamp (for example, `2024-03-02T20:34:07Z`) — must be in the future.
-  * A relative duration: an integer (seconds) or an interval string like `2d 6h 30m 0s`.
+  * An ISO-8601 timestamp with timezone (for example, `2024-03-02T20:34:07Z`). A past timestamp isn't rejected, so make sure it's in the future.
+  * A relative duration: an integer (seconds) or an interval string like `2d6h30m` (no spaces — a value with spaces fails at send time).
 
 A few recommendations:
 
@@ -241,7 +252,7 @@ Enable this to display a countdown timer on the notification card. The timer sho
 
 ### Extra Data
 
-A JSON field for passing custom key-value pairs alongside the notification. Use this for app-level metadata that your frontend can process — for example, deep link parameters, feature flags, or tracking IDs.
+A JSON field for passing custom key-value pairs alongside the notification. In template content JSON, `extra_data` is a JSON-encoded **string** (for example `"{\"order_id\": \"42\"}"`), not an object. Use this for app-level metadata that your frontend can process — for example, deep link parameters, feature flags, or tracking IDs.
 
 This is also useful when you're building a **custom notification card** that needs data the generic Inbox template fields don't cover. Pass that extra data here, and your frontend can read it from the notification payload to render the card exactly how you want.
 
@@ -352,7 +363,7 @@ This applies to already-running workflows too: the template version is resolved 
   
 
   ### How do I add dynamic expiry from my payload?
-    Use a Handlebars variable like `{{expiry_time}}` in the Dynamic Expiry field. The value can be an ISO-8601 timestamp (for example, `2024-03-02T20:34:07Z`) or a relative duration (integer for seconds, or `2d 6h 30m 0s` format).
+    Use a Handlebars variable like `{{expiry_time}}` in the Dynamic Expiry field. The value can be an ISO-8601 timestamp (for example, `2024-03-02T20:34:07Z`) or a relative duration (integer for seconds, or `2d6h30m` format with no spaces).
   
 
 
@@ -360,4 +371,3 @@ This applies to already-running workflows too: the template version is resolved 
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
-```

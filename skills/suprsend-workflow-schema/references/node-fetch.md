@@ -2,6 +2,15 @@
 
 **Schema `node_type`:** `httpapi_fetch`
 
+## Verified behaviour (overrides the docs below)
+
+- **Every field except `output_key` is JSONNET** — `url` and each header / query-param `key` **and** `value`. Quote literals: `{ "key": "\"Authorization\"", "value": "\"Bearer \" + data.api_token" }`. A bare word (`"key": "Authorization"`) is an unknown variable and `{{ }}` is a syntax error: the request is skipped, an error is logged, and the run continues without the data.
+- **Success** is any 2xx. The request times out after **15 s**.
+- **Failures:** a 5xx is retried (up to 3 attempts, with backoff), then the workflow run fails. Everything else — 4xx, 301/302 (redirects aren't followed), timeouts, connection or render errors, unsupported response types, a top-level JSON array, a body over 100 KB — is logged, **not retried**, and the run continues without the data. Make later nodes tolerate a missing `output_key`.
+- **Response types:** `application/json` must be a JSON object. `text/plain`, `text/csv`, `text/html`, `text/markdown` and `application/xml` are stored as a raw string and **require `output_key`**. Any other `Content-Type` is rejected.
+- **`output_key`** can't start with `$` or `ss_` (rejected on save).
+- **Blocked targets:** only `http`/`https` URLs. Private, loopback and link-local IPs and SuprSend's own API hosts are rejected at runtime.
+
 ## Documentation
 
 # Fetch
@@ -19,9 +28,9 @@ In a Fetch node, you have to define the endpoint, query params and headers. You 
 | Field | Description |
 | - | - |
 | Method* | Only `GET` method is supported in Fetch. |
-| Endpoint* | A valid URL endpoint for the `GET` method. Add static URL as `"https://static_url"` and dynamic URL as `{{data.url_endpoint}}`. Data for dynamic URL will be picked from trigger payload. You can also combine static and dynamic part as `"https://domain" + {{data.path}}`. |
-| Params | Query Params to pass in the request, for example (limit 10) to fetch top 10 stories to show in digest notification. Similar to endpoint, you can pass both static and dynamic value in query params. |
-| Header | Any header to be passed in the request can be added as key-value pair with key being the header type and value as header value. |
+| Endpoint* | A valid URL endpoint for the `GET` method. Add static URL as `"https://static_url"` and dynamic URL as `data.url_endpoint` (the URL is a JSONNET expression — never wrap it in `{{ }}`). Data for dynamic URL will be picked from trigger payload. You can also combine static and dynamic part as `"https://domain" + data.path`. |
+| Params | Query Params to pass in the request, for example (limit 10) to fetch top 10 stories to show in digest notification. Similar to endpoint, param key and value are both JSONNET expressions — quote static values: `{"key": "\"limit\"", "value": "\"10\""}`. |
+| Header | Any header to be passed in the request can be added as key-value pair with key being the header type and value as header value. Both key and value are JSONNET expressions — quote literal strings: `{"key": "\"Authorization\"", "value": "\"Bearer \" + data.api_token"}`. |
 | Response key | Response of your `GET` request is appended against response key and merged in the workflow payload. Data is merged at parent level if response key is not set. |
 
 
@@ -40,11 +49,11 @@ Fetch node supports JSONNET rendering language. You can add workflow trigger pay
 
 When executing the request for a fetch function, SuprSend expects the following from your service:
 
-* The response to the request is one of: 200 OK, 201 Created, or 204 No Content.
+* The response status is any 2xx. Redirects (301/302) are not followed and count as a failure.
 
 * If the request response contains data, it's encoded as JSON and can be decoded into a map/dictionary/hash.
 
-* The response to the request takes no longer than 5 seconds for SuprSend to receive.
+* The response to the request takes no longer than 15 seconds (the request timeout).
 
 ### Merging response to workflow input
 
@@ -126,10 +135,10 @@ The fetch node is restricted to `GET` requests only. The `body` field must be `n
     "http_method": "GET",
     "url": "\"https://api.example.com/users/\" + data[\"$recipient\"].distinct_id",
     "headers": [
-      { "key": "Authorization", "value": "\"Bearer \" + data.api_token" }
+      { "key": "\"Authorization\"", "value": "\"Bearer \" + data.api_token" }
     ],
     "query_params": [
-      { "key": "include", "value": "\"preferences\"" }
+      { "key": "\"include\"", "value": "\"preferences\"" }
     ],
     "body": null,
     "output_key": "user_data"

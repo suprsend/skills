@@ -12,10 +12,21 @@ function validateUrl(url: string): void {
   }
 }
 
+// Authenticated GitHub API calls get 5,000 requests/hour instead of 60/IP.
+// The token is only ever sent to api.github.com.
+function requestInit(url: string): RequestInit {
+  const init: RequestInit = { signal: AbortSignal.timeout(30_000) };
+  const token = process.env.GITHUB_TOKEN;
+  if (token && new URL(url).hostname === "api.github.com") {
+    init.headers = { Authorization: `Bearer ${token}` };
+  }
+  return init;
+}
+
 export async function fetchText(url: string): Promise<string> {
   validateUrl(url);
   logger.debug(`Fetching ${url}`);
-  const res = await fetch(url, { signal: AbortSignal.timeout(30_000) });
+  const res = await fetch(url, requestInit(url));
   if (!res.ok) {
     throw new Error(`HTTP ${res.status} fetching ${url}: ${res.statusText}`);
   }
@@ -25,7 +36,7 @@ export async function fetchText(url: string): Promise<string> {
 export async function fetchJson<T>(url: string): Promise<T> {
   validateUrl(url);
   logger.debug(`Fetching JSON ${url}`);
-  const res = await fetch(url, { signal: AbortSignal.timeout(30_000) });
+  const res = await fetch(url, requestInit(url));
   if (!res.ok) {
     throw new Error(`HTTP ${res.status} fetching ${url}: ${res.statusText}`);
   }

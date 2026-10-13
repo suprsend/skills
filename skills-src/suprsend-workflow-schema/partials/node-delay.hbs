@@ -22,9 +22,13 @@
 
 ### Duration format
 
-Pattern: `{{get fragment_schema "$definitions.static_duration_format.pattern"}}`
+Pattern: `{{get fragment_schema "$definitions.static_duration_format.pattern"}}` — applies to `value` when `delay_type` is `fixed` and to `relative_to.offset_value` when `offset_value_type` is `fixed`. On save, hours must be 0–23, minutes and seconds 0–59, the total > 0 and ≤ 90 days, with no spaces.
 
-Examples: `30s`, `5m`, `1h30m`, `2d12h`
+Valid: `30s`, `5m`, `1h30m`, `2d12h`. Rejected: `48h` (write `2d`), `90m` (write `1h30m`), `1d36h` (write `2d12h`), `0s`, `1h 30m`. Full rules: [Workflow Schema Guide → Duration Format](workflow-schema-guide.md#duration-format).
+
+### Timestamps in the past
+
+For `dynamic` (ISO-8601 timestamp) and `relative_to` delays, a computed time that is already past gives a **zero delay**: the workflow continues immediately — it is not an error.
 
 ## Example
 

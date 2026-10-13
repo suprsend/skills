@@ -27,6 +27,8 @@ Cancellation is **not tenant-scoped**. A node with only `recipient_selection` ca
 
 If a filter can't be resolved — an expression fails, `actor` is selected but the trigger has no actor, or `recipient_expression` returns an unknown `distinct_id` — the node logs an error and the workflow continues without cancelling anything. If every filter evaluates to empty, nothing is cancelled.
 
+> **Warning — an empty `cancellation_key` widens the cancellation.** If the expression evaluates to `null` or `""`, only that filter is dropped and the other filters still run. With a plain `"cancellation_key": "data.invoice_id"`, a `payment_received` event carrying `invoice_id: null` would cancel **every** pending `payment-reminder` run for that user. A *missing* field is an evaluation error, so nothing is cancelled. Make empty values error out too (as in the example below): `if data.invoice_id == null || data.invoice_id == "" then error "invoice_id missing" else data.invoice_id`.
+
 ## Cancellation keys
 
 A run only has a cancellation key if one was assigned when it started:
@@ -60,7 +62,7 @@ A separate workflow triggered by `payment_received` cancels the pending reminder
   "properties": {
     "workflows": ["payment-reminder"],
     "recipient_selection": "recipient",
-    "cancellation_key": "data.invoice_id"
+    "cancellation_key": "if data.invoice_id == null || data.invoice_id == \"\" then error \"invoice_id missing\" else data.invoice_id"
   }
 }
 ```

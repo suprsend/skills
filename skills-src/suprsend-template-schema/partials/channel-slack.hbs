@@ -10,6 +10,8 @@ For variants with `channel: "slack"`.
 
 `body_type` is required. When `body_type` is `text`, `body_text` is required. When `body_type` is `block`, `body_block` is required.
 
+**Length limits:** `body_text` max 4000 characters, `body_block` (the JSONNET source) max 13200. Longer values fail validation on save. Slack itself rejects a section `text` over 3000 characters with `invalid_blocks` and the send fails, so in practice keep `body_text` and each section's text under 3000.
+
 ### `templating_language` values
 
 {{schema-enum (get slack_schema "properties.templating_language.enum")}}
@@ -23,8 +25,8 @@ The pairing is enforced: `body_type: "block"` forces `templating_language: "json
 
 {{schema-enum (get slack_schema "properties.body_type.enum")}}
 
-- `text` — `body_text` is a plain message string.
-- `block` — `body_block` is a JSON string conforming to Slack's [Block Kit](https://api.slack.com/block-kit) spec.
+- `text` — `body_text` is sent as one Slack section of type **`plain_text`**. mrkdwn (`*bold*`, `_italic_`), `<@U123>` mentions and `<url|text>` links show up **literally**; only emoji shortcodes (`:tada:`) render. Use `block` for any formatting, mentions or links.
+- `block` — `body_block` is a JSONNET expression whose output conforms to Slack's [Block Kit](https://api.slack.com/block-kit) spec.
 
 ## Default mode: JSONNET (Block Kit)
 
@@ -33,20 +35,25 @@ The pairing is enforced: `body_type: "block"` forces `templating_language: "json
 Use Text mode ONLY when:
 
 - User explicitly asks for "plain text" or "simple text"
-- Notification is a true one-liner with no CTA
+- Notification is a true one-liner with no CTA, no formatting, no mentions and no links
 - Migrating an existing text template
 
 Use JSONNET if ANY of these are present:
 
 - CTA / action link → button block
+- Bold/italic, `<url|text>` links or `<@U123>` mentions → `mrkdwn` text objects (Text mode can't render them)
 - 2+ sections → section blocks + divider
 - Key-value data → fields array
 - Recipient/tenant personalization
-- Batched/digest events → rich_text_list
+- Batched/digest events → a `rich_text` block containing a `rich_text_list` element (`rich_text_list` is not a top-level block), or one `section` per item
 
 ### Critical format rule
 
 JSONNET output MUST be wrapped in `{ "blocks": [...] }`. The bare-array format `[{...}, {...}]` will fail — SuprSend's renderer requires the JSONNET output to be a JSON object.
+
+Only the `blocks` array is sent. Any other top-level key (`text`, `attachments`, `thread_ts`, …) is dropped, and each message is posted as a new message (threading replies isn't supported).
+
+Invalid Block Kit isn't silently dropped: Slack rejects the whole message with `invalid_blocks` and the notification fails. Validate in Block Kit Builder before committing.
 
 ✅ Correct:
 
@@ -101,6 +108,6 @@ NEVER mix Handlebars `\{{ }}` and JSONNET in the same template.
 
 ## Documentation
 
-```
+**Verified behaviour (overrides the docs below):** Text mode is sent as `plain_text`, so no mrkdwn, mentions or links. Only the `blocks` key of the JSONNET output is sent. Invalid blocks fail the send with `invalid_blocks`; they are not truncated or silently dropped.
+
 {{{docs_slack}}}
-```

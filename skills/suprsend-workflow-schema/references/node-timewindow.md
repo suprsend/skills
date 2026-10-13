@@ -53,7 +53,7 @@ You can also configure multiple Time Windows in `OR`. for example, send notifica
 
 ## Changing recipient's timezone while they wait in a time window
 
-If a recipient’s timezone is updated while they are waiting in a Time Window, the delay will be recalculated based on the new timezone. If the adjustment results in a time past the end of the current Time Window, the delivery will be pushed to the start of the next schedule.
+If a recipient’s timezone is updated while they are waiting in a Time Window, the current wait is **not** shortened or recalculated: the run first sleeps for the wait computed on entry, then re-checks the window in the recipient's current timezone. If that moment is outside the window, it waits again until the next window start.
 
 for example,
 
@@ -61,7 +61,7 @@ for example,
 
 * The recipient's timezone is America/New_York (UTC-5), so the delay is 7 hours until 9:00 AM (America/New_York).
 
-* If the timezone is updated to Europe/London (UTC+1) while waiting, the delay will be recalculated to 1 hour.
+* If the timezone is updated to Europe/London (UTC+1) while waiting, the run still waits the full 7 hours (until 14:00 UTC = 3:00 PM Europe/London); that is inside the window, so it proceeds then.
 
 ## Some common notification use cases
 
@@ -124,6 +124,17 @@ This documentation is built and hosted on [Mintlify](https://mintlify.com), a de
 - `null`
 - `fixed`
 - `recipient`
+
+**`null` is listed by the schema but rejected on save** — omit `tz_selection` instead (it defaults to `"fixed"`). With `"fixed"`, `tz_fixed` is an IANA name such as `America/New_York` (default `UTC`); with `"recipient"`, the recipient's `$timezone` is used.
+
+### Rules checked on save
+
+- `windows`: 1–5 windows, OR'd (a time qualifies if it falls in any window).
+- `daily`: every day. `weekly_mo2fr`: Mon–Fri (`weekdays` ignored).
+- `weekly`: **requires** a non-empty `weekdays` list (`su`, `mo`, `tu`, `we`, `th`, `fr`, `sa`).
+- `monthly`: **requires** `monthdays: [{ "pos": <int>, "day": "<weekday>" }]`. With `day` (e.g. `{"pos": 1, "day": "mo"}` = first Monday), `pos` is 1–5 or -1 to -5 (from the end). Without `day`, `pos` is the day of the month, 1–31 or -1 to -31.
+- `stime` / `etime`: 24-hour `"HH:MM"`. `etime` is required when `stime` is set, and `stime` must be **earlier** than `etime` — split an overnight window (22:00–06:00) into two: `22:00`–`23:59` and `00:00`–`06:00`.
+- A window with no `stime` that covers every day (`daily`, or `weekly` with all 7 days) is rejected — it equals no time window.
 
 ## Example
 

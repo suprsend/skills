@@ -2,14 +2,29 @@
 
 SuprSend offers two ways to localize a template:
 
-1. **Translation keys** (recommended) — keep **one variant** and reference text via `{{t "key"}}`. SuprSend resolves the key from your uploaded translation files against the recipient's `$locale`. Use this when only the text changes across languages.
-2. **Language variants** — create one variant per language with its own `locale`. Use this when the entire content differs per language (different layouts, images, buttons, structure).
+1. **Translation keys** (recommended when available) — keep **one variant** and reference text via `{{t "key"}}` (JSONNET: `t("key")`). SuprSend resolves the key from your published translation files against the recipient's locale. Use this when only the text changes across languages.
+2. **Language variants** — create one variant per language with its own `locale`. Use this when the entire content differs per language (different layouts, images, buttons, structure), or when translations aren't enabled for the account.
+
+## Before using translation keys
+
+`{{t "key"}}` / `t("key")` render only when **all** of these hold — otherwise the render fails at send time (saving the template does not catch it):
+
+- Translations are **enabled for the account**. They are off by default on every plan; if they aren't on, use language variants instead.
+- A translation version has been **published** (draft files are not used).
+- The key exists in the recipient's locale file, its base language, or `en`.
+
+**Namespaces:** `{{t "key"}}` reads only the `common` namespace — files named `{locale}.json` (e.g. `en.json`, `fr.json`). Keys in a namespaced file `{ns}.{locale}.json` (e.g. `billing.en.json`) need the prefix: `{{t "billing:key"}}`.
+
+## Language variants
+
+Put the language in the variant's `locale` field — not in `conditions`. The recipient's locale is read from the user's `$locale` property, falling back to `$preferred_language`, then `en`. There is no built-in `language` property.
 
 Selection: SuprSend tries locales in order — the recipient's locale, then its base language, then `en` (e.g. `fr-CA` → `fr` → `en`). The first variant (in that order, for the matched channel + tenant) whose conditions match is used; the `en` `default` variant is the final fallback. Locale codes are case-sensitive (`fr-CA`, not `fr-ca`).
 
+With tenants, locale is checked first: if the tenant has no variant in the recipient's language, a tenant-less variant in that language beats the tenant's `en` variant. If the tenant has any variant for a base language, the tenant-less variants for that language are skipped (except `default`). See [Template Schema Guide](template-schema-guide.md) → Variant Selection.
+
 ## Documentation
 
-```
 # Multi-lingual Templates
 
 > Localize SuprSend templates with translation keys or language variants so you can deliver notifications in each recipient preferred language.
@@ -19,7 +34,7 @@ SuprSend supports two ways to localise notification templates. The right approac
 | Approach | Use when | How it works |
 | - | - | - |
 | **[Translations](#translations-recommended)** (recommended) | The text changes per language, but the template structure (layout, images, buttons) stays the same. | Use translation keys (`{{t "key"}}`) in your template. SuprSend resolves the key to the user's language at send time from your uploaded translation files. |
-| **[Language variants](#language-variants)** | The entire content differs per language - different images, layouts, buttons, or structure. Not just text. | Create a separate variant per language with a `locale` condition. Each variant has its own full content. |
+| **[Language variants](#language-variants)** | The entire content differs per language - different images, layouts, buttons, or structure. Not just text. | Create a separate variant per language with its `locale` field set. Each variant has its own full content. |
 
 For most use cases, **Translations** is the right choice. It's simpler, easier to maintain, and scales better. Use variants only when you genuinely need different content structure per language.
 
@@ -38,6 +53,8 @@ The value should be a standard locale code: `en`, `es`, `fr`, `hi`, `de`, `pt-BR
 ***
 
 ## Translations (recommended)
+
+> **Note:** Translation keys render only when translations are enabled for your account (off by default — contact SuprSend to turn them on), a translation version has been published, and the key exists in it. Otherwise the render fails at send time; saving the template does not catch it.
 
 Translations let you keep **one template** and manage all language text in separate JSON files. The template uses **translation keys** instead of raw text - at send time, SuprSend looks up the key in the user's language file and renders the translated text.
 
@@ -93,7 +110,7 @@ If the user's locale file or key is missing, SuprSend falls back:
 2. General language (for example, `es.json`)
 3. Default language (`en.json`)
 
-Always maintain an `en.json` as the base fallback.
+Always maintain an `en.json` as the base fallback — if a key is missing from every file in the chain, the render fails.
 
 ### When to use Translations
 
@@ -132,9 +149,9 @@ At send time, SuprSend checks the recipient's locale and sends the matching lang
 
 ### Combining language with tenant
 
-For tenants that need both brand customisation and localisation, create variants with combined conditions — for example, locale `es` + tenant `acme` for Acme's Spanish-speaking users.
+For tenants that need both brand customisation and localisation, set both the **Locale** and **Tenant** fields on one variant — for example, locale `es` + tenant `acme` for Acme's Spanish-speaking users.
 
-The fallback order: tenant+locale → tenant+default locale → default tenant+locale → default.
+The fallback order is locale first: recipient locale → base language → `en`. Within a base language, the tenant's variants replace the tenant-less ones if the tenant has any for that language (even if they don't match); otherwise the tenant-less ones are used. So for a Spanish recipient a tenant-less `es` variant beats Acme's `en` variant.
 
 Name these descriptively: `acme-es`, `uber-fr`, `default-hi`.
 
@@ -161,4 +178,3 @@ Name these descriptively: `acme-es`, `uber-fr`, `default-hi`.
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
-```

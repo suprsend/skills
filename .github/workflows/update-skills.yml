@@ -32,6 +32,8 @@ jobs:
 
       - name: Build all skills
         run: npm run build -- --no-cache
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check for changes
         id: changes

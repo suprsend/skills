@@ -40,9 +40,16 @@ For variants with `channel: "email"`.
 - `designer`
 - `plain_text`
 
-- `designer` — content authored in the SuprSend visual designer; serialized HTML + optional `design_json`.
-- `raw` — hand-authored HTML (with optional fallback text).
+- `designer` — content authored in the dashboard's drag-and-drop (Unlayer) editor; serialized HTML + editor state.
+- `raw` — hand-authored HTML (with optional fallback text). **Use this when you author email content as JSON.**
 - `plain_text` — text-only email.
+
+`preheader` and `email_markup` sit on `body` (not inside `raw`/`designer`) and are applied only to `raw` and `designer` bodies — they're discarded for `plain_text`. At send time they're injected into the rendered HTML:
+
+- `preheader` → a hidden `<div>` inserted right **after the opening `<body>` tag**.
+- `email_markup` → a `<script type="application/ld+json">` inserted right **before `</head>`**.
+
+If the HTML has no `<body>` tag (or no `</head>`), the preheader (or markup) is **silently dropped** — always send a full `<html><head></head><body>…</body></html>` document when you use them.
 
 ### `designer` body
 
@@ -54,7 +61,9 @@ For variants with `channel: "email"`.
 | display_conditions | array | No |  |
 | merge_tags | array | No |  |
 
-`html` is required. `design_json` round-trips the visual designer state. `merge_tags` lists the data references used by the design so the editor can validate them:
+`html` is required. Only `html` and `text` are rendered and sent; `design_json`, `merge_tags` and `display_conditions` are editor state for the drag-and-drop editor and are ignored at send time. **Don't hand-write `design_json`** — a made-up value breaks the visual editor for that variant. To create email content from JSON, use a `raw` body; when editing a variant built in the visual editor, leave `design_json` / `merge_tags` / `display_conditions` untouched.
+
+`merge_tags` entries (editor state):
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -102,35 +111,25 @@ For variants with `channel: "email"`.
     "type": "raw",
     "preheader": "Order summary attached",
     "raw": {
-      "html": "<h1>Thanks for your order</h1><p>Total: {{ order.total_formatted }}</p>",
+      "html": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"></head><body><h1>Thanks for your order</h1><p>Total: {{ order.total_formatted }}</p></body></html>",
       "text": "Thanks for your order. Total: {{ order.total_formatted }}"
     }
   }
 }
 ```
 
-### Designer email with merge tags
+The HTML is a full document so the `preheader` has a `<body>` tag to attach to. `from_address` / `reply_to` take effect only with your own email vendor (see the verified behaviour list below).
 
-```json
-{
-  "subject": "{{ campaign.subject }}",
-  "body": {
-    "type": "designer",
-    "designer": {
-      "html": "<table>...rendered html...</table>",
-      "text": "...plain fallback...",
-      "design_json": { "version": 1, "rows": [] },
-      "merge_tags": [
-        { "id": "first_name", "expression": "{{ first_name }}" }
-      ]
-    }
-  }
-}
-```
+## Verified behaviour (overrides the docs below)
+
+- **Plain-text part:** if `text` is empty, it's generated from the rendered HTML **at send time** (not at commit).
+- **`from_address` and `reply_to` are ignored** when the email is sent through SuprSend's built-in email vendor; they apply only with your own email vendor.
+- **`extra_to`, `cc`, `bcc`, `reply_to`** are comma-separated address strings. If any one address in a list is malformed after rendering, that **entire list is silently dropped** at send time.
+- **`preheader` / `email_markup`** need a `<body>` tag / a `</head>` tag in the HTML respectively, and are ignored for `plain_text` bodies (see [Body](#body)).
+- **Updates merge with stored content:** omitted top-level keys keep their stored values, and `body` is merged key by key — `body.raw`, `body.designer` and `body.plain_text` are each merged field by field. Switching `body.type` keeps the other types' stored content. To clear a field, send it explicitly as `""`.
 
 ## Documentation
 
-```
 # Email
 
 > Design email templates using the drag-and-drop editor, raw HTML, or plain text - with variables, tenant branding, display conditions, and email markup.
@@ -285,7 +284,7 @@ Set up your variable data in the **Variables panel** (`{}` tab in the left sideb
 Plain text is always sent alongside HTML - you don't choose between them. It's the fallback for recipients who block HTML, and improves deliverability (spam filters score multi-part emails higher).
 
 
-**Auto mode** - leave blank and SuprSend auto-generates plain text from your HTML on every commit.
+**Auto mode** - leave blank and SuprSend auto-generates plain text from the rendered HTML at send time.
 
 **Custom mode** - write your own. Click **Fetch from HTML** to pull the current HTML as a starting point, then edit. Once you edit, auto-generation stops.
 
@@ -295,7 +294,7 @@ Best for: sales outreach, OTP/verification codes, internal alerts - anywhere des
 
 ## Email Markup (JSON-LD)
 
-Email Markup adds rich interactive features directly in the Gmail inbox - no need to open the email. Add JSON-LD to the **Email Markup JSON** field in Email Settings. Supports Handlebars variables.
+Email Markup adds rich interactive features directly in the Gmail inbox - no need to open the email. Add JSON-LD to the **Email Markup JSON** field in Email Settings. Supports Handlebars variables. It's inserted just before `</head>`, so the HTML must contain a `</head>` tag (otherwise the markup is dropped).
 
 **Common use cases:**
 
@@ -335,11 +334,11 @@ Before previewing or committing, configure subject, sender, and preheader. Click
 
 **Subject** - keep under 50 characters (mobile clients truncate). Supports variables like `{{order_id}}`.
 
-**From Name** / **From Email** - display name and sender address. Left blank = picked from your [vendor settings](/docs/vendors). Domain must be verified.
+**From Name** / **From Email** - display name and sender address. Left blank = picked from your [vendor settings](/docs/vendors). Domain must be verified. From Email and Reply To are ignored when sending through SuprSend's built-in email vendor.
 
-**Preheader** - preview text next to the subject in the inbox. If blank, email clients pull the first body text (often unhelpful). Set this explicitly. 40–140 characters.
+**Preheader** - preview text next to the subject in the inbox. Inserted right after the HTML `<body>` tag — dropped if the HTML has no `<body>` tag, and not used for plain-text-only emails. If blank, email clients pull the first body text (often unhelpful). Set this explicitly. 40–140 characters.
 
-**CC / BCC / Reply To / Add Multiple Tos** - all optional, all support variables.
+**CC / BCC / Reply To / Add Multiple Tos** - all optional, all support variables. Separate multiple addresses with commas; if any address in a list is malformed, that whole list is silently dropped at send time.
 
 <Tip>
   **AI prompt - optimize subject + preheader:** *"I'm sending a \[transactional/marketing] email for \[describe notification]. Current subject: \[subject]. Current preheader: \[preheader]. Suggest 3 pairs that work together (subject under 50 chars, preheader 40-90 chars). Preserve Handlebars variables."*
@@ -358,7 +357,7 @@ Click **Test** (top-right) to send a real email. See [Testing](/docs/templates#t
 Click **Commit** to publish. The commit snapshots: editor content, Plain Text, and all Email Settings.
 
 * Design Editor, HTML Editor, and Plain Text all save independently. **Whatever editor is open at the time you commit - that version gets committed and published.** Always verify you're on the right tab before committing.
-* If Plain Text is blank, it's auto-generated from HTML at commit time.
+* If Plain Text is blank, it's auto-generated from the rendered HTML at send time.
 
 ***
 
@@ -374,7 +373,7 @@ Click **Commit** to publish. The commit snapshots: editor content, Plain Text, a
   
 
   ### What happens if Plain Text is blank?
-    SuprSend auto-generates it from the HTML on every commit. Click **Fetch from HTML** to preview what it looks like. Once you edit the plain text manually, auto-generation stops.
+    SuprSend auto-generates it from the rendered HTML at send time. Click **Fetch from HTML** to preview what it looks like. Once you edit the plain text manually, auto-generation stops.
   
 
   ### How do Merge Tags work with arrays?
@@ -399,4 +398,3 @@ Click **Commit** to publish. The commit snapshots: editor content, Plain Text, a
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
-```

@@ -1,5 +1,9 @@
 # Object Operation Nodes
 
+## Verified behaviour (overrides the docs below)
+
+- **Only users are subscribed / unsubscribed.** A selected actor or recipient that is an object is skipped; if none of the selected entities is a user, the node fails (logged; the run continues).
+
 ## Subscribe to Object
 
 **Schema `node_type`:** `objectoperation_addsubscription`
@@ -29,7 +33,7 @@ One common use case of creating object dynamically is when you need to create di
 
 ### Subscription properties
 
-Subscription properties are the set of variables defining relationship between a subscriber and an object. During a workflow execution, these properties can be accessed under the `recipient.subscription` namespace as `recipient.subscription.property_key`. Subscription properties are added in [JSONNET](https://jsonnet.org/ref/language.html) format. You can [read more about object subscription here](/docs/object-subscriptions).
+Subscription properties are the set of variables defining relationship between a subscriber and an object. During a workflow execution, these properties can be accessed as `$recipient.subscription.<key>` (Handlebars) or `data["$recipient"].subscription.<key>` (JSONNET) — only in runs that reached the recipient through an object fan-out (workflow triggered on the object, sent to its subscribers). Subscription properties are added in [JSONNET](https://jsonnet.org/ref/language.html) format. You can [read more about object subscription here](/docs/object-subscriptions).
 
 ***
 
@@ -63,7 +67,7 @@ One common use case of creating object dynamically is when you need to compute o
 
 ### Subscription properties
 
-Subscription properties are the set of variables defining relationship between a subscriber and an object. During a workflow execution, these properties can be accessed under the `recipient.subscription` namespace as `recipient.subscription.property_key`. Subscription properties are added in [JSONNET](https://jsonnet.org/ref/language.html) format. You can [read more about object subscription here](/docs/object-subscriptions).
+Subscription properties are the set of variables defining relationship between a subscriber and an object. During a workflow execution, these properties can be accessed as `$recipient.subscription.<key>` (Handlebars) or `data["$recipient"].subscription.<key>` (JSONNET) — only in runs that reached the recipient through an object fan-out (workflow triggered on the object, sent to its subscribers). Subscription properties are added in [JSONNET](https://jsonnet.org/ref/language.html) format. You can [read more about object subscription here](/docs/object-subscriptions).
 
 ***
 

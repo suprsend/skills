@@ -21,6 +21,8 @@ For a complete guide on creating workflows using the JSON schema, see {{ref-link
 
 A workflow needs `name`, `category`, `trigger_type`, and `tree` with at least one action node: a delivery (`send_*`), HTTP API, list, object, user-update, invoke-workflow, or cancel-workflow node. The `properties.template` field on a delivery node refers to the template slug authored separately.
 
+`category` must be the slug of a **published** notification category in the workspace, or the save fails with `'<slug>' not found`. Category slugs in these examples (`onboarding`, `billing`, …) are placeholders — use one that exists. Durations are strict (`2d`, not `48h`): see the guide's Duration Format.
+
 ## Workflow Nodes
 
 ### Delivery Nodes

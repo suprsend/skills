@@ -4,11 +4,29 @@ Most text-bearing fields in a variant's `content` are rendered with Handlebars a
 
 This applies to every channel where `templating_language` is `handlebars` (the default for all channels). Slack and MS Teams additionally support `jsonnet` — for those, see the channel reference.
 
-> **Tenant variables:** use `{{$tenant.*}}` — `$brand` is the legacy namespace for the same object; never emit it in new content. The tenant display name is `{{$tenant.name}}` (not the legacy `brand_name`). Custom tenant properties always go under `{{$tenant.properties.<key>}}`. There is no `$tenant.<custom_key>` shorthand — `{{$tenant.address}}`, `{{$tenant.support_url}}`, `{{$tenant.unsubscribe_url}}` will not resolve. See [Multi-tenant Variants](references/multi-tenant-variants.md) for the full reserved-key list and the top-level `{{$hosted_preference_url}}` / `{{$embedded_preference_url}}` variables.
+> **Tenant variables:** use `{{$tenant.*}}` — `$brand` is the legacy namespace for the same object; never emit it in new content. The tenant display name is `{{$tenant.name}}` (not the legacy `brand_name`). Custom tenant properties always go under `{{$tenant.properties.<key>}}`. There is no `$tenant.<custom_key>` shorthand — `{{$tenant.address}}`, `{{$tenant.support_url}}`, `{{$tenant.unsubscribe_url}}` fail the render with a missing-variable error. A missing custom key fails too (`{{$tenant.properties.<missing>}}`); use `{{default $tenant.properties.<key> "…"}}`, which falls back when `properties` is `{}` but still fails if `properties` is `null`. See [Multi-tenant Variants](multi-tenant-variants.md) for the full reserved-key list and the top-level `{{$hosted_preference_url}}` / `{{$embedded_preference_url}}` variables.
+
+## Verified behaviour (overrides the docs below)
+
+Templates render in **strict mode**:
+
+- **Missing variable = failed render, not empty output.** `{{x}}` fails when `x` is absent (a `null` value renders empty). `{{a.b}}` fails when `a` is absent or `null`, or when `b` is absent.
+- **Inside helper and block arguments** (`if`, `with`, `each`, `default`, `compare`, …) a missing top-level name or a missing *last* key is tolerated (`{{#if x}}`, `{{default a.b "-"}}` with `a: {}`), but a missing or `null` *parent* still fails. Guard each parent level: `{{#if a}}{{#if a.b}}…{{/if}}{{/if}}`.
+- **Escaping:** `{{ }}` escapes `&`, `<`, `>`, `"`, `'`, `` ` ``, `=` in every channel, and nothing un-escapes it later — SMS, push, WhatsApp, and Inbox deliver `O&#x27;Brien &amp; Sons`. Use `{{{ }}}` for text and URLs in those channels; keep `{{ }}` for email HTML.
+- **`datetime-format`:** pass an ISO-8601 string with offset or epoch **milliseconds**, and always pass a timezone: `{{datetime-format created_at "MMM D, YYYY h:mm a" "America/New_York"}}`. Epoch seconds and numeric strings misparse; without a timezone nothing is converted.
+- **Array helpers:** `unique`, `list-agg`, `itemAt`, and `join` return empty for a `null` value but fail the render when the variable is absent.
+- **Two-argument `compare` / `condition`** use `===`: `{{#compare plan "pro"}}…{{/compare}}`.
+
+**Supported, not covered below:**
+
+- Block params: `{{#each items as |item i|}}{{i}}: {{item.name}}{{/each}}`
+- `includeZero=true` on `if`: `{{#if count includeZero=true}}`
+- Whitespace control: `{{~ var ~}}` trims whitespace on that side.
+- Parent context inside `each`: `{{../title}}`
+- **Not supported:** partials (`{{> name}}`) — render error.
 
 ## Documentation
 
-```
 # Handlebars helpers
 
 > Handlebars syntax, built-in helpers, and the custom helpers available in SuprSend templates — conditionals, dates, JSON, strings, math, arrays, and translations.
@@ -16,15 +34,15 @@ This applies to every channel where `templating_language` is `handlebars` (the d
 SuprSend templates use Handlebars to insert variables and format data. This page is the syntax and helper reference. Slack and MS Teams templates use a different language — see [JSONNET templates](/docs/jsonnet-templates).
 
 > **Warning:**
-  Conditional helpers do not work in WhatsApp or in SMS sent in India (pre-approved copy). They do work for US SMS on Twilio and MessageBird.
+  Block helpers (`#if`, `#each`, `#with`, `#unless`, `#compare`, …), partials, and comments are rejected in WhatsApp templates and in SMS that needs pre-approved copy (e.g. India DLT). Inline helpers (`default`, `datetime-format`, `join`, …) and plain variables are allowed. Block helpers do work for US SMS on Twilio and MessageBird.
 
 
 ## Syntax
 
 | Syntax | What it does |
 | :- | :- |
-| `{{ var }}` | Default. HTML-escapes `<`, `>`, `"`, `'`, `&` into HTML entities. |
-| `{{{ var }}}` | Unescaped. Use for URLs and values that must keep `&`, `?`, `=`. Can inject HTML. |
+| `{{ var }}` | Default. HTML-escapes `<`, `>`, `"`, `'`, `&`, `` ` ``, `=` into HTML entities — in **every** channel. SMS, push, WhatsApp, and Inbox deliver the entities as-is (`O&#x27;Brien &amp; Sons`). |
+| `{{{ var }}}` | Unescaped. Use for URLs, and for text in non-HTML channels (SMS, push, WhatsApp, Inbox) so `'`, `&`, `=` arrive unchanged. Can inject HTML — in email, use only for trusted values. |
 | `{{array.[0].name}}` | First element of `array`. Use `[1]`, `[2]`, … for later items. |
 | `{{[first name]}}` | Names with spaces, capitals, or special characters. |
 
@@ -35,7 +53,7 @@ These are injected at render time, not by your trigger payload. Full preview con
 | Syntax | Source |
 | :- | :- |
 | `{{$recipient.name}}` | Recipient profile. |
-| `{{$actor.name}}` | Actor on the trigger. Empty if the trigger has no actor. |
+| `{{$actor.name}}` | Actor on the trigger. If the trigger has no actor, `$actor` is unset and this fails the render — wrap it in `{{#if $actor}}…{{/if}}`. |
 | `{{$tenant.name}}` | Tenant reserved property. Custom values: `{{$tenant.properties.address}}`. Full list: [Tenant templates](/docs/tenant-templates). |
 | `{{$batched_events_count}}` | Count of events in a [batch](/docs/batch) or [digest](/docs/digest). |
 | `{{$batched_events.[0].name}}` | Field on the nth batched event (`[0]` is the first). |
@@ -106,7 +124,7 @@ Free plan
 {{/if}}
 ```
 
-Falsy values: `false`, `0`, `""`, `null`, `undefined`. An empty array `[]` is truthy in Handlebars.
+Falsy values for `if`, `unless`, `with`, and `each`: `false`, `0`, `""`, `null`, `undefined`, and an empty array `[]`. An empty object `{}` is truthy. The custom `and` / `or` helpers treat `[]` as truthy. Add `includeZero=true` (`{{#if count includeZero=true}}`) to treat `0` as truthy.
 
 ### unless
 
@@ -213,7 +231,7 @@ No address on file
 
 With this mock data, the example above renders: `Austin, US`
 
-If `order.address` is missing or empty, the example renders `No address on file` instead.
+If `order` exists but `order.address` is absent, `null`, or `[]`, the example renders `No address on file` instead. If `order` itself is missing, the whole render fails; if `order.address` is `{}`, the block runs and `{{city}}` fails. Guard the parent with `{{#if order}}` and use `{{default city ""}}` for fields that may be absent.
 
 ### lookup
 
@@ -323,7 +341,7 @@ Each row is the output of the expression with that mock data.
 | `!==` | LHS value or type does not equal RHS | `1 !== "1"` |
 | `typeof` | `typeof` LHS equals the RHS type string | `typeof` value is `"string"` |
 
-Nested paths need the parent key present — see [Nested paths](#nested-paths). `{{#compare order.status '==' "shipped"}}` does not run if `order` is missing. Guard the parent first:
+Nested paths need the parent key present — see [Nested paths](#nested-paths). `{{#compare order.status '==' "shipped"}}` makes the whole render fail if `order` is missing. Guard the parent first:
 
 ```handlebars theme={"system"}
 {{#if order}}
@@ -335,7 +353,7 @@ Nested paths need the parent key present — see [Nested paths](#nested-paths). 
 
 ### condition
 
-Returns a boolean for use inside `{{#if}}`. Use this when you need a comparison as a **subexpression**, not a block. If the variable is missing, `condition` returns `false`.
+Returns a boolean for use inside `{{#if}}`. Use this when you need a comparison as a **subexpression**, not a block. A missing top-level variable is compared as `undefined`: `'=='` / `'==='` against a value return `false`, but `'!='` / `'!=='` return `true` and `'==' null` returns `true`. A missing *parent* (`order.status` with no `order`) fails the render. With only two arguments (`condition a b`, or `{{#compare a b}}`) the operator defaults to `===`.
 
 **Syntax**
 
@@ -454,9 +472,9 @@ Returns a formatted date string. Throws an error if the value is not a valid dat
 
 | Parameter | Required | Description |
 | :- | :- | :- |
-| `variable` | yes | A date or timestamp. Use `"now"` for the time the template renders. Throws an error if the date is invalid. |
-| `format string` | yes | Moment.js format. See [format tokens](https://momentjs.com/docs/#/displaying/format/). Example: `"dddd, MMMM Do YYYY, h:mm:ss a"` → `Sunday, February 14 2010, 3:25:50 PM`. |
-| `timezone` | no | IANA timezone to convert into. See the [tz database list](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones). |
+| `variable` | yes | An ISO-8601 string with offset (`"2023-09-26T10:00:00Z"`) or epoch **milliseconds**. Epoch **seconds** are read as milliseconds (`1695686400` → 1970-01-20) and numeric strings (`"1695686400"`) misparse. Use `"now"` for the time the template renders. Throws an error if the date is invalid. |
+| `format string` | yes | Moment.js format. See [format tokens](https://momentjs.com/docs/#/displaying/format/). Example: `"dddd, MMMM Do YYYY, h:mm:ss a"` → `Sunday, February 14th 2010, 3:25:50 pm`. |
+| `timezone` | no, but always pass one | IANA timezone to convert into. Without it nothing is converted: an ISO string keeps its own offset, and epoch ms / `"now"` use the server's local zone. See the [tz database list](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones). |
 
 **Example**
 
@@ -517,7 +535,7 @@ With this mock data, the example above renders:
 
 | Expression | Output |
 | :- | :- |
-| `{{jsonStringify this}}` | `{"likes":3,"comments":4,"users":["Olivia","Steve"]}` |
+| `{{jsonStringify this}}` | `{"comments":4,"likes":3,"users":["Olivia","Steve"]}` — keys come out sorted, and at send time `this` also contains `$recipient`, `$tenant`, `$brand`, `$workflow`, `$event_name`, and preference URLs. Stringify a specific key instead. |
 | `{{jsonStringify users}}` | `["Olivia","Steve"]` |
 
 ### jsonParse
@@ -633,7 +651,7 @@ Uppercases the first character of a string.
 
 ## Math
 
-All math helpers throw an error if an argument is not a number. `add`, `subtract`, and `multiply` accept multiple arguments or an array of numbers.
+All math helpers throw an error if an argument is not a JSON number — numeric strings like `"12"` throw too. Exceptions: `null` is allowed in `add` / `subtract` (counted as `0`) and skipped by `multiply`; `divide` by `0` returns `Infinity`. `add`, `subtract`, and `multiply` accept multiple arguments or an array of numbers.
 
 ### add
 
@@ -727,7 +745,7 @@ Rounds to the nearest integer.
 
 ### mod
 
-Returns the remainder of `dividend / divisor`. The result takes the sign of the dividend. Throws an error if an input is not a number, or if the divisor is `0`.
+Returns the remainder of `dividend / divisor`. The result takes the sign of the dividend. Throws an error if an input is not a number. A divisor of `0` returns `NaN` (no error).
 
 **Syntax**
 
@@ -765,9 +783,11 @@ Returns unique items from an array. Duplicate values are dropped.
 
 | Expression | Data | Output |
 | :- | :- | :- |
-| `{{unique email}}` | `{"email":["joe@abc.com","steve@abc.com","joe@abc.com"]}` | `joe@abc.com, steve@abc.com` |
-| `{{unique cities "city"}}` | `{"cities":[{"city":"San Francisco"},{"city":"Austin"},{"city":"Austin"}]}` | `San Francisco, Austin` |
-| `{{unique personal_details "name.first_name"}}` | `{"personal_details":[{"name":{"first_name":"john"}},{"name":{"first_name":"mike"}}]}` | `john, mike` |
+| `{{unique email}}` | `{"email":["joe@abc.com","steve@abc.com","joe@abc.com"]}` | `joe@abc.com,steve@abc.com` |
+| `{{unique cities "city"}}` | `{"cities":[{"city":"San Francisco"},{"city":"Austin"},{"city":"Austin"}]}` | `San Francisco,Austin` |
+| `{{unique personal_details "name.first_name"}}` | `{"personal_details":[{"name":{"first_name":"john"}},{"name":{"first_name":"mike"}}]}` | `john,mike` |
+
+Printed directly, the array is comma-joined with **no space**. Wrap it in `join` for `, `: `{{join (unique email)}}` → `joe@abc.com, steve@abc.com`.
 
 ### list-agg
 
@@ -805,7 +825,7 @@ Returns the item at an index. In a [batch](/docs/batch) or [digest](/docs/digest
 | Parameter | Required | Description |
 | :- | :- | :- |
 | `variable` | yes | Must be an array. Throws an error otherwise. |
-| `index` | yes | Must be an integer. Throws an error otherwise. |
+| `index` | yes | A non-negative integer. A non-number throws; a negative or fractional index returns empty. |
 
 **Examples**
 
@@ -831,13 +851,13 @@ Concatenates array values with a separator between each item.
 | Parameter | Required | Description |
 | :- | :- | :- |
 | `variable` | yes | Array of primitives (string, number, boolean). Throws an error otherwise. |
-| `separator` | no | String inserted between items. Defaults to `,`. |
+| `separator` | no | String inserted between items. Defaults to `", "` (comma + space). Falsy items (`0`, `""`, `false`, `null`) are silently dropped; a plain string input is returned unchanged. |
 
 **Examples**
 
 | Expression | Data | Output |
 | :- | :- | :- |
-| `{{join email}}` | `{"email":["joe@abc.com","steve@abc.com","joe@abc.com"]}` | `joe@abc.com , steve@abc.com , joe@abc.com` |
+| `{{join email}}` | `{"email":["joe@abc.com","steve@abc.com","joe@abc.com"]}` | `joe@abc.com, steve@abc.com, joe@abc.com` |
 | `{{join email ' - '}}` | `{"email":["joe@abc.com","steve@abc.com","joe@abc.com"]}` | `joe@abc.com - steve@abc.com - joe@abc.com` |
 
 > **Note:**
@@ -846,7 +866,7 @@ Concatenates array values with a separator between each item.
 
 ### length
 
-Returns the number of items in an array, or the character length of a string. Returns `0` for any other type.
+Returns the number of truthy items in an array (`null`, `0`, `""`, `false` are not counted: `[1,null,0,"",2]` → `2`), or the character length of a string. Returns `0` for any other type.
 
 **Syntax**
 
@@ -866,7 +886,7 @@ Returns the number of items in an array, or the character length of a string. Re
 
 ### t
 
-Resolves a translated string from the template's translation files. Only works when translations are enabled for the template.
+Resolves a translated string from the template's translation files. Only works when translations are enabled for your account, a translation version is published, and the key exists — otherwise the render fails. Translation strings see **only** the hash arguments you pass (`name=first_name`), not the template's variables. Interpolated values are HTML-escaped twice (`A&B` → `A&amp;amp;B`; `{{{t ...}}}` still escapes them once), and a literal `&` in a translation renders as `&amp;` under `{{t ...}}`. Prefer `{{{t ...}}}` and keep `&`, `<`, `'` out of interpolated values.
 
 Use this helper to keep one template and swap copy per locale. For file setup, pluralization examples, and CLI/API management, see [Translations](/docs/translations).
 
@@ -939,9 +959,11 @@ Guard the parent first:
   San Francisco
 {{/if}}
 
-{{#if person.address}}
-  {{#if person.address.current}}
-    {{default person.address.current.city "Los Angeles"}}
+{{#if person}}
+  {{#if person.address}}
+    {{#if person.address.current}}
+      {{default person.address.current.city "Los Angeles"}}
+    {{/if}}
   {{/if}}
 {{/if}}
 ```
@@ -949,8 +971,8 @@ Guard the parent first:
 ## Troubleshooting
 
 
-  ### Apostrophes or special characters look garbled in preview
-    Double braces (`{{ var }}`) turn special characters into safe codes so they display as text. An apostrophe can show up as `&#x27;` in push preview.
+  ### Apostrophes or special characters arrive as `&#x27;` / `&amp;`
+    Double braces (`{{ var }}`) turn special characters into safe codes so they display as text. This happens in every channel, not just preview: SMS, push, WhatsApp, and Inbox deliver `O'Brien & Sons` as `O&#x27;Brien &amp; Sons`.
 
     To print the value exactly as stored — apostrophes, `&`, or URLs — use triple braces: `{{{ variable }}}`.
   
@@ -958,7 +980,7 @@ Guard the parent first:
   ### How does SuprSend avoid HTML injection when printing variables?
     By default, `{{ var }}` converts characters that could change the page (`<`, `>`, `"`, `'`, `&`) into safe text codes (HTML entities). That way a variable can't inject HTML or scripts into the message.
 
-    Use `{{{ var }}}` only when you need the raw character, such as a URL, and only for values you trust.
+    Use `{{{ var }}}` when you need the raw characters: URLs, and any text in SMS, push, WhatsApp, or Inbox. In email HTML, use it only for values you trust.
   
 
   ### When do I use if vs compare vs condition?
@@ -998,4 +1020,3 @@ Guard the parent first:
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
-```

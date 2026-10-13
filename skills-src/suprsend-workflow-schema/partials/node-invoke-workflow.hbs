@@ -15,6 +15,15 @@ Use `invokeworkflow` to trigger a workflow from within another workflow. The two
 - The same run needs to send to multiple distinct recipients — overrides re-point the whole run, not individual nodes.
 - A digest / batch needs to aggregate across a key other than the parent's trigger recipient — see [Digest](node-digest.md).
 
+## Verified behaviour (overrides the docs below)
+
+- **`append_current_run_data` defaults to `false`** — the child run gets only the rendered `data` (or `{}`). Set it to `true` to forward the current run's data, including `$batched_events` / `$batched_events_count` from an earlier batch or digest; keys in `data` override it (shallow merge).
+- **`workflow` is a literal slug**, not JSONNET. An unknown slug is logged and the parent run continues without invoking anything.
+- **`recipient_selection: "recipient"` fails if the parent run's recipient is an object** (logged; the parent run continues). Use `"expression"` to pick a user instead.
+- **`recipient_expression`** may return a `distinct_id` string, a recipient object (`{ "distinct_id": ... }` or `{ "object_type": ..., "id": ... }`), or an array of these to invoke the workflow for several recipients.
+- **`tenant_id` is always inherited** from the parent run; it can't be set on this node.
+- **`data`** must evaluate to a JSON object; anything else is replaced with `{}`.
+
 ## Documentation
 
 {{{docs_invoke_workflow}}}

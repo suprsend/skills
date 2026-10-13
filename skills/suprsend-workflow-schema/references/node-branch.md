@@ -41,7 +41,7 @@ Conditions evaluate data from trigger payloads, user properties, tenant properti
 | **Actor** | Properties of the user who performed the action | Add as `<property_key>` | Add as `$actor.<property_key>` | |
 | **Recipient** | Properties of the user receiving the notification | Add as `<property_key>` | Add as `$recipient.<property_key>` | |
 | **Tenant** | Properties of the tenant/brand | Add as `<property_key>` for reserved properties,  `properties.<property_key>` for custom properties | Add as `$tenant.<property_key>` or `$tenant.properties.<property_key>` | |
-| **Message Status** | Delivery status of previously sent notifications | Pass the node slug whose message status you want to check, for example, `message_status from node "welcome-email" == "seen"` | Pass the status you want to check, for example, `"seen"` | Value can be one of `delivered`, `seen`, `clicked`, `delivery_failed` |
+| **Message Status** | Delivery status of previously sent notifications | Pass the node slug whose message status you want to check, for example, `message_status from node "welcome_email" == "seen"` (the node slug is its `ref`: letters, digits and `_` only, no hyphens) | Pass the status you want to check, for example, `"seen"` | Value can be one of `delivered`, `seen`, `clicked`, `delivery_failed` |
 
 ### Operators
 
@@ -51,7 +51,7 @@ Conditions evaluate data from trigger payloads, user properties, tenant properti
 | `>`, `>=` | Greater than / greater than or equal | Numbers, timestamps |
 | `<`, `<=` | Less than / less than or equal to | Numbers, timestamps |
 | `contains` / `not contains` | Substring or array item match / no substring or array item match | Strings, arrays |
-| `is empty` / `is not empty` | key is missing, empty or null / key is present, not empty or null | All |
+| `is empty` / `is not empty` | key is missing or is `null`, `""`, `false`, `0`, `[]` or `{}` / key has any other value | All |
 | `datetime is` / `datetime is before` / `datetime is after` | Datetime equal to / less than / greater than | Timestamps |
 | `intersects` / `not intersects` | Any array value matches / No array values match | Arrays |
 
@@ -82,7 +82,7 @@ Dynamic values are evaluated based on the data available at the node input along
 | Input payload | Add key directly (for example, `payment_due_date`) |
 | Actor | Add as `$actor.<property_key>` (for example, `$actor.role`) |
 | Recipient | Add as `$recipient.<property_key>` (for example, `$recipient.plan`) |
-| Tenant | Add as `$tenant.<property_key>` for reserved properties, add as `properties.<property_key>` for custom properties (for example, `$tenant.timezone`, `properties.timezone`) |
+| Tenant | Add as `$tenant.<property_key>` for reserved properties, add as `$tenant.properties.<property_key>` for custom properties (for example, `$tenant.timezone`, `$tenant.properties.region`). A bare `properties.<property_key>` reads the trigger payload, not the tenant |
 
 ## Combining Conditions
 
@@ -105,7 +105,7 @@ When using message status checks, always add a delay before evaluating the statu
 
 
 **Condition Syntax:**
-Condition on message status looks like this `<node slug> IS/ IS_NOT <message status>`. Eg. `message_status from node "welcome-email" is "seen"`.
+Condition on message status looks like this `<node slug> IS/ IS_NOT <message status>`. Eg. `message_status from node "welcome_email" is "seen"`.
 
 You can find node slug below node name in the workflow editor.
 
@@ -246,6 +246,8 @@ Each branch has 2-10 items: up to 9 conditional branches and 1 default branch (m
 - `$future_event`
 - `$ref`
 
+For `value` syntax, `EMPTY` semantics, `ARRAY_INTERSECTS` and tenant custom properties, see [Workflow Schema Guide → Condition Expressions](workflow-schema-guide.md#condition-expressions). A message-status condition's `ref` must be the earlier node's `ref` (`^[a-zA-Z_][a-zA-Z0-9_]*$`, e.g. `welcome_email` — no hyphens).
+
 ## Example
 
 ```json
@@ -268,7 +270,7 @@ Each branch has 2-10 items: up to 9 conditional branches and 1 default branch (m
         }
       ],
       "nodes": [
-        { "node_type": "send_smart_channel_routing", "properties": { "template": "premium-alert" } }
+        { "node_type": "send_smart_channel_routing", "properties": { "template": "premium-alert", "success": "seen" } }
       ]
     },
     {

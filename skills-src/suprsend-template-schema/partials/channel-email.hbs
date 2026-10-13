@@ -20,15 +20,24 @@ For variants with `channel: "email"`.
 
 {{schema-enum (get email_schema "$defs.email_body_def.properties.type.enum")}}
 
-- `designer` — content authored in the SuprSend visual designer; serialized HTML + optional `design_json`.
-- `raw` — hand-authored HTML (with optional fallback text).
+- `designer` — content authored in the dashboard's drag-and-drop (Unlayer) editor; serialized HTML + editor state.
+- `raw` — hand-authored HTML (with optional fallback text). **Use this when you author email content as JSON.**
 - `plain_text` — text-only email.
+
+`preheader` and `email_markup` sit on `body` (not inside `raw`/`designer`) and are applied only to `raw` and `designer` bodies — they're discarded for `plain_text`. At send time they're injected into the rendered HTML:
+
+- `preheader` → a hidden `<div>` inserted right **after the opening `<body>` tag**.
+- `email_markup` → a `<script type="application/ld+json">` inserted right **before `</head>`**.
+
+If the HTML has no `<body>` tag (or no `</head>`), the preheader (or markup) is **silently dropped** — always send a full `<html><head></head><body>…</body></html>` document when you use them.
 
 ### `designer` body
 
 {{schema-table (get email_schema "$defs.designer_body_def")}}
 
-`html` is required. `design_json` round-trips the visual designer state. `merge_tags` lists the data references used by the design so the editor can validate them:
+`html` is required. Only `html` and `text` are rendered and sent; `design_json`, `merge_tags` and `display_conditions` are editor state for the drag-and-drop editor and are ignored at send time. **Don't hand-write `design_json`** — a made-up value breaks the visual editor for that variant. To create email content from JSON, use a `raw` body; when editing a variant built in the visual editor, leave `design_json` / `merge_tags` / `display_conditions` untouched.
+
+`merge_tags` entries (editor state):
 
 {{schema-table (get email_schema "$defs.designer_body_merge_tag_def")}}
 
@@ -66,34 +75,23 @@ For variants with `channel: "email"`.
     "type": "raw",
     "preheader": "Order summary attached",
     "raw": {
-      "html": "<h1>Thanks for your order</h1><p>Total: \{{ order.total_formatted }}</p>",
+      "html": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"></head><body><h1>Thanks for your order</h1><p>Total: \{{ order.total_formatted }}</p></body></html>",
       "text": "Thanks for your order. Total: \{{ order.total_formatted }}"
     }
   }
 }
 ```
 
-### Designer email with merge tags
+The HTML is a full document so the `preheader` has a `<body>` tag to attach to. `from_address` / `reply_to` take effect only with your own email vendor (see the verified behaviour list below).
 
-```json
-{
-  "subject": "\{{ campaign.subject }}",
-  "body": {
-    "type": "designer",
-    "designer": {
-      "html": "<table>...rendered html...</table>",
-      "text": "...plain fallback...",
-      "design_json": { "version": 1, "rows": [] },
-      "merge_tags": [
-        { "id": "first_name", "expression": "\{{ first_name }}" }
-      ]
-    }
-  }
-}
-```
+## Verified behaviour (overrides the docs below)
+
+- **Plain-text part:** if `text` is empty, it's generated from the rendered HTML **at send time** (not at commit).
+- **`from_address` and `reply_to` are ignored** when the email is sent through SuprSend's built-in email vendor; they apply only with your own email vendor.
+- **`extra_to`, `cc`, `bcc`, `reply_to`** are comma-separated address strings. If any one address in a list is malformed after rendering, that **entire list is silently dropped** at send time.
+- **`preheader` / `email_markup`** need a `<body>` tag / a `</head>` tag in the HTML respectively, and are ignored for `plain_text` bodies (see [Body](#body)).
+- **Updates merge with stored content:** omitted top-level keys keep their stored values, and `body` is merged key by key — `body.raw`, `body.designer` and `body.plain_text` are each merged field by field. Switching `body.type` keeps the other types' stored content. To clear a field, send it explicitly as `""`.
 
 ## Documentation
 
-```
 {{{docs_email}}}
-```

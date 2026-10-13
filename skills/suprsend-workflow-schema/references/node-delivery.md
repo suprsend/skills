@@ -4,7 +4,7 @@ Delivery nodes send notifications to users.
 
 ## Single Channel Nodes
 
-Send via one specific channel. Each uses a different `node_type` but shares the same schema properties.
+Send via one specific channel. Each uses a different `node_type`, and only `template` and `success` apply (see [Schema Properties](#schema-properties)).
 
 | `node_type` | Channel |
 |---|---|
@@ -181,12 +181,12 @@ SuprSend checks which channels qualify for delivery by intersecting:
 Routing logic **only applies to outside-app channels** - Email, SMS, WhatsApp, Slack, MS teams and Push. SuprSend orders these based on your chosen [optimize-on](#optimize-on) setting (default: lowest to highest cost).
 
 > **Note:**
-  **Inbox is always delivered at T+0** - it is exempt from channel routing entirely. Regardless of the optimize-on setting, channel order, or cost, Inbox fires immediately alongside the first outside-app channel whenever it is active on the template and user profile. It does not count toward the outside-app channel sequence or interval calculation.
+  **Inbox is delivered at T+0 only in the default setup** - when neither Must Send To (`mandatory_channels`) nor a channel sequence (`routing_basis: "channels_sequence"`) is set. Then Inbox fires immediately alongside the first outside-app channel and does not count toward the sequence or interval calculation. If either setting is used, Inbox gets no special treatment: it is ordered like any other channel (by cost, or by its position in the sequence) unless you list it in `mandatory_channels`.
 
 
 ### 3. Deliver sequentially with a delay
 
-Notifications go out in this sequence:
+Default sequence (no Must Send To channel, no channel sequence):
 
 | Time | What's sent |
 | - | - |
@@ -197,7 +197,11 @@ Notifications go out in this sequence:
 
 The interval between each outside-app channel is:
 
-`interval = time_to_live ÷ (number of outside-app channels − 1)`
+`interval = time_to_live ÷ (number of routed channels − 1)` in the default setup, where the first routed channel goes at T+0.
+
+**When a Must Send To channel is sent** (listed in `mandatory_channels` and reachable for this user), must-send channels go at T+0 and routed channels start one interval later: `interval = time_to_live ÷ number of routed channels`. Example: `mandatory_channels: ["inbox"]`, Email + SMS routed, time-to-live 1h → Inbox at T+0, Email at T+30min, SMS at T+60min.
+
+Routed channels are counted per channel identity (see below). If a step fails to send at all, the next step goes out without waiting for the rest of its interval.
 
 **Example:** Template with Inbox + Email + SMS + WhatsApp, time-to-live = 1 hour:
 
@@ -221,6 +225,8 @@ Once the success metric is achieved at any point, all remaining channel deliveri
 
 Sets the order in which outside-app channels are attempted. The default is **cost** - channels are tried from lowest to highest cost based on your vendor settings.
 
+In workflow JSON this is `routing_basis`: `"cost_low_to_high"` (default) or `"channels_sequence"`. With `"channels_sequence"`, also pass `routing_channels_sequence` (non-empty list of channel values): listed channels go first in list order, unlisted ones follow by cost. The saved sequence may not keep the order you sent, so read the node back after saving to check it.
+
 ### Time to Live
 
 The total time window across which outside-app channels are attempted. This determines the interval between each channel.
@@ -229,7 +235,7 @@ The total time window across which outside-app channels are attempted. This dete
 
 ### Must Send To
 
-Channels listed here are delivered to **immediately at T+0**, outside of routing order. Use this for channels that must always receive the notification regardless of sequencing.
+Channels listed here (`mandatory_channels`) are delivered to **immediately at T+0**, outside of routing order. Use this for channels that must always receive the notification regardless of sequencing. Setting it turns off the automatic Inbox-at-T+0 rule (add `inbox` here if you need it immediately), and when a must-send channel is sent, the first routed channel waits one full interval instead of going at T+0.
 
 ### Success Metric
 
@@ -290,7 +296,7 @@ You can use a [JQ expression](https://jqlang.github.io/jq/manual/) to map your e
 
 
   ### Why am I receiving Inbox and Email at the same time?
-    This is expected. Inbox is exempt from routing logic and always fires at T+0 - alongside the first outside-app channel (Email, in this case). The time-to-live delay only applies to the 2nd, 3rd, and subsequent outside-app channels.
+    This is expected in the default setup (no Must Send To, no channel sequence): Inbox then fires at T+0 alongside the first outside-app channel (Email, in this case). The time-to-live delay only applies to the 2nd, 3rd, and subsequent outside-app channels.
 
     So with Inbox + Email + SMS and a 10-minute time-to-live:
 
@@ -305,7 +311,15 @@ You can use a [JQ expression](https://jqlang.github.io/jq/manual/) to map your e
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 
-## Schema Properties (shared by all delivery nodes)
+## Schema Properties
+
+The table lists every delivery property. Each node type keeps only some of them, and **other keys are silently dropped on save**:
+
+| `node_type` | Properties kept |
+|---|---|
+| Single-channel (`send_email`, `send_sms`, …) | `template`, `success`. The channel is fixed by the node type (`send_mobile_push` = `androidpush` + `iospush`). |
+| `send_multi_channel` | `template`, `channels`, `channels_expr`, `success` |
+| `send_smart_channel_routing` | `template`, `channels_expr`, `success`, `ttl_value`, `mandatory_channels`, `routing_basis`, `routing_channels_sequence`. There is **no `channels`**: it routes across all live template channels unless `channels_expr` narrows them. |
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -315,6 +329,14 @@ This documentation is built and hosted on [Mintlify](https://mintlify.com), a de
 | success | string | No | success metric (delivered/seen/interaction/<user-event>) |
 | mandatory_channels | array | No | applicable for smart-channel-routing, notification on mandatory channels will be sent immediately |
 | ttl_value | string | No | Duration format ([xx]d[xx]h[xx]m[xx]s) examples [30s, 1m, 1m30s, 1d3h45m] |
+
+**Field rules:**
+
+- `template`: slug of an existing, **published** template. Otherwise the node errors on save.
+- `success`: `delivered` | `seen` | `interaction` | a custom event name. **Required on `send_smart_channel_routing`** — workflow JSON without it is rejected on save. On other delivery nodes it defaults to `seen`. A custom event counts only if it happens within 1 day of the send (fixed window). On an event-triggered workflow, a success event that is also a trigger event is rejected at publish. Only smart routing acts on it by stopping the remaining channels. On other nodes it is analytics only.
+- `ttl_value` (smart routing): default `1h`. Use a duration like `30m` or `1h30m`: no spaces, hours ≤ 23, minutes and seconds ≤ 59, greater than 0, at most 90 days ([Duration format](workflow-schema-guide.md#duration-format)).
+- `routing_basis` (smart routing): `cost_low_to_high` (default) | `channels_sequence`. With `channels_sequence`, `routing_channels_sequence` (non-empty channel list) is required. Listed channels go first and the rest follow by cost. The saved order may not match what you sent, so read the node back to check.
+- `mandatory_channels` (smart routing): sent at T+0. Setting it turns off the automatic "inbox at T+0" behaviour, and when a listed channel is reachable for the user, the routed channels start one interval after T+0 (interval = `ttl_value` ÷ number of routed channels). See the example below.
 
 ### Channel values
 
@@ -360,8 +382,17 @@ This documentation is built and hosted on [Mintlify](https://mintlify.com), a de
   "node_type": "send_smart_channel_routing",
   "properties": {
     "template": "payment-reminder",
+    "ttl_value": "1h",
+    "routing_basis": "cost_low_to_high",
     "mandatory_channels": ["inbox"],
     "success": "seen"
   }
 }
 ```
+
+Timing for a user reachable on inbox, email and SMS (email cheaper than SMS):
+
+- **As written** (`mandatory_channels: ["inbox"]`): inbox at T+0, email at **T+30m**, SMS at T+60m. The interval is 1h ÷ 2 routed channels.
+- **Without `mandatory_channels`** (default): inbox **and** email at T+0, SMS at T+60m. The interval is 1h ÷ (2 − 1).
+
+Delivery stops as soon as the user reaches `success`. Omit `mandatory_channels` if the first paid channel should go out immediately.

@@ -73,11 +73,130 @@ sources:
     key: docs_template_variants
     urls:
       - "https://docs.suprsend.com/docs/template-variants"
+    replacements:
+      # Selection order — upstream describes panel order + a tenant-first fallback chain; actual order is locale-first.
+      - find: |-
+          When a notification is triggered, SuprSend evaluates all non-default variants in the order they appear in the panel. The first one whose conditions all match is sent. If no variant matches, the **default** (always at the top) is sent as the fallback.
+        replace: |-
+          When a notification is triggered, SuprSend picks one variant per channel. Candidates are variants whose **Tenant** is empty or exactly the send's tenant and whose **Locale** is in the recipient's fallback list (for example `hi-IN` → `hi` → `en`). They are tried by locale first, then non-default variants in panel order, and the first whose conditions match is sent. The **default** variant (always at the top of the panel) is tried last, as the fallback.
+      - find: |-
+          * All conditions on a variant must be true - partial matches are skipped.
+        replace: |-
+          * Conditions added with **+ OR** are alternatives — the variant matches if any one of them is true. The rules inside a single condition must all be true.
+      - find: |-
+          * **Tenant** and **locale** are soft checks with fallback: tenant+locale → tenant+default locale → default tenant+locale → default.
+        replace: |-
+          * **Tenant** and **locale** are soft checks with fallback, and **locale comes first**: recipient locale → base language → `en`. Within a base language, if the tenant has any variant for it, tenant-less variants for that language are skipped (even if the tenant's variants don't match); otherwise tenant-less variants are used. So for a French recipient a tenant-less `fr` variant beats the tenant's `en` variant. Sub-tenants don't inherit a parent tenant's variants.
+      - find: |-
+          3. Select a **Tenant** if your variant has a tenant condition.
+        replace: |-
+          3. Select a **Tenant** if your variant is scoped to a tenant.
+      - find: |-
+          **One template, many tenants** - create a variant per tenant using a `$tenant.id` condition.
+        replace: |-
+          **One template, many tenants** - create a variant per tenant by setting its **Tenant** field (`tenant_id`), not a condition.
+      - find: |-
+          **Tenant + language** - combine conditions: `$tenant.id = acme` + `$recipient.language = fr`. Place these above language-only variants so they match first.
+        replace: |-
+          **Tenant + language** - set both fields on one variant: **Tenant** `acme` + **Locale** `fr`. Language is not a condition: the recipient's locale comes from `$locale` (falling back to `$preferred_language`), and there is no built-in `language` property.
 
   - type: docs
     key: docs_handlebars_helpers
     urls:
       - "https://docs.suprsend.com/docs/handlebars-helpers"
+    replacements:
+      - find: "Conditional helpers do not work in WhatsApp or in SMS sent in India (pre-approved copy). They do work"
+        replace: |-
+          Block helpers (`#if`, `#each`, `#with`, `#unless`, `#compare`, …), partials, and comments are rejected in WhatsApp templates and in SMS that needs pre-approved copy (e.g. India DLT). Inline helpers (`default`, `datetime-format`, `join`, …) and plain variables are allowed. Block helpers do work
+      - find: |-
+          | `{{ var }}` | Default. HTML-escapes `<`, `>`, `"`, `'`, `&` into HTML entities. |
+        replace: |-
+          | `{{ var }}` | Default. HTML-escapes `<`, `>`, `"`, `'`, `&`, `` ` ``, `=` into HTML entities — in **every** channel. SMS, push, WhatsApp, and Inbox deliver the entities as-is (`O&#x27;Brien &amp; Sons`). |
+      - find: |-
+          | `{{{ var }}}` | Unescaped. Use for URLs and values that must keep `&`, `?`, `=`. Can inject HTML. |
+        replace: |-
+          | `{{{ var }}}` | Unescaped. Use for URLs, and for text in non-HTML channels (SMS, push, WhatsApp, Inbox) so `'`, `&`, `=` arrive unchanged. Can inject HTML — in email, use only for trusted values. |
+      - find: |-
+          | `{{$actor.name}}` | Actor on the trigger. Empty if the trigger has no actor. |
+        replace: |-
+          | `{{$actor.name}}` | Actor on the trigger. If the trigger has no actor, `$actor` is unset and this fails the render — wrap it in `{{#if $actor}}…{{/if}}`. |
+      - find: |-
+          Falsy values: `false`, `0`, `""`, `null`, `undefined`. An empty array `[]` is truthy in Handlebars.
+        replace: |-
+          Falsy values for `if`, `unless`, `with`, and `each`: `false`, `0`, `""`, `null`, `undefined`, and an empty array `[]`. An empty object `{}` is truthy. The custom `and` / `or` helpers treat `[]` as truthy. Add `includeZero=true` (`{{#if count includeZero=true}}`) to treat `0` as truthy.
+      - find: |-
+          If `order.address` is missing or empty, the example renders `No address on file` instead.
+        replace: |-
+          If `order` exists but `order.address` is absent, `null`, or `[]`, the example renders `No address on file` instead. If `order` itself is missing, the whole render fails; if `order.address` is `{}`, the block runs and `{{city}}` fails. Guard the parent with `{{#if order}}` and use `{{default city ""}}` for fields that may be absent.
+      - find: "does not run if `order` is missing. Guard the parent first:"
+        replace: "makes the whole render fail if `order` is missing. Guard the parent first:"
+      - find: |-
+          If the variable is missing, `condition` returns `false`.
+        replace: |-
+          A missing top-level variable is compared as `undefined`: `'=='` / `'==='` against a value return `false`, but `'!='` / `'!=='` return `true` and `'==' null` returns `true`. A missing *parent* (`order.status` with no `order`) fails the render. With only two arguments (`condition a b`, or `{{#compare a b}}`) the operator defaults to `===`.
+      - find: |-
+          | `variable` | yes | A date or timestamp. Use `"now"` for the time the template renders. Throws an error if the date is invalid. |
+        replace: |-
+          | `variable` | yes | An ISO-8601 string with offset (`"2023-09-26T10:00:00Z"`) or epoch **milliseconds**. Epoch **seconds** are read as milliseconds (`1695686400` → 1970-01-20) and numeric strings (`"1695686400"`) misparse. Use `"now"` for the time the template renders. Throws an error if the date is invalid. |
+      - find: "→ `Sunday, February 14 2010, 3:25:50 PM`."
+        replace: "→ `Sunday, February 14th 2010, 3:25:50 pm`."
+      - find: "| `timezone` | no | IANA timezone to convert into."
+        replace: |-
+          | `timezone` | no, but always pass one | IANA timezone to convert into. Without it nothing is converted: an ISO string keeps its own offset, and epoch ms / `"now"` use the server's local zone.
+      - find: |-
+          | `{{jsonStringify this}}` | `{"likes":3,"comments":4,"users":["Olivia","Steve"]}` |
+        replace: |-
+          | `{{jsonStringify this}}` | `{"comments":4,"likes":3,"users":["Olivia","Steve"]}` — keys come out sorted, and at send time `this` also contains `$recipient`, `$tenant`, `$brand`, `$workflow`, `$event_name`, and preference URLs. Stringify a specific key instead. |
+      - find: "All math helpers throw an error if an argument is not a number."
+        replace: |-
+          All math helpers throw an error if an argument is not a JSON number — numeric strings like `"12"` throw too. Exceptions: `null` is allowed in `add` / `subtract` (counted as `0`) and skipped by `multiply`; `divide` by `0` returns `Infinity`.
+      - find: "Throws an error if an input is not a number, or if the divisor is `0`."
+        replace: "Throws an error if an input is not a number. A divisor of `0` returns `NaN` (no error)."
+      - find: |-
+          | `{{unique email}}` | `{"email":["joe@abc.com","steve@abc.com","joe@abc.com"]}` | `joe@abc.com, steve@abc.com` |
+          | `{{unique cities "city"}}` | `{"cities":[{"city":"San Francisco"},{"city":"Austin"},{"city":"Austin"}]}` | `San Francisco, Austin` |
+          | `{{unique personal_details "name.first_name"}}` | `{"personal_details":[{"name":{"first_name":"john"}},{"name":{"first_name":"mike"}}]}` | `john, mike` |
+        replace: |-
+          | `{{unique email}}` | `{"email":["joe@abc.com","steve@abc.com","joe@abc.com"]}` | `joe@abc.com,steve@abc.com` |
+          | `{{unique cities "city"}}` | `{"cities":[{"city":"San Francisco"},{"city":"Austin"},{"city":"Austin"}]}` | `San Francisco,Austin` |
+          | `{{unique personal_details "name.first_name"}}` | `{"personal_details":[{"name":{"first_name":"john"}},{"name":{"first_name":"mike"}}]}` | `john,mike` |
+
+          Printed directly, the array is comma-joined with **no space**. Wrap it in `join` for `, `: `{{join (unique email)}}` → `joe@abc.com, steve@abc.com`.
+      - find: "| `index` | yes | Must be an integer. Throws an error otherwise. |"
+        replace: "| `index` | yes | A non-negative integer. A non-number throws; a negative or fractional index returns empty. |"
+      - find: "| `separator` | no | String inserted between items. Defaults to `,`. |"
+        replace: |-
+          | `separator` | no | String inserted between items. Defaults to `", "` (comma + space). Falsy items (`0`, `""`, `false`, `null`) are silently dropped; a plain string input is returned unchanged. |
+      - find: "| `joe@abc.com , steve@abc.com , joe@abc.com` |"
+        replace: "| `joe@abc.com, steve@abc.com, joe@abc.com` |"
+      - find: "Returns the number of items in an array, or the character length of a string."
+        replace: |-
+          Returns the number of truthy items in an array (`null`, `0`, `""`, `false` are not counted: `[1,null,0,"",2]` → `2`), or the character length of a string.
+      - find: "Resolves a translated string from the template's translation files. Only works when translations are enabled for the template."
+        replace: |-
+          Resolves a translated string from the template's translation files. Only works when translations are enabled for your account, a translation version is published, and the key exists — otherwise the render fails. Translation strings see **only** the hash arguments you pass (`name=first_name`), not the template's variables. Interpolated values are HTML-escaped twice (`A&B` → `A&amp;amp;B`; `{{{t ...}}}` still escapes them once), and a literal `&` in a translation renders as `&amp;` under `{{t ...}}`. Prefer `{{{t ...}}}` and keep `&`, `<`, `'` out of interpolated values.
+      - find: |-
+          {{#if person.address}}
+            {{#if person.address.current}}
+              {{default person.address.current.city "Los Angeles"}}
+            {{/if}}
+          {{/if}}
+        replace: |-
+          {{#if person}}
+            {{#if person.address}}
+              {{#if person.address.current}}
+                {{default person.address.current.city "Los Angeles"}}
+              {{/if}}
+            {{/if}}
+          {{/if}}
+      - find: "Apostrophes or special characters look garbled in preview"
+        replace: "Apostrophes or special characters arrive as `&#x27;` / `&amp;`"
+      - find: "An apostrophe can show up as `&#x27;` in push preview."
+        replace: |-
+          This happens in every channel, not just preview: SMS, push, WhatsApp, and Inbox deliver `O'Brien & Sons` as `O&#x27;Brien &amp; Sons`.
+      - find: "Use `{{{ var }}}` only when you need the raw character, such as a URL, and only for values you trust."
+        replace: |-
+          Use `{{{ var }}}` when you need the raw characters: URLs, and any text in SMS, push, WhatsApp, or Inbox. In email HTML, use it only for values you trust.
 
   - type: docs
     key: docs_jsonnet
@@ -91,7 +210,7 @@ sources:
           ## Slack Block Kit examples
       - find: "## MS Teams Adaptive Card examples"
         replace: |-
-          > **Critical rule for Teams:** In SuprSend, `body_type: "card"` requires `templating_language: "jsonnet"`. Using Handlebars (`{{ }}`) inside Adaptive Card JSON will break rendering — always use `data.key` syntax. Every Adaptive Card must include `"$schema": "http://adaptivecards.io/schemas/adaptive-card.json"` at the top.
+          > **Critical rule for Teams:** In SuprSend, `body_type: "card"` requires `templating_language: "jsonnet"`. Using Handlebars (`{{ }}`) inside Adaptive Card JSON will break rendering — always use `data.key` syntax. The JSONNET must evaluate to a single bare AdaptiveCard object (`{ "type": "AdaptiveCard", "version": ..., "body": [...] }`) — not an array, and not a Teams message / `attachments` envelope (SuprSend wraps the card for you). `"$schema"` is optional.
 
           ## MS Teams Adaptive Card examples
 
@@ -99,11 +218,49 @@ sources:
     key: docs_multi_lingual
     urls:
       - "https://docs.suprsend.com/docs/multi-lingual-template"
+    replacements:
+      # Translation keys need the feature enabled — upstream calls them "recommended" with no caveat.
+      - find: "## Translations (recommended)"
+        replace: |-
+          ## Translations (recommended)
+
+          > **Note:** Translation keys render only when translations are enabled for your account (off by default — contact SuprSend to turn them on), a translation version has been published, and the key exists in it. Otherwise the render fails at send time; saving the template does not catch it.
+      - find: "Always maintain an `en.json` as the base fallback."
+        replace: "Always maintain an `en.json` as the base fallback — if a key is missing from every file in the chain, the render fails."
+      # Language is the variant's `locale` field, not a condition.
+      - find: "Create a separate variant per language with a `locale` condition."
+        replace: "Create a separate variant per language with its `locale` field set."
+      - find: "create variants with combined conditions — for example, locale `es` + tenant `acme`"
+        replace: "set both the **Locale** and **Tenant** fields on one variant — for example, locale `es` + tenant `acme`"
+      - find: "The fallback order: tenant+locale → tenant+default locale → default tenant+locale → default."
+        replace: "The fallback order is locale first: recipient locale → base language → `en`. Within a base language, the tenant's variants replace the tenant-less ones if the tenant has any for that language (even if they don't match); otherwise the tenant-less ones are used. So for a Spanish recipient a tenant-less `es` variant beats Acme's `en` variant."
 
   - type: docs
     key: docs_tenant_templates
     urls:
       - "https://docs.suprsend.com/docs/tenant-templates"
+    replacements:
+      # Tenant scoping is the variant's `tenant_id` field (exact match), not a condition; channels are per template, not per variant.
+      - find: "the same template with different content, layout, or channels enabled per tenant, using a variant condition on `tenant_id`. *Best when tenant differences go beyond variable substitution* — a different call to action, an extra section, a tenant-specific footer, or an entirely different channel set."
+        replace: "the same template with different content or layout per tenant, using a variant whose **Tenant** field (`tenant_id`) is set to that tenant. *Best when tenant differences go beyond variable substitution* — a different call to action, an extra section, or a tenant-specific footer."
+      - find: "When variable substitution isn't enough — a tenant needs a different subject line, an extra body section, a different CTA, or a completely different set of channels — create a [template variant](/docs/template-variants) with a `tenant_id` condition. SuprSend evaluates variants top-to-bottom at send time and picks the first one whose condition matches; if no variant matches, the default template is used."
+        replace: "When variable substitution isn't enough — a tenant needs a different subject line, an extra body section, or a different CTA — create a [template variant](/docs/template-variants) with its **Tenant** field (`tenant_id`) set to that tenant. At send time each channel picks its own variant; a tenant variant is a candidate only when the send's `tenant_id` matches it exactly, and if no candidate matches, the default variant is used."
+      - find: "add a variant with `tenant_id equals enterprise-corp` and put the disclaimer in the body."
+        replace: "add a variant with **Tenant** set to `enterprise-corp` and put the disclaimer in the body."
+      - find: "* **Tenant-specific channels** — one tenant wants Slack messages disabled but everyone else keeps them; enable/disable channels inside that tenant's variant."
+        replace: "* **Tenant-specific channels** — not done with variants: channels are enabled per template and each channel picks its own variant, so a channel with no variant for the tenant still sends its default content. To stop a channel for one tenant, add it to that tenant's `blocked_channels`."
+      - find: "* **Combined tenant + language** — a variant condition can reference `tenant_id` alongside `$preferred_language`, trigger data, or user properties, so you can layer"
+        replace: "* **Combined tenant + language** — set both the **Tenant** and **Locale** fields on one variant (and add conditions on trigger data or user properties if needed), so you can layer"
+      - find: "In the Create Variant modal, add a condition like `tenant_id equals <your-tenant-id>`. Pick the channels this variant applies to."
+        replace: "In the Create Variant modal, set the **Tenant** field to your tenant id — not a condition (a condition on `tenant_id` reads the trigger payload). Pick the channels this variant applies to; picking a channel the template doesn't have yet adds that channel to the template for everyone, with its own default variant."
+      - find: "If two tenants need the same override, use a condition like `tenant_id in [acme-corp, globex]` rather than duplicating the variant."
+        replace: "A variant targets exactly one tenant and there is no `in` operator, so if two tenants need the same override, duplicate the variant and change its Tenant. Sub-tenants don't inherit a parent tenant's variants."
+      - find: "SuprSend evaluates variants top-to-bottom and picks the first one whose condition matches. If no variant matches, the default template is used"
+        replace: "Only variants whose Tenant matches the send's `tenant_id` exactly (or that have no Tenant) are candidates, and the first match is used. If no variant matches, the default template is used"
+      - find: "Yes. When you create a variant, you pick the channels it applies to. If a tenant's variant enables only Email + In-App Inbox, sends for that tenant will skip the other channels defined on the default template."
+        replace: "No. Channels are enabled per template, not per variant. Picking channels when you create a variant creates the variant in each picked channel (and adds any channel the template doesn't have yet, for everyone). Each channel picks its variant independently, so if a tenant has variants only for Email + In-App Inbox, the other channels still send their default content. To stop a channel for one tenant, use the tenant's `blocked_channels`."
+      - find: "Yes. A variant condition can reference `tenant_id`, the user's `$preferred_language`, trigger data properties, or any combination."
+        replace: "Yes. Set the tenant with the variant's **Tenant** field and the language with its **Locale** field (the recipient's locale comes from `$locale`, falling back to `$preferred_language`); conditions can add trigger-data or user-property rules on top."
 
   - type: docs
     key: docs_email
@@ -113,6 +270,23 @@ sources:
       # Per-recipient preference URL — upstream has a broken `$tenant.$hosted_preference_url` form.
       - find: '* `{{$tenant.$hosted_preference_url}}` - unsubscribe link'
         replace: '* `{{$hosted_preference_url}}` — per-recipient unsubscribe / preference URL (top-level, not under `$tenant`)'
+      # Plain text is generated from the rendered HTML at send time, not at commit.
+      - find: '**Auto mode** - leave blank and SuprSend auto-generates plain text from your HTML on every commit.'
+        replace: '**Auto mode** - leave blank and SuprSend auto-generates plain text from the rendered HTML at send time.'
+      - find: '* If Plain Text is blank, it''s auto-generated from HTML at commit time.'
+        replace: '* If Plain Text is blank, it''s auto-generated from the rendered HTML at send time.'
+      - find: 'SuprSend auto-generates it from the HTML on every commit.'
+        replace: 'SuprSend auto-generates it from the rendered HTML at send time.'
+      # Sender overrides are ignored on the built-in vendor; one malformed address drops the whole list.
+      - find: '**From Name** / **From Email** - display name and sender address. Left blank = picked from your [vendor settings](/docs/vendors). Domain must be verified.'
+        replace: '**From Name** / **From Email** - display name and sender address. Left blank = picked from your [vendor settings](/docs/vendors). Domain must be verified. From Email and Reply To are ignored when sending through SuprSend''s built-in email vendor.'
+      - find: '**CC / BCC / Reply To / Add Multiple Tos** - all optional, all support variables.'
+        replace: '**CC / BCC / Reply To / Add Multiple Tos** - all optional, all support variables. Separate multiple addresses with commas; if any address in a list is malformed, that whole list is silently dropped at send time.'
+      # Preheader / markup injection points.
+      - find: '**Preheader** - preview text next to the subject in the inbox.'
+        replace: '**Preheader** - preview text next to the subject in the inbox. Inserted right after the HTML `<body>` tag — dropped if the HTML has no `<body>` tag, and not used for plain-text-only emails.'
+      - find: 'Add JSON-LD to the **Email Markup JSON** field in Email Settings. Supports Handlebars variables.'
+        replace: 'Add JSON-LD to the **Email Markup JSON** field in Email Settings. Supports Handlebars variables. It''s inserted just before `</head>`, so the HTML must contain a `</head>` tag (otherwise the markup is dropped).'
 
   - type: docs
     key: docs_sms
@@ -122,35 +296,93 @@ sources:
       # US-context sample data — upstream uses a non-US first name placeholder.
       - find: '"first_name": "Nikita"'
         replace: '"first_name": "Emma"'
+      # DLT approval is not uploaded automatically; the approval is recorded manually.
+      - find: '    SuprSend submits the template to your SMS vendor for DLT approval. You''ll be notified when approved or rejected.'
+        replace: '    SuprSend doesn''t upload DLT templates for you: register the template on your DLT / vendor portal, then record the approval (with the vendor''s template ID) for the variant in SuprSend. If identical content was already approved in the workspace, that approval is reused.'
+      # Dashboard Message Type → `category` JSON values.
+      - find: '**Message Type** - select the type: **Transactional** (triggered by a user action - delivery updates, OTPs), **Promotional** (marketing messages without explicit consent), or **Engagement** (re-engagement messages to existing users - feature promotions, discount offers).'
+        replace: '**Message Type** - select the type: **Transactional** (triggered by a user action - delivery updates, OTPs), **Promotional** (marketing messages without explicit consent), or **Engagement** (re-engagement messages to existing users - feature promotions, discount offers). In template JSON this is `category`: Transactional → `service_implicit`, Engagement → `service_explicit`, Promotional → `promotional`.'
 
   - type: docs
     key: docs_whatsapp
     urls:
       - "https://docs.suprsend.com/docs/whatsapp-template"
+    replacements:
+      # Button / header / body limits enforced on save.
+      - find: '* **Call to Action** — up to 2 buttons.'
+        replace: '* **Call to Action** — up to 3 buttons: at most 2 **Visit Website** buttons and 1 **Call Phone Number** button; button text max 25 characters.'
+      - find: '* **Quick Reply** — up to 3 tap-to-reply buttons.'
+        replace: '* **Quick Reply** — up to 10 tap-to-reply buttons, each with unique text (max 25 characters).'
+      - find: 'Max 60 characters. Emojis are not supported. Supports Handlebars variables.'
+        replace: 'Max 60 characters. Emojis are not supported. Supports at most one Handlebars variable.'
+      - find: '**Body** - main message content. Max 1024 characters.'
+        replace: '**Body** - main message content. Max 1024 characters. Must not start or end with a variable.'
+      # Automatic submission only for Meta Cloud API / Twilio.
+      - find: 'The template enters **Approval Pending** state - SuprSend submits it to Meta automatically.'
+        replace: 'The template enters **Approval Pending** state. SuprSend submits it for approval automatically only when the WhatsApp vendor is Meta Cloud API or Twilio; with other vendors, get the template approved in the vendor''s portal and record the approval in SuprSend.'
+      - find: '    SuprSend submits the template to Meta automatically. Most templates'
+        replace: '    With Meta Cloud API or Twilio as the WhatsApp vendor, SuprSend submits the template automatically; with other vendors, approve it in the vendor''s portal and record the approval in SuprSend. Most templates'
+      - find: 'SuprSend handles submission automatically - you''ll be notified when the status changes.'
+        replace: 'SuprSend submits automatically only with Meta Cloud API or Twilio as the WhatsApp vendor (other vendors need the approval recorded in SuprSend) - you''ll be notified when the status changes.'
+      # Only UTILITY and MARKETING categories are accepted.
+      - find: '\[UTILITY/MARKETING/AUTHENTICATION]'
+        replace: '\[UTILITY/MARKETING]'
+      - find: 'Choosing the wrong category is the most common reason for rejection.'
+        replace: 'Choosing the wrong category is the most common reason for rejection. SuprSend WhatsApp templates support only **Utility** and **Marketing** — there is no Authentication category.'
+      - find: "| **Authentication** | Sending OTPs or verification codes. Specialised template structure. | Login OTP, two-factor auth, phone verification |\n"
+        replace: ''
+      - find: "  ### Authentication - OTP\n    | Field | Value |\n    | - | - |\n    | Category | Authentication |\n    | Body | `Your verification code is {{otp_code}}. It expires in 10 minutes.` |\n  \n\n"
+        replace: ''
+      # Mock data must give every variable a non-empty value.
+      - find: '* **Variable placement** - ensure each variable has a clear example value in the Variables panel. WhatsApp uses these during approval review.'
+        replace: '* **Variable placement** - every variable needs a non-empty example value in the Variables panel (mock data) — commit is blocked otherwise. WhatsApp uses these during approval review.'
 
   - type: docs
     key: docs_inbox
     urls:
       - "https://docs.suprsend.com/docs/in-app-inbox-template"
+    replacements:
+      # Button count isn't enforced by the API; empty buttons are dropped.
+      - find: 'Up to 2 buttons with text + URL.'
+        replace: 'Up to 2 buttons with text + URL (the API doesn''t enforce this limit). A button whose text or URL renders empty is dropped at send time.'
+      # Expiry duration format: no spaces; hours 0-23 for fixed relative; past ISO not rejected.
+      - find: 'Set a duration relative to when the notification is sent — for example, `2 days 6 hours`.'
+        replace: 'Set a duration relative to when the notification is sent — for example, 2 days 6 hours (`2d6h` in template JSON: no spaces, hours 0–23, minutes and seconds 0–59).'
+      - find: '  * An ISO-8601 timestamp (for example, `2024-03-02T20:34:07Z`) — must be in the future.'
+        replace: '  * An ISO-8601 timestamp with timezone (for example, `2024-03-02T20:34:07Z`). A past timestamp isn''t rejected, so make sure it''s in the future.'
+      - find: 'an interval string like `2d 6h 30m 0s`.'
+        replace: 'an interval string like `2d6h30m` (no spaces — a value with spaces fails at send time).'
+      - find: 'or a relative duration (integer for seconds, or `2d 6h 30m 0s` format).'
+        replace: 'or a relative duration (integer for seconds, or `2d6h30m` format with no spaces).'
+      # extra_data is a JSON-encoded string in template content.
+      - find: 'A JSON field for passing custom key-value pairs alongside the notification.'
+        replace: 'A JSON field for passing custom key-value pairs alongside the notification. In template content JSON, `extra_data` is a JSON-encoded **string** (for example `"{\"order_id\": \"42\"}"`), not an object.'
 
   - type: docs
     key: docs_slack
     urls:
       - "https://docs.suprsend.com/docs/slack-template"
     replacements:
-      - find: |2
-            Start with Text for simple alerts and status updates. Switch to JSONNET when you need buttons, images, structured layouts, or batched event lists.
-        replace: |2
-            **Default to JSONNET.** Use Text only for one-liner alerts with no CTA; use JSONNET for everything else.
-      - find: |2
-            Click **View on Slack Builder** in the JSONNET editor. Slack silently drops invalid blocks instead of showing errors - always validate before committing.
-        replace: |2
-            **JSONNET is not valid JSON — you cannot paste it directly into Block Kit Builder.** Use one of these:
-
-            1. Click **Load Preview** in the SuprSend JSONNET editor.
-            2. For external review: replace every `data.key` with its mock value, resolve all `+` concatenations, ensure output is wrapped in `{ "blocks": [...] }`, then paste into Block Kit Builder.
-
-            Slack silently drops invalid blocks — always validate before committing.
+      # Text mode is sent to Slack as a plain_text section: no mrkdwn, mentions or links.
+      - find: '**Text mode** - a single text field. Supports [Handlebars](/docs/handlebars-helpers) variables (`{{variable_name}}`).'
+        replace: '**Text mode** - a single text field, sent to Slack as `plain_text`: mrkdwn (`*bold*`), `<@U123>` mentions and `<url|text>` links show literally, so use JSONNET for any formatting. Supports [Handlebars](/docs/handlebars-helpers) variables (`{{variable_name}}`).'
+      # Only the `blocks` key of the JSONNET output is sent; thread_ts is never used.
+      - find: 'Slack automatically threads messages sent to the same channel with the same `thread_ts`. Pass a consistent `thread_ts` in your trigger payload to keep related messages threaded.'
+        replace: 'Not supported from a template. SuprSend posts every notification as a new message and sends only the `blocks` array of your JSONNET output. `thread_ts`, top-level `text`, `attachments` and any other keys are dropped, and a `thread_ts` in the trigger payload is not used.'
+      - find: 'Use `<@SLACK_USER_ID>` to @mention a user. Pass the ID as a variable: `<@{{assignee_slack_id}}>`.'
+        replace: 'JSONNET mode only: put `<@SLACK_USER_ID>` inside a `mrkdwn` text object, for example `"text": "Assigned to <@" + data.assignee_slack_id + ">"`. In Text mode the body is sent as `plain_text`, so `<@...>` shows literally and nobody is notified.'
+      - find: 'Slack uses `<URL|display text>` syntax. In JSONNET:'
+        replace: 'Slack uses `<URL|display text>` syntax inside a `mrkdwn` text object (JSONNET mode only; Text mode shows it literally). In JSONNET:'
+      - find: 'Start with Text for simple alerts and status updates. Switch to JSONNET when you need buttons, images, structured layouts, or batched event lists.'
+        replace: '**Default to JSONNET.** Text mode is sent as `plain_text`, so mrkdwn, mentions and links show literally. Use Text only for unformatted one-liner alerts with no CTA, and JSONNET for everything else.'
+      # JSONNET editor has no preview (Load Preview is the Teams editor); Slack rejects invalid blocks, it doesn't drop them.
+      - find: 'Click **View on Slack Builder** in the JSONNET editor. Slack silently drops invalid blocks instead of showing errors - always validate before committing.'
+        replace: 'The JSONNET editor has no preview. Click **View on Slack Builder** in the JSONNET editor to check the output in Slack''s Block Kit Builder. To review it elsewhere, replace every `data.key` with its mock value, resolve the `+` concatenations, keep the `{ "blocks": [...] }` wrapper, then paste the JSON into Block Kit Builder. Slack does not silently drop invalid blocks: it rejects the whole message with `invalid_blocks` and the notification fails. Always validate before committing.'
+      # Section text caps at 3000 chars; over that Slack rejects the message (no truncation).
+      - find: 'Slack truncates messages over 4000 characters.'
+        replace: 'Slack does not truncate. A section `text` over 3000 characters is rejected with `invalid_blocks` and the notification fails. Text mode sends the whole body as one section, so keep `body_text` under 3000 characters (the template accepts up to 4000). The JSONNET source (`body_block`) is capped at 13200 characters on save.'
+      - find: 'Slack uses `mrkdwn`, not standard Markdown. Bold: `*text*`, italic: `_text_`, strikethrough: `~text~`, code: triple backticks.'
+        replace: 'JSONNET mode only: `mrkdwn` text objects use Slack mrkdwn, not standard Markdown. Bold: `*text*`, italic: `_text_`, strikethrough: `~text~`, code: triple backticks. Text mode is sent as `plain_text`, so no formatting is applied (emoji `:shortcodes:` still render).'
 
   - type: docs
     key: docs_ms_teams
@@ -169,6 +401,10 @@ sources:
     key: docs_iospush
     urls:
       - "https://docs.suprsend.com/docs/ios-push-template"
+    replacements:
+      # `badge` is reset to 0 before render and omitted from the APNs payload.
+      - find: 'SuprSend increments the app badge by 1 for each notification. Clear the badge in your app when the user opens it or reads notifications.'
+        replace: 'SuprSend does not set the app badge. The template `badge` field is ignored and no `badge` key is sent to APNs. Set and clear the badge count from your app (for example, from your unread count).'
 
   - type: docs
     key: docs_webpush
@@ -177,6 +413,11 @@ sources:
     replacements:
       - find: '"first_name": "Nikita"'
         replace: '"first_name": "Emma"'
+      # `icon_url` is a per-variant field; when omitted it is saved empty (no tenant-logo default).
+      - find: '**Large Icon** - shown to the right of the notification text. Defaults to your organisation logo (set in Organisation Settings). Cannot be changed per template.'
+        replace: '**Large Icon** (`icon_url`) - shown to the right of the notification text. Set per template variant. If `icon_url` is omitted it is saved empty and no icon is sent, so set it explicitly (for example `{{{$tenant.logo}}}` for the tenant logo).'
+      - find: 'The large icon defaults to your organisation logo set in **Organisation Settings** on the SuprSend dashboard. It cannot be changed per template - update it in your org settings if you need a different icon.'
+        replace: 'Set `icon_url` on the template variant to any public image URL, or to `{{{$tenant.logo}}}` for the tenant logo. It is per variant, so tenant or locale variants can use different icons. If `icon_url` is omitted it is saved empty and no icon is sent.'
 
 # ── Output references ────────────────────────────────────────────────────
 

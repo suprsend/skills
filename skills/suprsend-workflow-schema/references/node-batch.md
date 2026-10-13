@@ -18,7 +18,7 @@ Batch node aggregates multiple triggers into a single batch output to send one c
   
 
   **Aggregates incoming triggers**
-    When the batch window is open, all the workflows initiated for the recipient with the same workflow slug and batch key are aggregated in the batch. Batches are created unique for each recipient and batch key combination for that workflow.
+    When the batch window is open, all the workflows initiated for the recipient with the same workflow slug and batch key are aggregated in the batch. Batches are created unique for each recipient, tenant and batch key combination for that workflow.
   
 
   **Move to next workflow step once batch window is closed**
@@ -34,7 +34,7 @@ There are 3 types of window type: **Fixed** (fixed for all users), **Dynamic** (
 
 
   ### Fixed
-    Fixed batch window is defined in your workflow form as `xxd xxh xxm xxs` and it keeps the batch open for a fixed duration for all users. An example of using fixed batch window can be social media updates where you want to send alert to users about new comments or post likes after an hour from the first comment.
+    Fixed batch window (`fixed_window`) is a duration like `30m`, `1h30m` or `2d12h` with no spaces (see [Duration format](workflow-schema-guide.md#duration-format)) and it keeps the batch open for a fixed duration for all users. An example of using fixed batch window can be social media updates where you want to send alert to users about new comments or post likes after an hour from the first comment.
 
     
 
@@ -72,7 +72,7 @@ There are 3 types of window type: **Fixed** (fixed for all users), **Dynamic** (
     * An ISO-8601 timestamp (for example 2024-03-02T20:34:07Z) which must be a datetime in the future, or
     * A relative duration unit, which can be
       * an integer like`50`, which will be considered as duration in seconds
-      * an interval string defined as `xxd xxh xxm xxs`, where d = day, h = hour, m = minutes and s = seconds
+      * an interval string like `2d5h30m` (no spaces), where d = day, h = hour, m = minutes and s = seconds
 
     > **Note:**
       **Batch window is not modified by subsequent workflows once the window is open**
@@ -92,12 +92,12 @@ There are 3 types of window type: **Fixed** (fixed for all users), **Dynamic** (
 
 ## Batch Key
 
-This is the property in your `track event` call used for defining unique batches of the events. By default, event will be batched per user. You can use batch key to create multiple batches per user. Batches are created for each unique `distinct_id` and `batch_key` combination. For instance, you can add `post_id` as your batch key if you want to send separate notifications for comments on different LinkedIn posts.
+This is the property in your `track event` call used for defining unique batches of the events. By default, event will be batched per user. You can use batch key to create multiple batches per user. Batches are created for each unique recipient + tenant + `batch_key` combination within the workflow. For instance, you can add `post_id` as your batch key if you want to send separate notifications for comments on different LinkedIn posts.
 
 
 ## Retain Batch events
 
-It will define the number of event data that will be included in your batch variable. You have the option to display either the first n events or the last n events in your batch output. By default, the first 10 events are included in your batch output variable once the batch window closes. You can customize the number of events to any value between 2 and 100.
+It will define the number of event data that will be included in your batch variable. You have the option to display either the first n events or the last n events in your batch output. By default, the first 10 events are included in your batch output variable once the batch window closes. You can customize the number of events (`retain_count`) to any value between 1 and 100.
 
 
 ## Flush first item immediately
@@ -119,7 +119,7 @@ Send anomaly alert with first notification sent at the occurrence of first error
 Batch output variable has 2 type of variables:
 
 1. `$batched_events` array: All the event properties corresponding to a batched event is appended to this array and can be used in the template in the array format. The number of event properties returned here is limited by retaining batch events.
-2. `$batched_event_count`: This count represents the number of events in a batch and is utilized to render the batch count in a template. For instance, you might send a message like, `Joe left 5 comments in the last 1 hour` where 5 corresponds to \$batched_event_count.
+2. `$batched_events_count` (plural "events"): This count represents the number of events in a batch and is utilized to render the batch count in a template. For instance, you might send a message like, `Joe left 5 comments in the last 1 hour` where 5 corresponds to `$batched_events_count`.
 
 > **Note:**
   📘 **Retain batch events** setting doesn't impact the count, it just limits the number of event properties returned in `$batched_events` array.
@@ -398,6 +398,26 @@ This documentation is built and hosted on [Mintlify](https://mintlify.com), a de
 | retain_order | string | No | retain items in this order. first -> first n items. last -> last n items |
 | batch_key | string | No | jq-expression for deriving batch-key from payload |
 
+**Field rules** (the table's "Required" column misses the conditional ones):
+
+- `window_type` decides which window field is **required**: `fixed` → `fixed_window`, `dynamic` → `dynamic_window_expr`, `relative_to` → `relative_to`. Fields for the other window types are dropped on save.
+- `fixed_window` (and `relative_to.offset_value` when `offset_value_type` is `fixed`): a duration like `30m`, `1h30m`, `2d12h`. No spaces, hours ≤ 23, minutes and seconds ≤ 59, greater than 0, at most 90 days. See [Duration format](workflow-schema-guide.md#duration-format).
+- `dynamic_window_expr`: a jq expression that must resolve at runtime to a future ISO-8601 timestamp, an integer (seconds), or a duration string without spaces (e.g. `"2h30m"`). If the value is missing or invalid, the run stops with an error.
+- `retain_count`: 1–100, default 10. `retain_order`: `first` (default) keeps the oldest N in arrival order; `last` keeps the newest N, **newest first**. Neither changes `$batched_events_count`.
+- Grouping: one open batch per recipient + tenant + workflow + `batch_key` value.
+- Output variables for later nodes and templates: `$batched_events` (array of event properties), `$batched_events_count` (plural — the singular `$batched_event_count` does not exist and fails the render), and `$batch_key`.
+
+### Relative-to properties
+
+All four are required when `window_type` is `relative_to`. This is the same shape as the [delay node](node-delay.md). `offset_type` is `before` or `after`. With `offset_value_type: "fixed"`, `offset_value` is a duration. With `"dynamic"`, it is a jq expression.
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| pivot_expr | string | Yes | jq-expression to calculate the pivot timestamp which when used with offset will give final timestamp |
+| offset_type | string | Yes | represents whether offset is to be added/subtracted from pivot timestamp |
+| offset_value_type | string | Yes | how to derive the offset value. Will it be fixed value OR derived at runtime using jq-expression |
+| offset_value | string | Yes |  |
+
 ### Mode values
 
 - `accumulate_all`
@@ -426,6 +446,24 @@ This documentation is built and hosted on [Mintlify](https://mintlify.com), a de
     "batch_key": ".post_id",
     "retain_count": 10,
     "retain_order": "last"
+  }
+}
+```
+
+### Example — relative window (close 30 minutes before a payload timestamp)
+
+```json
+{
+  "node_type": "batch",
+  "properties": {
+    "mode": "accumulate_all",
+    "window_type": "relative_to",
+    "relative_to": {
+      "pivot_expr": ".due_at",
+      "offset_type": "before",
+      "offset_value_type": "fixed",
+      "offset_value": "30m"
+    }
   }
 }
 ```

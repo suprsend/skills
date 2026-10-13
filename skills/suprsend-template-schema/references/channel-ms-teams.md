@@ -31,6 +31,14 @@ For variants with `channel: "ms_teams"`.
 
 The pairing is enforced: `body_type: "card"` forces `templating_language: "jsonnet"` and `"text"` forces `"handlebars"`. Reference variables in `body_card` as `data.key` — Handlebars `{{ }}` inside a card is sent as literal text.
 
+**Length limits:** `body_text` max 4000 characters, `body_card` (the JSONNET source) max 14000. Longer values fail validation on save.
+
+### Card output shape
+
+- The JSONNET output must be the **bare Adaptive Card object**: `{ "type": "AdaptiveCard", "version": "1.4", "body": [...] }`. SuprSend wraps it in the Teams message and attachment envelope itself.
+- An array output fails to render. Don't output a `{ "type": "message", "attachments": [...] }` envelope either, because it would be wrapped a second time.
+- `$schema` is optional. The card is passed to Teams as-is.
+
 ## Examples
 
 ### Plain text message
@@ -54,7 +62,6 @@ The pairing is enforced: `body_type: "card"` forces `templating_language: "jsonn
 
 ## Documentation
 
-```
 # MS Teams
 
 > Design MS Teams notification templates using the Markdown editor for simple messages or the JSONNET editor for rich Adaptive Card layouts.
@@ -177,4 +184,3 @@ Click **Commit** in the top bar to publish the current draft as a new live versi
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
-```

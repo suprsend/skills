@@ -27,7 +27,19 @@ For variants with `channel: "webpush"`.
 | buttons | array | No |  |
 | extra_payload | object | No | extra payload. dict of key-value pairs |
 
-`header` and `body` are required.
+`header` (max 500 characters) and `body` (max 4000 characters) are required — longer values fail validation on save.
+
+### Rejected on save
+
+- `renotify: true` with an empty `group`. Renotify needs a `group`, which becomes the notification tag.
+- `is_silent: true` combined with `vibrate` or `sound`.
+
+### What actually reaches the browser
+
+- **`icon_url`** is set per variant. If you omit it, it is saved as an empty string (the schema's `{{$tenant.logo}}` default is not applied) and no icon is sent. Set it explicitly, for example `"icon_url": "{{{$tenant.logo}}}"`.
+- **`extra_payload` and `lang` are not delivered.** They are accepted and stored, but the notification's `data` carries only the click URLs and SuprSend's notification ids. Don't build service-worker logic on them.
+- **Button `id`** is always replaced with an id built from the workflow slug and the button `text`. Omit it; buttons are identified by their text.
+- `group` is sent as the notification `tag`. A new notification with the same group replaces the previous one.
 
 ### `dir` values
 
@@ -36,6 +48,10 @@ For variants with `channel: "webpush"`.
 - `rtl`
 
 `vibrate` is an array of positive integers (alternating vibration / pause durations in ms — service worker reads it directly).
+
+### URLs and special characters
+
+Push content is not HTML, but `{{ }}` still HTML-escapes its output (`&` → `&amp;`, `=` → `&#x3D;`, `'` → `&#x27;`) and nothing reverses it. A whole URL in `{{ }}` (for example an avatar URL with a query string) arrives broken. Use triple braces `{{{ }}}` for any variable that holds a URL or may contain those characters.
 
 ## Buttons
 
@@ -48,6 +64,8 @@ Up to 2 entries in `buttons[]`:
 | url | string | Yes |  |
 | icon | string | No |  |
 
+Set `text`, `url` and optionally `icon`. Any `id` you set is replaced on save.
+
 ## Examples
 
 ### Simple notification
@@ -56,7 +74,7 @@ Up to 2 entries in `buttons[]`:
 {
   "header": "Build complete",
   "body": "{{ repo }} – {{ branch }} built in {{ duration }}",
-  "icon_url": "{{ $tenant.logo }}",
+  "icon_url": "{{{ $tenant.logo }}}",
   "action_url": "https://acme.com/builds/{{ build.id }}"
 }
 ```
@@ -65,14 +83,14 @@ Up to 2 entries in `buttons[]`:
 
 ```json
 {
-  "header": "{{ sender.name }} sent a message",
-  "body": "{{ message.preview }}",
-  "icon_url": "{{ sender.avatar_url }}",
+  "header": "{{{ sender.name }}} sent a message",
+  "body": "{{{ message.preview }}}",
+  "icon_url": "{{{ sender.avatar_url }}}",
   "badge_url": "https://cdn.acme.com/badge.png",
   "action_url": "https://acme.com/chat/{{ thread.id }}",
   "buttons": [
-    { "id": "reply",   "text": "Reply",   "url": "https://acme.com/chat/{{ thread.id }}?reply=1" },
-    { "id": "dismiss", "text": "Dismiss", "url": "https://acme.com/chat/{{ thread.id }}?dismiss=1" }
+    { "text": "Reply",   "url": "https://acme.com/chat/{{ thread.id }}?reply=1" },
+    { "text": "Dismiss", "url": "https://acme.com/chat/{{ thread.id }}?dismiss=1" }
   ],
   "renotify": true,
   "group": "chat-{{ thread.id }}"
@@ -81,7 +99,8 @@ Up to 2 entries in `buttons[]`:
 
 ## Documentation
 
-```
+**Verified behaviour (overrides the docs below):** the scenario tables show URL variables like `{{product_image_url}}`. Use `{{{product_image_url}}}` in `image_url`, `icon_url`, `action_url` and button `url` so query strings aren't HTML-escaped.
+
 # Web Push
 
 > Design web push notification templates in SuprSend with title, body, image, action URL, and buttons, plus a live Windows and macOS preview of your content.
@@ -93,7 +112,7 @@ The Web Push editor is a form with title, body, image, action URL, and buttons -
 
 **Title** - single-line heading. Keep under 40 characters (Windows truncates aggressively; macOS is more generous). Supports Handlebars variables.
 
-**Large Icon** - shown to the right of the notification text. Defaults to your organisation logo (set in Organisation Settings). Cannot be changed per template.
+**Large Icon** (`icon_url`) - shown to the right of the notification text. Set per template variant. If `icon_url` is omitted it is saved empty and no icon is sent, so set it explicitly (for example `{{{$tenant.logo}}}` for the tenant logo).
 
 **Body** - 2-3 lines max. One sentence with a clear CTA is ideal. Supports Handlebars variables.
 
@@ -202,7 +221,7 @@ Click **Commit** in the top bar to publish the current draft as a new live versi
   
 
   ### How do I change the large icon?
-    The large icon defaults to your organisation logo set in **Organisation Settings** on the SuprSend dashboard. It cannot be changed per template - update it in your org settings if you need a different icon.
+    Set `icon_url` on the template variant to any public image URL, or to `{{{$tenant.logo}}}` for the tenant logo. It is per variant, so tenant or locale variants can use different icons. If `icon_url` is omitted it is saved empty and no icon is sent.
   
 
   ### How often should I send web push notifications?
@@ -215,4 +234,3 @@ Click **Commit** in the top bar to publish the current draft as a new live versi
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
-```

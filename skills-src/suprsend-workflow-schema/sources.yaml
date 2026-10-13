@@ -91,31 +91,141 @@ sources:
     key: docs_delay
     urls:
       - "https://docs.suprsend.com/docs/delay"
+    replacements:
+      # The UI form shows spaces; saved JSON values are strict (no spaces, hours <= 23, ...).
+      - find: |-
+          Fixed delay is defined in your workflow form as `xxd xxh xxm xxs` and it delays
+        replace: |-
+          Fixed delay is defined in your workflow form as `xxd xxh xxm xxs` (in workflow JSON: no spaces, hours 0–23, minutes/seconds 0–59, total > 0 and ≤ 90d — e.g. `"value": "2d"`, not `"48h"`) and it delays
+      # Past timestamps are not errors — they resolve to zero delay.
+      - find: |-
+          An ISO-8601 timestamp (for example 2024-03-02T20:34:07Z) which must be a datetime in the future, or
+        replace: |-
+          An ISO-8601 timestamp (for example 2024-03-02T20:34:07Z). A timestamp already in the past gives zero delay (the workflow continues immediately, no error), or
+      - find: |-
+          * **Timestamp**: An ISO-8601 format datetime (for example 2024-03-02T20:34:07Z), which must be in the future.
+        replace: |-
+          * **Timestamp**: An ISO-8601 format datetime (for example 2024-03-02T20:34:07Z). If timestamp ± interval is already in the past, the delay is zero and the workflow continues immediately (no error).
 
   - type: docs
     key: docs_batch
     urls:
       - "https://docs.suprsend.com/docs/batch"
+    replacements:
+      # Batches are grouped per recipient + tenant + batch_key (tenant was missing).
+      - find: 'Batches are created unique for each recipient and batch key combination for that workflow.'
+        replace: 'Batches are created unique for each recipient, tenant and batch key combination for that workflow.'
+      - find: 'Batches are created for each unique `distinct_id` and `batch_key` combination.'
+        replace: 'Batches are created for each unique recipient + tenant + `batch_key` combination within the workflow.'
+      # Durations never contain spaces.
+      - find: 'Fixed batch window is defined in your workflow form as `xxd xxh xxm xxs`'
+        replace: 'Fixed batch window (`fixed_window`) is a duration like `30m`, `1h30m` or `2d12h` with no spaces (see [Duration format](workflow-schema-guide.md#duration-format))'
+      - find: 'an interval string defined as `xxd xxh xxm xxs`, where'
+        replace: 'an interval string like `2d5h30m` (no spaces), where'
+      - find: 'You can customize the number of events to any value between 2 and 100.'
+        replace: 'You can customize the number of events (`retain_count`) to any value between 1 and 100.'
+      # Variable name is plural: $batched_events_count.
+      - find: '2. `$batched_event_count`: This count represents the number of events in a batch and is utilized to render the batch count in a template. For instance, you might send a message like, `Joe left 5 comments in the last 1 hour` where 5 corresponds to \$batched_event_count.'
+        replace: '2. `$batched_events_count` (plural "events"): This count represents the number of events in a batch and is utilized to render the batch count in a template. For instance, you might send a message like, `Joe left 5 comments in the last 1 hour` where 5 corresponds to `$batched_events_count`.'
 
   - type: docs
     key: docs_digest
     urls:
       - "https://docs.suprsend.com/docs/digest"
+    replacements:
+      - find: 'A unique batch is created for each recipient.'
+        replace: 'A unique batch is created for each recipient and tenant.'
+      # Timezone fallback: user -> tenant -> account -> UTC.
+      - find: "If a recipient's timezone is not set, it will default to the account timezone"
+        replace: "If a recipient's timezone is not set, it falls back to the tenant's timezone, then to the account timezone"
+      # Interval caps, `time` required for daily+, dtstart bounds.
+      - find: '"interval": 1, //you can pass any integer value here, default value 1'
+        replace: '"interval": 1, // integer >= 1, default 1. Max: minutely 1440, hourly 100, daily 100, weekly_mo2fr 25, weekly 25, monthly 6'
+      - find: '"time": "08:00", // defaults to 00:00 if not passed'
+        replace: '"time": "08:00", // HH:MM. REQUIRED for daily, weekly_mo2fr, weekly, monthly (no default; missing time fails the run)'
+      - find: '"dtstart": "2024-08-01T10:40:50", // defaults to current_timestamp if not passed'
+        replace: '"dtstart": "2024-08-01T10:40:50", // optional, defaults to now. Must be >= 2024-01-01 and <= 6 months ahead'
+      - find: 'Interval `2` with frequency `daily` would mean repeat every 2 days. Defaults to `1` if not set. |'
+        replace: 'Interval `2` with frequency `daily` would mean repeat every 2 days. Defaults to `1` if not set. Max: `minutely` 1440, `hourly` 100, `daily` 100, `weekly_mo2fr` 25, `weekly` 25, `monthly` 6. |'
+      - find: '| `time` | string (optional) | Time for daily, weekly, or monthly frequency when the digest will close. Defined in hour and minute as `hh:mm`. Defaults to `00:00` if not set. |'
+        replace: '| `time` | string (mandatory for `daily`, `weekly_mo2fr`, `weekly`, `monthly`) | Time when the digest will close, as `HH:MM` (24-hour). No default: if it is missing, the schedule is invalid and the workflow run stops with an error. |'
+      - find: 'Defaults to `current_timestamp` at the time of setting the schedule if not defined. |'
+        replace: 'Defaults to `current_timestamp` at the time of setting the schedule if not defined. Must be on or after `2024-01-01T00:00:00` and at most 6 months in the future. |'
+      - find: 'You can customize the number of triggers to any value between 2 and 100.'
+        replace: 'You can customize the number of triggers (`retain_count`) to any value between 1 and 100.'
+      # Variable name is plural: $batched_events_count.
+      - find: '2. `$batched_event_count`: This count represents the number of events in a batch and is utilized to render the batch count in a template. For instance, you might send a message like,`Joe left 5 comments in the last 1 hour`where 5 corresponds to \$batched_event_count.'
+        replace: '2. `$batched_events_count` (plural "events"): This count represents the number of events in a batch and is utilized to render the batch count in a template. For instance, you might send a message like, `Joe left 5 comments in the last 1 hour` where 5 corresponds to `$batched_events_count`.'
 
   - type: docs
     key: docs_timewindow
     urls:
       - "https://docs.suprsend.com/docs/time-window"
+    replacements:
+      # A timezone change does not shorten the current wait; the window is re-checked after it.
+      - find: |-
+          If a recipient’s timezone is updated while they are waiting in a Time Window, the delay will be recalculated based on the new timezone. If the adjustment results in a time past the end of the current Time Window, the delivery will be pushed to the start of the next schedule.
+        replace: |-
+          If a recipient’s timezone is updated while they are waiting in a Time Window, the current wait is **not** shortened or recalculated: the run first sleeps for the wait computed on entry, then re-checks the window in the recipient's current timezone. If that moment is outside the window, it waits again until the next window start.
+      - find: |-
+          * If the timezone is updated to Europe/London (UTC+1) while waiting, the delay will be recalculated to 1 hour.
+        replace: |-
+          * If the timezone is updated to Europe/London (UTC+1) while waiting, the run still waits the full 7 hours (until 14:00 UTC = 3:00 PM Europe/London); that is inside the window, so it proceeds then.
 
   - type: docs
     key: docs_branch
     urls:
       - "https://docs.suprsend.com/docs/branch"
+    replacements:
+      # Node refs are identifier-like (no hyphens).
+      - find: |-
+          `message_status from node "welcome-email" == "seen"`
+        replace: |-
+          `message_status from node "welcome_email" == "seen"` (the node slug is its `ref`: letters, digits and `_` only, no hyphens)
+      - find: |-
+          Eg. `message_status from node "welcome-email" is "seen"`.
+        replace: |-
+          Eg. `message_status from node "welcome_email" is "seen"`.
+      # EMPTY is also true for false, 0, [] and {}.
+      - find: |-
+          | `is empty` / `is not empty` | key is missing, empty or null / key is present, not empty or null | All |
+        replace: |-
+          | `is empty` / `is not empty` | key is missing or is `null`, `""`, `false`, `0`, `[]` or `{}` / key has any other value | All |
+      # A bare `properties.x` in a value reads the trigger payload, not the tenant.
+      - find: |-
+          add as `properties.<property_key>` for custom properties (for example, `$tenant.timezone`, `properties.timezone`)
+        replace: |-
+          add as `$tenant.properties.<property_key>` for custom properties (for example, `$tenant.timezone`, `$tenant.properties.region`). A bare `properties.<property_key>` reads the trigger payload, not the tenant
 
   - type: docs
     key: docs_wait_until
     urls:
       - "https://docs.suprsend.com/docs/wait-until"
+    replacements:
+      # Events are matched to in-progress runs (same recipient + tenant) and held until the run reaches the node.
+      - find: |-
+          It's important to note that conditions are evaluated when the workflow execution reaches "Wait Until" node, meaning any events performed before this point will not satisfy the condition branch.
+        replace: |-
+          An awaited event only matches runs that are in progress when it arrives, for the same recipient (`distinct_id`) and tenant. An event sent after the run started — even while the run is still at an earlier node — is held and evaluated when the run reaches the Wait Until node; events sent before the run started never match.
+      # EMPTY is also true for false, 0, [] and {}.
+      - find: |-
+          | `is empty` | Evaluates to `true` if the key is missing, an empty string, or has a `null` value. |
+        replace: |-
+          | `is empty` | Evaluates to `true` if the key is missing or is `null`, `""`, `false`, `0`, `[]` or `{}`. |
+      - find: |-
+          | `is not empty` | Key should be present and should not be an empty string or `null` value. |
+        replace: |-
+          | `is not empty` | Key is present and is not `null`, `""`, `false`, `0`, `[]` or `{}` (so `0` and `false` count as empty). |
+      # The UI form shows spaces; saved JSON values are strict.
+      - find: |-
+          Fixed delay is defined in your workflow form as `**d **h **m **s` and it adds a fixed delay for all users.
+        replace: |-
+          Fixed delay is defined in your workflow form as `**d **h **m **s` and it adds a fixed delay for all users. In workflow JSON write it without spaces, with hours 0–23 and minutes/seconds 0–59, max 90d (e.g. `"value": "2d"`, not `"48h"`).
+      # Past timestamps are not errors — they resolve to a zero max wait.
+      - find: |-
+          * An ISO-8601 timestamp (for example 2024-03-02T20:34:07Z) which must be a datetime in the future, or
+        replace: |-
+          * An ISO-8601 timestamp (for example 2024-03-02T20:34:07Z). A timestamp already in the past gives a zero max wait (no error), or
 
   - type: docs
     key: docs_delivery_single
@@ -131,16 +241,87 @@ sources:
     key: docs_smart_delivery
     urls:
       - "https://docs.suprsend.com/docs/smart-delivery"
+    replacements:
+      # Inbox is only auto-first when neither mandatory_channels nor a channel sequence is set.
+      - find: 'Inbox is always delivered at T+0** - it is exempt from channel routing entirely. Regardless of the optimize-on setting, channel order, or cost, Inbox fires immediately alongside the first outside-app channel whenever it is active on the template and user profile. It does not count toward the outside-app channel sequence or interval calculation.'
+        replace: 'Inbox is delivered at T+0 only in the default setup** - when neither Must Send To (`mandatory_channels`) nor a channel sequence (`routing_basis: "channels_sequence"`) is set. Then Inbox fires immediately alongside the first outside-app channel and does not count toward the sequence or interval calculation. If either setting is used, Inbox gets no special treatment: it is ordered like any other channel (by cost, or by its position in the sequence) unless you list it in `mandatory_channels`.'
+      - find: 'Notifications go out in this sequence:'
+        replace: 'Default sequence (no Must Send To channel, no channel sequence):'
+      # Interval differs when a Must Send To channel is sent at T+0.
+      - find: '`interval = time_to_live ÷ (number of outside-app channels − 1)`'
+        replace: |-
+          `interval = time_to_live ÷ (number of routed channels − 1)` in the default setup, where the first routed channel goes at T+0.
+
+          **When a Must Send To channel is sent** (listed in `mandatory_channels` and reachable for this user), must-send channels go at T+0 and routed channels start one interval later: `interval = time_to_live ÷ number of routed channels`. Example: `mandatory_channels: ["inbox"]`, Email + SMS routed, time-to-live 1h → Inbox at T+0, Email at T+30min, SMS at T+60min.
+
+          Routed channels are counted per channel identity (see below). If a step fails to send at all, the next step goes out without waiting for the rest of its interval.
+      - find: 'Sets the order in which outside-app channels are attempted. The default is **cost** - channels are tried from lowest to highest cost based on your vendor settings.'
+        replace: |-
+          Sets the order in which outside-app channels are attempted. The default is **cost** - channels are tried from lowest to highest cost based on your vendor settings.
+
+          In workflow JSON this is `routing_basis`: `"cost_low_to_high"` (default) or `"channels_sequence"`. With `"channels_sequence"`, also pass `routing_channels_sequence` (non-empty list of channel values): listed channels go first in list order, unlisted ones follow by cost. The saved sequence may not keep the order you sent, so read the node back after saving to check it.
+      - find: 'Channels listed here are delivered to **immediately at T+0**, outside of routing order. Use this for channels that must always receive the notification regardless of sequencing.'
+        replace: 'Channels listed here (`mandatory_channels`) are delivered to **immediately at T+0**, outside of routing order. Use this for channels that must always receive the notification regardless of sequencing. Setting it turns off the automatic Inbox-at-T+0 rule (add `inbox` here if you need it immediately), and when a must-send channel is sent, the first routed channel waits one full interval instead of going at T+0.'
+      - find: 'This is expected. Inbox is exempt from routing logic and always fires at T+0 - alongside the first outside-app channel (Email, in this case).'
+        replace: 'This is expected in the default setup (no Must Send To, no channel sequence): Inbox then fires at T+0 alongside the first outside-app channel (Email, in this case).'
 
   - type: docs
     key: docs_webhook
     urls:
       - "https://docs.suprsend.com/docs/webhook"
+    replacements:
+      # URL is raw JSONNET — `{{ }}` is a syntax error.
+      - find: |-
+          dynamic URL as `{{data.url_endpoint}}`. Data for dynamic URL will be picked from trigger payload. You can also combine static and dynamic part as `"https://domain" + {{data.path}}`.
+        replace: |-
+          dynamic URL as `data.url_endpoint` (the URL is a JSONNET expression — never wrap it in `{{ }}`). Data for dynamic URL will be picked from trigger payload. You can also combine static and dynamic part as `"https://domain" + data.path`.
+      # Query-param and header keys are JSONNET too — bare words fail to render.
+      - find: |-
+          Similar to endpoint, you can pass both static and dynamic value in query params.
+        replace: |-
+          Similar to endpoint, param key and value are both JSONNET expressions — quote static values: `{"key": "\"limit\"", "value": "\"10\""}`.
+      - find: |-
+          can be added as key-value pair with key being the header type and value as header value.
+        replace: |-
+          can be added as key-value pair with key being the header type and value as header value. Both key and value are JSONNET expressions — quote literal strings: `{"key": "\"Authorization\"", "value": "\"Bearer \" + data.api_token"}`.
+      # Any 2xx is success; 15s timeout.
+      - find: |-
+          * The response to the request is one of: 200 OK, 201 Created, or 204 No Content.
+        replace: |-
+          * The response status is any 2xx. Redirects (301/302) are not followed and count as a failure.
+      - find: |-
+          * The response to the request takes no longer than 5 seconds for SuprSend to receive.
+        replace: |-
+          * The response to the request takes no longer than 15 seconds (the request timeout).
 
   - type: docs
     key: docs_fetch
     urls:
       - "https://docs.suprsend.com/docs/fetch"
+    replacements:
+      # URL is raw JSONNET — `{{ }}` is a syntax error.
+      - find: |-
+          dynamic URL as `{{data.url_endpoint}}`. Data for dynamic URL will be picked from trigger payload. You can also combine static and dynamic part as `"https://domain" + {{data.path}}`.
+        replace: |-
+          dynamic URL as `data.url_endpoint` (the URL is a JSONNET expression — never wrap it in `{{ }}`). Data for dynamic URL will be picked from trigger payload. You can also combine static and dynamic part as `"https://domain" + data.path`.
+      # Query-param and header keys are JSONNET too — bare words fail to render.
+      - find: |-
+          Similar to endpoint, you can pass both static and dynamic value in query params.
+        replace: |-
+          Similar to endpoint, param key and value are both JSONNET expressions — quote static values: `{"key": "\"limit\"", "value": "\"10\""}`.
+      - find: |-
+          can be added as key-value pair with key being the header type and value as header value.
+        replace: |-
+          can be added as key-value pair with key being the header type and value as header value. Both key and value are JSONNET expressions — quote literal strings: `{"key": "\"Authorization\"", "value": "\"Bearer \" + data.api_token"}`.
+      # Any 2xx is success; 15s timeout.
+      - find: |-
+          * The response to the request is one of: 200 OK, 201 Created, or 204 No Content.
+        replace: |-
+          * The response status is any 2xx. Redirects (301/302) are not followed and count as a failure.
+      - find: |-
+          * The response to the request takes no longer than 5 seconds for SuprSend to receive.
+        replace: |-
+          * The response to the request takes no longer than 15 seconds (the request timeout).
 
   - type: docs
     key: docs_transform
@@ -151,6 +332,26 @@ sources:
     key: docs_invoke_workflow
     urls:
       - "https://docs.suprsend.com/docs/invoke-workflow"
+    replacements:
+      # `workflow` is a literal slug, not JSONNET.
+      - find: |-
+          All fields support variables in [JSONNET](https://jsonnet.org/ref/language.html) format.
+        replace: |-
+          Recipient, actor, data and cancellation key support variables in [JSONNET](https://jsonnet.org/ref/language.html) format. The `workflow` slug is a literal string, not an expression.
+      # Batched variables ARE in this node's input and are forwarded with append_current_run_data.
+      - find: |-
+          📘 Please note Data modifications after a batch or digest node will not affect the invoke node's variables, which means `$batched...` variables will not be available in this node's input.
+        replace: |-
+          Variables added by an earlier batch or digest node (`$batched_events`, `$batched_events_count`) are part of this node's input: you can use them in expressions, and they are forwarded to the invoked workflow when `append_current_run_data` is `true`.
+      # append_current_run_data defaults to false.
+      - find: |-
+          By default, data from the current workflow run is passed.
+        replace: |-
+          By default (`append_current_run_data: false`) only the data JSON field is passed (or `{}` if empty) — the current run's data is **not** included.
+      - find: |-
+          * To exclude the current workflow data, uncheck the `Append current workflow execution data` option.
+        replace: |-
+          * To include the current workflow data, set `append_current_run_data: true` (the `Append current workflow execution data` option).
 
   - type: docs
     key: docs_user_update
@@ -171,11 +372,23 @@ sources:
     key: docs_object_subscribe
     urls:
       - "https://docs.suprsend.com/docs/subscribe-to-object"
+    replacements:
+      # Real path is $recipient.subscription.<key>, set only on object fan-out.
+      - find: |-
+          these properties can be accessed under the `recipient.subscription` namespace as `recipient.subscription.property_key`.
+        replace: |-
+          these properties can be accessed as `$recipient.subscription.<key>` (Handlebars) or `data["$recipient"].subscription.<key>` (JSONNET) — only in runs that reached the recipient through an object fan-out (workflow triggered on the object, sent to its subscribers).
 
   - type: docs
     key: docs_object_unsubscribe
     urls:
       - "https://docs.suprsend.com/docs/unsubscribe-from-object"
+    replacements:
+      # Real path is $recipient.subscription.<key>, set only on object fan-out.
+      - find: |-
+          these properties can be accessed under the `recipient.subscription` namespace as `recipient.subscription.property_key`.
+        replace: |-
+          these properties can be accessed as `$recipient.subscription.<key>` (Handlebars) or `data["$recipient"].subscription.<key>` (JSONNET) — only in runs that reached the recipient through an object fan-out (workflow triggered on the object, sent to its subscribers).
 
 # ── Output references ────────────────────────────────────────────────────
 # Each reference file is rendered from a Handlebars template in partials/.

@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, rename, rm, writeFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { SKILLS_OUTPUT_DIR } from "./config.js";
 import { fetchJson, fetchText } from "./utils/fetch.js";
@@ -59,8 +59,19 @@ export async function pullExternalSkills(): Promise<void> {
 
   for (const dir of skillDirs) {
     const targetDir = resolve(SKILLS_OUTPUT_DIR, dir.name);
+    // Download into a staging dir and swap only on success: files deleted
+    // upstream disappear, and a failed pull leaves the previous copy intact.
+    const stagingDir = `${targetDir}.pull-tmp`;
     logger.info(`Pulling skill: ${dir.name}`);
-    await downloadDir(dir.path, targetDir);
+    await rm(stagingDir, { recursive: true, force: true });
+    try {
+      await downloadDir(dir.path, stagingDir);
+    } catch (err) {
+      await rm(stagingDir, { recursive: true, force: true });
+      throw err;
+    }
+    await rm(targetDir, { recursive: true, force: true });
+    await rename(stagingDir, targetDir);
     logger.info(`Pulled skill: ${dir.name}`);
   }
 }

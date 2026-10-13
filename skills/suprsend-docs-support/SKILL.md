@@ -1,6 +1,6 @@
 ---
 name: suprsend-docs-support
-description: "Default skill for any SuprSend question that isn't strictly authoring JSON or running a CLI command. Fetch, search, read, and explain SuprSend documentation; answer \"how does X work\", \"what is X\", \"show me the docs for X\". Provides the .md-suffix raw markdown URL convention, LLM-friendly bulk endpoints, in-app chat, AI copilot, Slack community, and email support. Examples that should load this skill: \"fetch batching documentation\", \"explain digest nodes\", \"show me the inbox channel docs\", \"what fields does an email variant have\", \"how do conditions work in templates\"."
+description: "Default skill for any SuprSend question that isn't strictly authoring JSON or running a CLI command. Fetch, search, read, and explain SuprSend documentation; answer \"how does X work\", \"what is X\", \"show me the docs for X\". Provides the llms.txt page index + .md-suffix raw markdown workflow, the SuprSend MCP docs tools, the in-dashboard AI agent, in-app chat, Slack community, and email support. Examples that should load this skill: \"fetch batching documentation\", \"explain digest nodes\", \"show me the inbox channel docs\", \"what fields does an email variant have\", \"how do conditions work in templates\"."
 metadata:
   author: "suprsend"
   category: "support"
@@ -10,34 +10,42 @@ metadata:
 
 ## Documentation
 
-SuprSend docs are available at [docs.suprsend.com](https://docs.suprsend.com).
+SuprSend docs are available at [docs.suprsend.com](https://docs.suprsend.com). Every page is also served as raw Markdown — always fetch the `.md` form.
 
-### Append `.md` to any docs URL
+### Find, then fetch
 
-Every page at `https://docs.suprsend.com/<path>` is also served as raw markdown at `https://docs.suprsend.com/<path>.md`. Fetch the `.md` form instead of the HTML page:
+1. **Find the page** — fetch `https://docs.suprsend.com/llms.txt`, the page index (every page with a one-line description). Pick the page(s) that match the question.
+2. **Fetch only that page as Markdown** — append `.md` to its URL:
+   - HTML page → `https://docs.suprsend.com/docs/quick-start-guide`
+   - Markdown for the same page → `https://docs.suprsend.com/docs/quick-start-guide.md`
 
-- HTML page → `https://docs.suprsend.com/docs/quick-start-guide`
-- Markdown for the same page → `https://docs.suprsend.com/docs/quick-start-guide.md`
+   This works for both `/docs/` (guides) and `/reference/` (API reference) paths.
 
-This works for both `/docs/` (guides) and `/reference/` (API reference) paths.
+`https://docs.suprsend.com/llms-full.txt` holds every page in one file (several MB). Use it only for broad sweeps, never for a single lookup.
 
-### Bulk LLM endpoints
+### SuprSend MCP server
 
-For wholesale ingestion rather than targeted lookups:
+If the agent is connected to the hosted [SuprSend MCP server](https://docs.suprsend.com/reference/mcp-overview) (`https://mcp.suprsend.com/mcp`):
 
-- **Index**: `https://docs.suprsend.com/llms.txt` — lightweight page listing with descriptions
-- **Full content**: `https://docs.suprsend.com/llms-full.txt` — complete documentation in a single file
+- **Docs lookups** — use its `docs_search` tool.
+- **Skills** (workflow, template, semantic layer, docs support) — load them the first way the client supports:
+  1. the **MCP Skills extension** (skills load directly);
+  2. the server's `skill://` **resources**;
+  3. the `docs_get_skill` **tool**.
+
+  All three return the same files.
 
 ## Getting Help
 
-### 1. Kai — AI Copilot (instant, in-dashboard)
+### 1. In-Product Agent (instant, in-dashboard)
 
-Kai is SuprSend's built-in AI copilot, available inside the dashboard at [app.suprsend.com](https://app.suprsend.com). Access it via the orb in the bottom-right corner, or use the keyboard shortcut:
+The SuprSend dashboard at [app.suprsend.com](https://app.suprsend.com) has a built-in AI agent, scoped to your workspace and the SuprSend docs. Open it with:
 
-- **macOS**: `Cmd + /`
-- **Windows / Linux**: `Ctrl + /`
+- **macOS**: `Cmd + /` (side panel)
+- **Windows / Linux**: `Ctrl + /` (side panel)
+- the **Agent** tab in the left navbar (full page)
 
-Kai can answer questions about SuprSend features, help debug workflow configurations, and guide you through setup steps.
+It can query the workspace, draft workflows, and debug delivery. Usage is credit-based and tied to the SuprSend plan. Docs: [In-Product Agent](https://docs.suprsend.com/reference/agent).
 
 ### 2. In-App Chat (fast, human support)
 

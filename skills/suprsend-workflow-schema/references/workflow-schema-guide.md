@@ -50,6 +50,8 @@ A workflow JSON has top-level metadata and a `tree` containing an array of `node
 
 - `name`, `category`, `trigger_type`, `tree`
 - When `trigger_type` is `"event"`, `trigger_events` is also required
+- `category` must be the slug of a **published** notification category in the workspace; otherwise the save fails with `{"category": "'<slug>' not found"}`. The slugs in this guide (`billing`, `collaboration`, …) are placeholders — use an existing one.
+- `ratelimit` (optional): `count` is an integer 1–100; `sliding_window` follows the [Duration Format](#duration-format) rules.
 
 ### Trigger type values
 
@@ -226,15 +228,21 @@ Every node in the `tree.nodes` array has a `node_type` field. Valid types:
 
 ## Duration Format
 
-Used by delay `value` / `offset_value`, batch `fixed_window`, the send node's `ttl_value`, and the workflow `ratelimit.sliding_window`.
+Used by fixed delay `value`, fixed `relative_to.offset_value`, the wait-until timeout's fixed delay, batch `fixed_window`, the send node's `ttl_value`, and the workflow `ratelimit.sliding_window`.
 
-Pattern: `^(\d+[dhms])+$`
+Pattern: `^(\d+[dhms])+$` — but the pattern alone is not enough. On save the value is also rejected unless:
 
-Examples: `30s`, `5m`, `1h30m`, `2d`, `1d12h30m`
+- **hours are 0–23, minutes 0–59, seconds 0–59** — roll over into the next unit: write `2d`, not `48h`; `1h30m`, not `90m`; `2d12h`, not `1d36h`;
+- the total is **greater than 0** (`0s` is rejected) and **at most 90 days** (`90d`);
+- there are **no spaces** between units (`1h 30m` is rejected).
+
+Valid: `30s`, `5m`, `1h30m`, `2d`, `1d12h30m`, `90d`. Rejected: `48h`, `90m`, `36h`, `1d36h`, `0s`, `91d`.
+
+Dynamic values (jq-expressions resolved at run time) are not checked on save.
 
 ## Condition Expressions
 
-Conditions use the `expression_v1` format. `expression_v1.op` is always `"AND"` — all `args` must match. For OR, add multiple objects to the `conditions` array (each is OR'd). Limits: 10 args per expression, 10 conditions per branch.
+Conditions use the `expression_v1` format. `expression_v1.op` is always `"AND"` — all `args` must match. For OR, add multiple objects to the `conditions` array (each is OR'd). Limits (rejected on save): 10 `args` per `expression_v1`, 10 conditions per branch, `variable` and `value` at most 512 characters each.
 
 ```json
 {
@@ -251,6 +259,10 @@ Conditions use the `expression_v1` format. `expression_v1.op` is always `"AND"` 
 
 `value` is parsed as an expression: wrap string literals in escaped quotes (`"\"premium\""`). Numbers (`"100"`), `true` / `false`, `null`, and arrays (`"[\"a\", \"b\"]"`) can be bare; a bare word such as `"premium"` is read as a **variable path** in the trigger payload, not a string.
 
+- **`EMPTY` / `NON_EMPTY`** (no `value` needed): `EMPTY` is true when the key is missing or is `null`, `""`, `false`, `0`, `[]` or `{}`. So `NON_EMPTY` is **false** for `0` and `false` — use `==` / `!=` to test numbers and booleans.
+- **`ARRAY_INTERSECTS` / `NOT_ARRAY_INTERSECTS`**: write `value` as an array literal, e.g. `"[\"admin\", \"owner\"]"` (or a variable holding an array). A comma-separated string like `"\"admin,owner\""` is not split.
+- **Tenant custom properties**: on the left use `"variable_ns": "$tenant"`, `"variable": "properties.<key>"`; inside `value` write `$tenant.properties.<key>`. A bare `properties.<key>` in `value` reads the **trigger payload**, not the tenant.
+
 ### Variable namespaces
 
 | Namespace | Data Source |
@@ -258,7 +270,7 @@ Conditions use the `expression_v1` format. `expression_v1.op` is always `"AND"` 
 | *(empty string)* | Trigger payload plus outputs of earlier nodes (transform variables, fetch `output_key`); after a batch/digest also `$batched_events`, `$batched_events_count`, `$batch_key` |
 | `$actor` | Properties of the user who performed the action |
 | `$recipient` | Properties of the user receiving the notification |
-| `$tenant` | Properties of the tenant (`$brand` is the legacy alias — don't emit it) |
+| `$tenant` | Properties of the tenant (`$brand` is the legacy alias — don't emit it). Custom properties: `variable: "properties.<key>"` |
 | `$organization` | Organization-level properties |
 | `$category` | The workflow category's `properties.<key>` or `digest_schedule.<key>` (branch node only) |
 | `$ref` | Output of an earlier send node, set via `ref` — e.g. `message_status` with `IS` / `IS_NOT` and `$message.delivered` / `seen` / `clicked` / `delivery_failed` (branch node only) |
@@ -287,11 +299,12 @@ Conditions use the `expression_v1` format. `expression_v1.op` is always `"AND"` 
 - Every workflow must have `name`, `category`, `trigger_type`, and `tree`
 - The tree must contain at least one action node: delivery (`send_*`), HTTP API, list operation, object operation, `userupdate`, `invokeworkflow`, or `cancelworkflow`. There is no rule about which node comes last.
 - `tree.nodes` holds at most 25 nodes
-- Branch nodes must have exactly one default branch (`is_default: true`) as the last item, with no conditions (`"conditions": []`)
+- Every branch node has exactly one default branch (`is_default: true`) as the last item. For `branch` its conditions are empty (`"conditions": []`); for `branch_waituntil` it holds **exactly one** `type: "delay"` condition (the timeout)
 - Branch names must be unique within a branch node
 - `branch_waituntil` must have exactly 2 branches: one condition branch and one timeout (default) branch
 - `trigger_events` must not include any wait-until event or delivery success event used in the same workflow
-- Node `ref` values must be unique across the entire workflow (nodes and branches)
+- Node `ref` values must be unique across the entire workflow (nodes and branches), match `^[a-zA-Z_][a-zA-Z0-9_]*$` and be at most 64 characters — like a variable name: `welcome_email`, not `welcome-email`
+- `category` must be an existing published category slug; durations must follow the [Duration Format](#duration-format) rules
 
 ## Schema References
 

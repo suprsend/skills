@@ -3,17 +3,16 @@
 JSONNET is an alternative templating language for variants whose `content` schema permits it. In the template-content schemas, this applies to:
 
 - **Slack** — `body_type: "block"`: `body_block` is always evaluated as a Jsonnet expression that produces the Slack `blocks` JSON.
-- **MS Teams** — `body_type: "card"`: `body_card` is always evaluated as a Jsonnet expression that produces the Adaptive Card JSON.
+- **MS Teams** — `body_type: "card"`: `body_card` is always evaluated as a Jsonnet expression that produces the Adaptive Card JSON — a single bare `AdaptiveCard` object, not an array or a message / `attachments` envelope (SuprSend wraps it). `$schema` is optional.
 
 `templating_language` is forced to `"jsonnet"` for these body types; Handlebars `{{ }}` inside them is not rendered.
 
-Other channels (email, sms, whatsapp, inbox, push) use Handlebars only — see [Handlebars Helpers](references/handlebars-helpers.md).
+Other channels (email, sms, whatsapp, inbox, push) use Handlebars only — see [Handlebars Helpers](handlebars-helpers.md).
 
-Inside Jsonnet, the trigger payload is available as `data`, and the translation function as `t` (e.g. `t("key")`). Access tenant properties via `data["$tenant"].<key>` (`data["$brand"]` is the legacy alias — don't emit it), recipient via `data["$recipient"]`, and so on — using the same namespaces documented for conditions and Handlebars variables.
+Inside Jsonnet, the trigger payload is available as `data`, and the translation function as `t` (e.g. `t("key")`). `t()` works only when translations are enabled for the account and a translation version is published — otherwise the render fails at send time (see [Multi-lingual Variants](multi-lingual-variants.md)). Access tenant properties via `data["$tenant"].<key>` (`data["$brand"]` is the legacy alias — don't emit it), recipient via `data["$recipient"]`, and so on — using the same namespaces documented for conditions and Handlebars variables.
 
 ## Documentation
 
-```
 # JSONNET
 
 > JSONNET syntax reference for Slack Block Kit and MS Teams Adaptive Card templates in SuprSend - variables, conditionals, arrays, and batched events.
@@ -368,7 +367,7 @@ Design visually in the [Slack Block Kit Builder](https://app.slack.com/block-kit
   
 
 
-> **Critical rule for Teams:** In SuprSend, `body_type: "card"` requires `templating_language: "jsonnet"`. Using Handlebars (`{{ }}`) inside Adaptive Card JSON will break rendering — always use `data.key` syntax. Every Adaptive Card must include `"$schema": "http://adaptivecards.io/schemas/adaptive-card.json"` at the top.
+> **Critical rule for Teams:** In SuprSend, `body_type: "card"` requires `templating_language: "jsonnet"`. Using Handlebars (`{{ }}`) inside Adaptive Card JSON will break rendering — always use `data.key` syntax. The JSONNET must evaluate to a single bare AdaptiveCard object (`{ "type": "AdaptiveCard", "version": ..., "body": [...] }`) — not an array, and not a Teams message / `attachments` envelope (SuprSend wraps the card for you). `"$schema"` is optional.
 
 ## MS Teams Adaptive Card examples
 
@@ -441,4 +440,3 @@ Design visually in the [Adaptive Cards Designer](https://adaptivecards.io/design
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
-```

@@ -23,6 +23,8 @@ Each branch has 2-10 items: up to 9 conditional branches and 1 default branch (m
 
 {{schema-enum (get fragment_schema "$definitions.condition_expr_v1_branch_def.properties.expression_v1.properties.args.items.properties.variable_ns.enum")}}
 
+For `value` syntax, `EMPTY` semantics, `ARRAY_INTERSECTS` and tenant custom properties, see [Workflow Schema Guide → Condition Expressions](workflow-schema-guide.md#condition-expressions). A message-status condition's `ref` must be the earlier node's `ref` (`^[a-zA-Z_][a-zA-Z0-9_]*$`, e.g. `welcome_email` — no hyphens).
+
 ## Example
 
 ```json
@@ -45,7 +47,7 @@ Each branch has 2-10 items: up to 9 conditional branches and 1 default branch (m
         }
       ],
       "nodes": [
-        { "node_type": "send_smart_channel_routing", "properties": { "template": "premium-alert" } }
+        { "node_type": "send_smart_channel_routing", "properties": { "template": "premium-alert", "success": "seen" } }
       ]
     },
     {

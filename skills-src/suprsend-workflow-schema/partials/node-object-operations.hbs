@@ -1,5 +1,9 @@
 # Object Operation Nodes
 
+## Verified behaviour (overrides the docs below)
+
+- **Only users are subscribed / unsubscribed.** A selected actor or recipient that is an object is skipped; if none of the selected entities is a user, the node fails (logged; the run continues).
+
 ## Subscribe to Object
 
 **Schema `node_type`:** `objectoperation_addsubscription`

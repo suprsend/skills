@@ -121,3 +121,34 @@ describe("URL validation", () => {
     await expect(fetchText("not-a-url")).rejects.toThrow(/invalid url/i);
   });
 });
+
+describe("GitHub API auth", () => {
+  beforeEach(() => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("[]", { status: 200 })));
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
+
+  const headersOf = () => new Headers(vi.mocked(fetch).mock.calls[0][1]?.headers);
+
+  it("sends GITHUB_TOKEN to api.github.com", async () => {
+    vi.stubEnv("GITHUB_TOKEN", "t0ken");
+    await fetchJson("https://api.github.com/repos/o/r/contents/x");
+    expect(headersOf().get("authorization")).toBe("Bearer t0ken");
+  });
+
+  it("never sends the token to other hosts", async () => {
+    vi.stubEnv("GITHUB_TOKEN", "t0ken");
+    await fetchText("https://raw.githubusercontent.com/o/r/main/x.md");
+    expect(headersOf().get("authorization")).toBeNull();
+  });
+
+  it("sends no auth header when GITHUB_TOKEN is unset", async () => {
+    vi.stubEnv("GITHUB_TOKEN", "");
+    await fetchJson("https://api.github.com/repos/o/r/contents/x");
+    expect(headersOf().get("authorization")).toBeNull();
+  });
+});

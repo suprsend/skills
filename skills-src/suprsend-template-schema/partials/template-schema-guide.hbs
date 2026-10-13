@@ -27,21 +27,35 @@ The `channel` selects which schema validates the `content` object. See the per-c
 
 ### `id`
 
-A unique identifier for the variant within the template — `^[a-zA-Z0-9_\-.]+$`, max 128 chars. Each variant must have a distinct `id`. `default` is reserved for the auto-created base variant: its `locale` / `tenant_id` / `conditions` are fixed, only its `content` can change, and it can't be deleted.
+An identifier that is unique **per channel** — `^[a-zA-Z0-9_\-.]+$`, max 128 chars. Variants in the same channel must have distinct `id`s; the same `id` can be reused on different channels (picking several channels when creating a variant creates one variant per channel with that `id`). `default` is reserved for the auto-created base variant: its `locale` / `tenant_id` / `conditions` are fixed, only its `content` can change, and it can't be deleted.
 
 ### `tenant_id`
 
 `null` for non-tenant variants, or a tenant slug (`^[a-zA-Z0-9_\-.]+$`, max 64 chars). When the template is rendered for a specific tenant, SuprSend prefers a matching `tenant_id` variant over `tenant_id: null` variants — see [Variant Selection](#variant-selection).
 
+This field is the only way to scope a variant to a tenant:
+
+- It is an **exact match** on the send's `tenant_id`, and one variant targets one tenant. To give two tenants the same override, create one variant per tenant.
+- **Sub-tenants do not inherit** a parent tenant's variants (unlike branding and `properties`, which are inherited).
+- A condition on `tenant_id` (empty namespace) reads the **trigger payload**, not the send's tenant. There is no `in` operator — it is rejected on save.
+
 ### `locale`
 
 A supported locale code — case-sensitive, e.g. `en`, `en-US`, `fr`, `hi-IN`, `es-MX`. Anything else is rejected with "Unsupported locale code". The `default` variant is always `en`.
+
+Put the language in this field, not in `conditions`. The recipient's locale is read from the user's `$locale` property, falling back to `$preferred_language`, then `en`. There is no built-in `language` property. A variant that tests language through `conditions` still sits in its own `locale` group (usually `en`), so real locale variants for the recipient's language are tried before it.
 
 ### `conditions`
 
 `null` or an array of `expression_v1` clauses. Entries in the array are **OR'd**; the `args` inside one entry are **AND'd**. When non-null, the variant is only eligible if at least one entry matches for the current send. Useful for segmentation (e.g., a different subject line for enterprise users).
 
 `value` is parsed as an expression: wrap string literals in escaped quotes (`"\"enterprise\""`). Numbers, `true` / `false`, and `null` can be bare; a bare word such as `"enterprise"` is read as a variable path, not a string.
+
+Limits and gotchas:
+
+- At most **10 `args`** per entry; `variable` and `value` are each at most **512 characters** (rejected on save otherwise).
+- `ARRAY_INTERSECTS` / `NOT_ARRAY_INTERSECTS` against several values need an array literal as `value`: `"[\"admin\",\"owner\"]"`. A comma-separated string such as `"\"admin,owner\""` is compared as one string.
+- There is no `IN` operator (rejected on save) — use `ARRAY_INTERSECTS` with an array literal, or one entry per value (entries are OR'd).
 
 Each condition follows:
 
@@ -73,13 +87,13 @@ Each condition follows:
 
 ### `needs_vendor_approval` / `vendor_approvals`
 
-Used for channels where the underlying vendor reviews content before send (notably SMS DLT and WhatsApp). `needs_vendor_approval` is the only part you author; it is forced to `true` for WhatsApp. `vendor_approvals` is **read-only** in variant JSON — approvals are submitted and tracked per vendor from the dashboard, and appear here when you read a variant back.
+Used for channels where the underlying vendor reviews content before send (notably SMS DLT and WhatsApp). `needs_vendor_approval` is the only part you author; it is forced to `true` for WhatsApp. Set it when you **create** the variant — changing it on an existing non-`default` variant is silently ignored (only the `default` variant accepts a later change). `vendor_approvals` is **read-only** in variant JSON — approval starts when the template is committed (automatic for WhatsApp via Meta Cloud API or Twilio; recorded manually per vendor otherwise) and appears here when you read a variant back. See the SMS and WhatsApp channel references.
 
 The `vendor_approvals` array entries (as returned) follow:
 
 {{schema-table (get variant_schema "$defs.variant_vendor_approval_def")}}
 
-For SMS variants, `needs_vendor_approval` is **required** (see the channel reference for details on DLT compliance).
+For SMS variants, `needs_vendor_approval` is optional: when omitted it follows the workspace's SMS vendor setting (DLT or not), and `true` forces the content `type` to `dlt`. See the SMS channel reference for DLT details.
 
 ### `seq_no`
 
@@ -89,10 +103,15 @@ Read-only priority, assigned `1..n` from the template's **variant order** (dashb
 
 When a workflow sends a template, SuprSend picks one variant per channel using:
 
-1. **Candidates** — enabled variants for the channel whose `tenant_id` is `null` or the send's tenant, and whose `locale` is in the fallback list: recipient locale → its base language → `en` (e.g. `hi-IN` → `hi` → `en`).
-2. **Tenant preference** — if any tenant-specific variant exists for a base language, the `tenant_id: null` variants for that language are dropped (except `default`).
+1. **Candidates** — enabled variants for the channel whose `tenant_id` is `null` or exactly the send's tenant, and whose `locale` is in the fallback list: recipient locale → its base language → `en` (e.g. `hi-IN` → `hi` → `en`).
+2. **Tenant preference** — if any tenant-specific variant exists for a base language, the `tenant_id: null` variants for that language are dropped (except `default`) — even when the tenant's variants have conditions that don't match this send.
 3. **Order** — by locale fallback position first, then non-`default` variants before `default`, then `seq_no` ascending.
 4. **First match wins** — variants are evaluated in that order and the first whose `conditions` match (or are `null`) is used.
+
+Consequences:
+
+- **Locale beats tenant.** If the tenant has no variant in the recipient's language, a tenant-less variant in that language wins over the tenant's `en` variant (e.g. recipient `fr`, variants `acme-en` and `default-fr` → `default-fr`).
+- **Each channel is independent.** Channels are enabled per template; a channel with no variant for the tenant still sends its `default` (or other tenant-less) content.
 
 ## When to add more variants
 
@@ -101,9 +120,7 @@ When a workflow sends a template, SuprSend picks one variant per channel using:
 
 ## Variants Concept
 
-```
 {{{docs_template_variants}}}
-```
 
 ## Examples
 

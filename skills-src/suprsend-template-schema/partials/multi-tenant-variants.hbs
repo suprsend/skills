@@ -1,8 +1,11 @@
 # Multi-tenant Variants
 
-Use a per-tenant variant when a template needs different content (subject line, copy, branding, attachments) for different tenants of the same workflow. Set the variant's `tenant_id` to the tenant slug; leave it `null` for the default fallback.
+Use a per-tenant variant when a template needs different content (subject line, copy, branding, attachments) for different tenants of the same workflow. Set the variant's `tenant_id` to the tenant slug; leave it `null` for the default fallback. The `tenant_id` field is the only way to scope a variant to a tenant — it is an exact match, and one variant targets one tenant (there is no `in` operator; a condition on `tenant_id` reads the trigger payload instead).
 
-Selection: when a template is sent for a specific `tenant_id`, only variants with that `tenant_id` or `tenant_id: null` are candidates. If the tenant has any variant for a base language, the `tenant_id: null` variants for that language are skipped — except `default`, which always remains the final fallback. If no tenant-specific variant exists, the `null` variants are used.
+Selection: when a template is sent for a specific `tenant_id`, only variants with exactly that `tenant_id` or `tenant_id: null` are candidates. If the tenant has any variant for a base language, the `tenant_id: null` variants for that language are skipped — even if the tenant's variants have conditions that don't match — except `default`, which always remains the final fallback. If no tenant-specific variant exists for that language, the `null` variants are used. Locale is checked before tenant: if the tenant has no variant in the recipient's language, a tenant-less variant in that language beats the tenant's `en` variant.
+
+- **Channels are per template, not per variant.** Each channel picks its own variant, so a channel with no variant for the tenant still sends its tenant-less (usually `default`) content. To stop a channel for one tenant, use the tenant's `blocked_channels`.
+- **Sub-tenants don't inherit variants.** A variant for `acme` is not used for `acme`'s sub-tenants; create one per sub-tenant that needs it.
 
 For tenant *variables* (logo, colors, properties) that just need substituting into shared content, prefer using `\{{$tenant.<property>}}` inside a single variant.
 
@@ -37,7 +40,7 @@ For tenants nested in a [sub-tenant](https://docs.suprsend.com/docs/sub-tenants)
 | `\{{$tenant.level}}` | Depth in the tree, `0` (root) to `4` |
 | `\{{$tenant.ancestors}}` | Array of ancestor tenant ids, root first; excludes the tenant itself |
 
-Branding keys and `properties` are inherited per key from the closest ancestor that sets them, resolved at send time. `id` and `name` are never inherited.
+Branding keys (including `embedded_preference_url` and `hosted_preference_domain`) and `properties` are inherited per key from the closest ancestor that sets them, resolved at send time. `id` and `name` are never inherited, and neither are template variants.
 
 ### Social links
 
@@ -66,6 +69,8 @@ For any property not in the reserved list above, use `\{{$tenant.properties.<key
 - `\{{$tenant.properties.support_url}}`
 - `\{{$tenant.properties.support_email}}`
 
+A custom key the tenant doesn't have also **fails the render** (strict mode). For an optional key use `\{{default $tenant.properties.<key> "fallback"}}` — this works only when the tenant's `properties` is an object; if `properties` is null the render still fails.
+
 In JSONNET templates, the equivalent shapes are `data["$tenant"].<reserved_key>` and `data["$tenant"].properties.<custom_key>`.
 
 ## Preference-page URLs (not under `$tenant`)
@@ -74,11 +79,16 @@ These are injected at send time as top-level variables — not nested under `$te
 
 - `\{{$hosted_preference_url}}` — signed link to the SuprSend-hosted preference / unsubscribe page for this notification's recipient. Substituted in **email and SMS** content only.
 - `\{{$embedded_preference_url}}` — your embedded preference page URL: the tenant's `embedded_preference_url`, falling back to the organization-level setting.
+- `\{{$hosted_preference_domain}}` — the hosted preference page domain: the tenant's `hosted_preference_domain`, falling back to the organization-level setting.
 
-`\{{$tenant.$hosted_preference_url}}` does not resolve. `\{{$tenant.embedded_preference_url}}` and `\{{$tenant.hosted_preference_domain}}` are the tenant's raw config values (empty if unset, no fallback). Prefer the top-level variables when linking recipients to their preferences.
+`\{{$tenant.$hosted_preference_url}}` does not resolve. `\{{$tenant.embedded_preference_url}}` and `\{{$tenant.hosted_preference_domain}}` are the tenant's own values (inherited from ancestors for sub-tenants; empty if unset, no organization fallback). Prefer the top-level variables when linking recipients to their preferences.
 
 ## Documentation
 
-```
+**Verified behaviour (overrides the docs below):**
+
+- Tenant variants change content and layout only. They don't change which channels are enabled — channels are enabled per template, and each channel picks its own variant.
+- Scope a variant with its `tenant_id` (dashboard: **Tenant**) field, never with a `tenant_id` condition; the match is exact and sub-tenants don't inherit variants.
+- Set language with the variant's `locale` field; the recipient's locale comes from `$locale`, falling back to `$preferred_language`.
+
 {{{docs_tenant_templates}}}
-```

@@ -22,11 +22,21 @@ For variants with `channel: "iospush"`.
 | notification_type | string | No |  |
 | via_suprsend | boolean | No |  |
 
-`header` and `body` are required. All other fields are optional.
+`header` (max 500 characters) and `body` (max 4000 characters) are required — longer values fail validation on save. Author only `header`, `body`, `image_url`, `action_url` and `sound`.
 
-- `content_available: 1` enables background app refresh (silent push).
-- `mutable_content: 1` allows a Notification Service Extension to modify the payload before display (used for media attachments).
-- `via_suprsend: true` routes delivery telemetry back through SuprSend.
+### Fields SuprSend controls (don't set them)
+
+These are overwritten on save or at send time, whatever you put in the variant:
+
+- `badge` — **never sent.** It is reset to 0 before rendering and left out of the APNs payload, so SuprSend never sets or increments the app badge. Manage the badge count in your app.
+- `content_available` — always `1`. An alert (title + body) is always shown; an iOS push template can't be a silent push.
+- `mutable_content` — always `1`, so a Notification Service Extension can attach the `image_url` media.
+- `thread_identifier` — always set to the workflow's notification category slug, so notifications group by category. A custom value is discarded.
+- `notification_type`, `via_suprsend`, `templating_language` — fixed values.
+
+### URLs and special characters
+
+Push content is not HTML, but `{{ }}` still HTML-escapes its output (`&` → `&amp;`, `=` → `&#x3D;`, `'` → `&#x27;`) and nothing reverses it. A whole URL in `{{ }}` (for example a signed image URL with a query string) arrives broken. Use triple braces `{{{ }}}` for any variable that holds a URL or may contain those characters.
 
 ## Examples
 
@@ -35,8 +45,7 @@ For variants with `channel: "iospush"`.
 ```json
 {
   "header": "New message",
-  "body": "{{ sender.name }}: {{ message.preview }}",
-  "badge": 1,
+  "body": "{{{ sender.name }}}: {{{ message.preview }}}",
   "sound": "default"
 }
 ```
@@ -47,17 +56,15 @@ For variants with `channel: "iospush"`.
 {
   "header": "Order shipped",
   "body": "Your order #{{ order.id }} is on its way",
-  "image_url": "{{ order.cover_image }}",
-  "action_url": "acme://orders/{{ order.id }}",
-  "badge": 1,
-  "mutable_content": 1,
-  "thread_identifier": "orders"
+  "image_url": "{{{ order.cover_image }}}",
+  "action_url": "acme://orders/{{ order.id }}"
 }
 ```
 
 ## Documentation
 
-```
+**Verified behaviour (overrides the docs below):** the scenario tables show URL variables like `{{product_image_url}}`. Use `{{{product_image_url}}}` in `image_url` and `action_url` so query strings aren't HTML-escaped.
+
 # iOS Push
 
 > Design iOS push notification templates in SuprSend with title, body, image, deep link, and action buttons, previewed live on a lock screen mockup.
@@ -186,7 +193,7 @@ Click **Commit** in the top bar to publish the current draft as a new live versi
   
 
   ### How does badge count work?
-    SuprSend increments the app badge by 1 for each notification. Clear the badge in your app when the user opens it or reads notifications.
+    SuprSend does not set the app badge. The template `badge` field is ignored and no `badge` key is sent to APNs. Set and clear the badge count from your app (for example, from your unread count).
   
 
   ### What happens if a variable is missing at send time?
@@ -195,4 +202,3 @@ Click **Commit** in the top bar to publish the current draft as a new live versi
 
 
 This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
-```

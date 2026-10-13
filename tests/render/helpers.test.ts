@@ -418,6 +418,16 @@ describe("Handlebars helpers", () => {
       const result = render('{{ref-link "guide.md"}}', {});
       expect(result).toBe("[guide.md](references/guide.md)");
     });
+
+    it("links to a sibling file when rendered into references/", () => {
+      const tpl = Handlebars.compile('{{ref-link "guide.md" "The Guide"}}', { noEscape: true });
+      expect(tpl({}, { data: { outputSubdir: "references" } })).toBe("[The Guide](guide.md)");
+    });
+
+    it("links up and across when rendered into scripts/ or assets/", () => {
+      const tpl = Handlebars.compile('{{ref-link "guide.md"}}', { noEscape: true });
+      expect(tpl({}, { data: { outputSubdir: "assets" } })).toBe("[guide.md](../references/guide.md)");
+    });
   });
 
   describe("truncate", () => {

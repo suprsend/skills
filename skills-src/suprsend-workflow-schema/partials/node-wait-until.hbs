@@ -19,10 +19,16 @@ one condition branch (`is_default: false`) and one timeout branch (`is_default: 
 
 ### Condition types
 
-- **Condition branch** — every entry in `conditions` must be `type: "future_event"` (max 5, each with a unique `event_name`); the branch is taken when any of those events arrives. Filter which event counts with `expression_v1` clauses inside its `event_conditions` (use `variable_ns: "$future_event"` for the incoming event's properties).
-- **Default (timeout) branch** — a single `type: "delay"` condition.
+- **Condition branch** — every entry in `conditions` must be `type: "future_event"` (max 5, each with a unique `event_name`); the branch is taken when any of those events arrives. Filter which event counts with `expression_v1` clauses inside its `event_conditions` (max 5 per event; use `variable_ns: "$future_event"` for the incoming event's properties).
+- **Default (timeout) branch** — exactly one `type: "delay"` condition. Fixed values follow the [Duration Format](workflow-schema-guide.md#duration-format) rules (`2d`, not `48h`). A dynamic or `relative_to` time that is already in the past gives a zero wait (immediate timeout), not an error.
 
 Top-level `expression_v1` conditions are not supported in `branch_waituntil`.
+
+### Which runs an event can satisfy
+
+- The event's `distinct_id` must equal the run's **recipient**, and its `tenant_id` must equal the run's tenant (an event without `tenant_id` only matches runs on the `default` tenant). Otherwise the event is ignored and the run times out. With `override_recipients_*`, the awaited event's `distinct_id` must be the overridden recipient — overrides are not applied to it.
+- The event must arrive while the run is **in progress**. An event sent after the run started but before it reaches this node (e.g. during an earlier `delay`) is held and evaluated when the run gets here. Events sent before the run started never match.
+- Events that arrive while the run is waiting at a *different* wait-until node are consumed there and discarded if they don't match it.
 
 ### Future event condition properties
 
@@ -30,7 +36,7 @@ Top-level `expression_v1` conditions are not supported in `branch_waituntil`.
 
 ### Delay condition (timeout) properties
 
-The default branch uses a delay condition with the same schema as the delay node:
+The default branch uses a delay condition with the same schema (and the same duration rules) as the delay node:
 
 {{schema-table (get fragment_schema "$definitions.delay_component_props")}}
 

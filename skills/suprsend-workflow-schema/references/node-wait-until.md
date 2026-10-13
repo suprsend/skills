@@ -26,7 +26,7 @@ Wait Until has 2 branches- **Condition** and **Max time**. The user proceeds thr
 
 ## Conditions
 
-You can add conditions on event properties, user properties, and action / event performed by user. It's important to note that conditions are evaluated when the workflow execution reaches "Wait Until" node, meaning any events performed before this point will not satisfy the condition branch.
+You can add conditions on event properties, user properties, and action / event performed by user. An awaited event only matches runs that are in progress when it arrives, for the same recipient (`distinct_id`) and tenant. An event sent after the run started — even while the run is still at an earlier node — is held and evaluated when the run reaches the Wait Until node; events sent before the run started never match.
 
 Except for max time branch, all other branches are condition branches. To setup a condition, you can select the type of the condition and the expression defining the condition.
 
@@ -54,8 +54,8 @@ Property condition is constructed as key, operator and value. You can add multip
 | `<=` | Key **is less than or equal to** value. Can be applied to integers and float values. |
 | `contains` | Key should be a substring or a list item in an array. |
 | `not contains` | Key should not be a substring or match any list item in an array. |
-| `is empty` | Evaluates to `true` if the key is missing, an empty string, or has a `null` value. |
-| `is not empty` | Key should be present and should not be an empty string or `null` value. |
+| `is empty` | Evaluates to `true` if the key is missing or is `null`, `""`, `false`, `0`, `[]` or `{}`. |
+| `is not empty` | Key is present and is not `null`, `""`, `false`, `0`, `[]` or `{}` (so `0` and `false` count as empty). |
 | `intersects` | Evaluates to true if **any value** in the left array matches **any value** in the right array. Useful for checking overlaps between arrays. |
 | `not intersects` | Evaluates to true if **no values** in the left array match any values in the right array. It could be used in case of checking or filtering out any overlaps between arrays. |
 
@@ -92,7 +92,7 @@ This branch will be executed if none of the condition branches are satisfied. Th
 
 ### Fixed delay
 
-Fixed delay is defined in your workflow form as `**d **h **m **s` and it adds a fixed delay for all users.
+Fixed delay is defined in your workflow form as `**d **h **m **s` and it adds a fixed delay for all users. In workflow JSON write it without spaces, with hours 0–23 and minutes/seconds 0–59, max 90d (e.g. `"value": "2d"`, not `"48h"`).
 
 
 Some examples of fixed delay are:
@@ -126,7 +126,7 @@ You can add duration key as a [JQ-expression](https://jqlang.github.io/jq/manual
 
 Your duration key variable can be computed to either:
 
-* An ISO-8601 timestamp (for example 2024-03-02T20:34:07Z) which must be a datetime in the future, or
+* An ISO-8601 timestamp (for example 2024-03-02T20:34:07Z). A timestamp already in the past gives a zero max wait (no error), or
 * A relative duration unit, which can be
   * an integer like `50`, considered as duration in seconds.
   * an interval string defined as `**d **h **m **s`, where d = day, h = hour, m = minutes and s = seconds
@@ -156,10 +156,16 @@ one condition branch (`is_default: false`) and one timeout branch (`is_default: 
 
 ### Condition types
 
-- **Condition branch** — every entry in `conditions` must be `type: "future_event"` (max 5, each with a unique `event_name`); the branch is taken when any of those events arrives. Filter which event counts with `expression_v1` clauses inside its `event_conditions` (use `variable_ns: "$future_event"` for the incoming event's properties).
-- **Default (timeout) branch** — a single `type: "delay"` condition.
+- **Condition branch** — every entry in `conditions` must be `type: "future_event"` (max 5, each with a unique `event_name`); the branch is taken when any of those events arrives. Filter which event counts with `expression_v1` clauses inside its `event_conditions` (max 5 per event; use `variable_ns: "$future_event"` for the incoming event's properties).
+- **Default (timeout) branch** — exactly one `type: "delay"` condition. Fixed values follow the [Duration Format](workflow-schema-guide.md#duration-format) rules (`2d`, not `48h`). A dynamic or `relative_to` time that is already in the past gives a zero wait (immediate timeout), not an error.
 
 Top-level `expression_v1` conditions are not supported in `branch_waituntil`.
+
+### Which runs an event can satisfy
+
+- The event's `distinct_id` must equal the run's **recipient**, and its `tenant_id` must equal the run's tenant (an event without `tenant_id` only matches runs on the `default` tenant). Otherwise the event is ignored and the run times out. With `override_recipients_*`, the awaited event's `distinct_id` must be the overridden recipient — overrides are not applied to it.
+- The event must arrive while the run is **in progress**. An event sent after the run started but before it reaches this node (e.g. during an earlier `delay`) is held and evaluated when the run gets here. Events sent before the run started never match.
+- Events that arrive while the run is waiting at a *different* wait-until node are consumed there and discarded if they don't match it.
 
 ### Future event condition properties
 
@@ -171,7 +177,7 @@ Top-level `expression_v1` conditions are not supported in `branch_waituntil`.
 
 ### Delay condition (timeout) properties
 
-The default branch uses a delay condition with the same schema as the delay node:
+The default branch uses a delay condition with the same schema (and the same duration rules) as the delay node:
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |

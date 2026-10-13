@@ -12,7 +12,7 @@ npx skills add suprsend/skills
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `suprsend-workflow-schema` | Workflow schema reference — all workflow nodes with documentation, JSON schema details, and usage examples                                                                                        |
 | `suprsend-template-schema` | Template (variant) schema reference — variant envelope, multi-tenant & multi-lingual variants, Handlebars + JSONNET syntax, and per-channel content schemas for all 9 channels                    |
-| `suprsend-docs-support`    | How to access SuprSend documentation and get support — `.md`-suffix raw markdown URLs, LLM-friendly endpoints, in-app chat, AI copilot, Slack, and email                                         |
+| `suprsend-docs-support`    | How to access SuprSend documentation and get support — `llms.txt` index + `.md`-suffix raw markdown, MCP docs tools, in-dashboard AI agent, in-app chat, Slack, and email |
 | `suprsend-cli`             | SuprSend CLI reference — command-line tool for managing workspaces, templates, workflows, schemas, and more, with agent-targeted per-command Tips _(pulled from [suprsend/cli](https://github.com/suprsend/cli))_ |
 
 ## For Users
@@ -33,6 +33,7 @@ Skills are not hand-maintained — they're generated from templates by a TypeScr
 
 - Node.js >= 20
 - `ANTHROPIC_API_KEY` environment variable (only if the skill uses `claude` type sources)
+- `GITHUB_TOKEN` environment variable (optional) — authenticates the CLI-skill pull from GitHub; without it the build can hit GitHub's 60 requests/hour limit for unauthenticated calls
 
 ### Setup
 
@@ -201,7 +202,7 @@ The `references`, `scripts`, and `assets` arrays in `sources.yaml` declare files
 | `trim`         | `{{trim text}}`                           | Strip whitespace                                    |
 | `ifEqual`      | `{{#ifEqual a b}}...{{/ifEqual}}`         | Conditional equality                                |
 | `each-sorted`  | `{{#each-sorted obj}}...{{/each-sorted}}` | Iterate keys alphabetically                         |
-| `ref-link`     | `{{ref-link "file.md" "Label"}}`          | Link to `references/` file                          |
+| `ref-link`     | `{{ref-link "file.md" "Label"}}`          | Link to a `references/` file, relative to the page being rendered |
 | `truncate`     | `{{truncate text 500}}`                   | Truncate to N characters                            |
 | `get`          | `{{get obj "path.to.key"}}`               | Deep property access (dot notation or JSON Pointer) |
 | `keys`         | `{{keys obj}}`                            | Get object keys as array                            |
