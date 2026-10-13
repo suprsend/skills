@@ -147,8 +147,8 @@ one condition branch (`is_default: false`) and one timeout branch (`is_default: 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
 | name | string | Yes | The name of the Branch |
-| description | string | null | No | Branch Description |
-| ref | string | null | No | ref of the branch. Must be unique within a workflow across all nodes and branches |
+| description | string \| null | No | Branch Description |
+| ref | string \| null | No | ref of the branch. Must be unique within a workflow across all nodes and branches |
 | is_default | boolean | Yes | Whether this is the default branch. There can be only one default branch, and it must be the last branch in the list |
 | is_terminal | boolean | No | Whether workflow terminates at the end of this branch |
 | conditions | array | Yes |  |

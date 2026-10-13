@@ -79,7 +79,7 @@ This documentation is built and hosted on [Mintlify](https://mintlify.com), a de
 | object_id | string | Yes | static literal OR a handlebars expression (if dynamic) |
 | create_object_if_missing | boolean | No | applicable when op=add_subscription. should object be created in doesn't exist? |
 | user_selection | array | Yes |  |
-| subscription_properties | string | null | No | subscription properties. JSONNET expression that evaluates to a map/dictionary |
+| subscription_properties | string \| null | No | subscription properties. JSONNET expression that evaluates to a map/dictionary |
 
 ### User selection values
 

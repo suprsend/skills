@@ -31,19 +31,19 @@ A workflow JSON has top-level metadata and a `tree` containing an array of `node
 | --- | --- | --- | --- |
 | $schema | string | No |  |
 | name | string | Yes | Workflow name |
-| description | string | null | No | Workflow description |
+| description | string \| null | No | Workflow description |
 | category | string | Yes | Preference category slug |
 | trigger_type | string | Yes | trigger type |
-| trigger_events | array | null | No | Array of event names that can trigger this workflow |
-| tags | array | null | No | optional tags for workflow |
-| ratelimit | object | null | No | ratelimit for a workflow/recipient. [count=2 in window=30d] |
-| conditions | array | null | No | trigger workflow only if these conditions satisfy |
-| override_recipients_type | string | null | No | override recipients using trigger payload. (applicable only if trigger_type=event) |
-| override_recipients_user_expr | string | null | No | a jq-expression to evaluate new recipients of type user (if override_recipients_type=user) |
-| override_recipients_single_object_fields_expr | object | null | No | overrides original recipient with an object. object-type and id are evaluated using jq-expr (if override_recipients_type=single_object_fields) |
-| override_actor_user_expr | string | null | No | a jq-expression to evaluate actor. (applicable only if trigger_type=event) |
-| override_tenant_expr | string | null | No | a jq-expression to evaluate tenant. (applicable only if trigger_type=event) |
-| cancellation_key | string | null | No | JSONNET expression evaluated at trigger time to set a cancellation key for this workflow run |
+| trigger_events | array \| null | No | Array of event names that can trigger this workflow |
+| tags | array \| null | No | optional tags for workflow |
+| ratelimit | object \| null | No | ratelimit for a workflow/recipient. [count=2 in window=30d] |
+| conditions | array \| null | No | trigger workflow only if these conditions satisfy |
+| override_recipients_type | string \| null | No | override recipients using trigger payload. (applicable only if trigger_type=event) |
+| override_recipients_user_expr | string \| null | No | a jq-expression to evaluate new recipients of type user (if override_recipients_type=user) |
+| override_recipients_single_object_fields_expr | object \| null | No | overrides original recipient with an object. object-type and id are evaluated using jq-expr (if override_recipients_type=single_object_fields) |
+| override_actor_user_expr | string \| null | No | a jq-expression to evaluate actor. (applicable only if trigger_type=event) |
+| override_tenant_expr | string \| null | No | a jq-expression to evaluate tenant. (applicable only if trigger_type=event) |
+| cancellation_key | string \| null | No | JSONNET expression evaluated at trigger time to set a cancellation key for this workflow run |
 | tree | object | Yes |  |
 
 ### Required fields
@@ -127,10 +127,10 @@ Every node in the `tree.nodes` array has a `node_type` field. Valid types:
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
 | node_type | string | Yes | The type of the Node |
-| name | string | null | No | The name of the Node |
-| description | string | null | No | Node Description |
-| ref | string | null | No | ref of the Node. Must be unique within a workflow across all nodes and branches |
-| properties | object | null | Yes |  |
+| name | string \| null | No | The name of the Node |
+| description | string \| null | No | Node Description |
+| ref | string \| null | No | ref of the Node. Must be unique within a workflow across all nodes and branches |
+| properties | object \| null | Yes |  |
 | branches | array | No |  |
 
 ## How Nodes Connect

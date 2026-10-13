@@ -111,9 +111,9 @@ This documentation is built and hosted on [Mintlify](https://mintlify.com), a de
 | url | string | Yes | JSONNET script to evaluate url |
 | headers | array | No |  |
 | body_content_type | string | No |  |
-| body | string | null | No | JSONNET script to evaluate request body |
+| body | string \| null | No | JSONNET script to evaluate request body |
 | query_params | array | No |  |
-| output_key | string | null | No | optional key to store the response body of api call |
+| output_key | string \| null | No | optional key to store the response body of api call |
 
 The fetch node is restricted to `GET` requests only. The `body` field must be `null`.
 

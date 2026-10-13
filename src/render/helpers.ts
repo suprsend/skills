@@ -24,11 +24,13 @@ export function registerHelpers(hbs: typeof Handlebars): void {
   hbs.registerHelper("schema-table", (schema: SchemaObj) => {
     if (!schema?.properties) return "";
     const required = new Set(schema.required ?? []);
+    // Escape pipes and flatten newlines so every row keeps exactly 4 columns
+    const cell = (s: string) => s.replace(/\|/g, "\\|").replace(/\n/g, " ");
     const rows = Object.entries(schema.properties).map(([name, prop]) => {
       const type = Array.isArray(prop.type) ? prop.type.join(" | ") : (prop.type ?? "any");
       const req = required.has(name) ? "Yes" : "No";
-      const desc = (prop.description ?? "").replace(/\|/g, "\\|").replace(/\n/g, " ");
-      return `| ${name} | ${type} | ${req} | ${desc} |`;
+      const desc = prop.description ?? "";
+      return `| ${cell(name)} | ${cell(type)} | ${req} | ${cell(desc)} |`;
     });
     const header = "| Property | Type | Required | Description |\n| --- | --- | --- | --- |";
     return new hbs.SafeString(`${header}\n${rows.join("\n")}`);

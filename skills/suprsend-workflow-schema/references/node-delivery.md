@@ -311,7 +311,7 @@ This documentation is built and hosted on [Mintlify](https://mintlify.com), a de
 | --- | --- | --- | --- |
 | template | string | Yes | slug of template used for notification content |
 | channels | array | No | specific channels to use when sending multi-channel notification |
-| channels_expr | string | null | No | jq-expression for preparing channel list, if channels are to be derived at runtime using payload |
+| channels_expr | string \| null | No | jq-expression for preparing channel list, if channels are to be derived at runtime using payload |
 | success | string | No | success metric (delivered/seen/interaction/<user-event>) |
 | mandatory_channels | array | No | applicable for smart-channel-routing, notification on mandatory channels will be sent immediately |
 | ttl_value | string | No | Duration format ([xx]d[xx]h[xx]m[xx]s) examples [30s, 1m, 1m30s, 1d3h45m] |

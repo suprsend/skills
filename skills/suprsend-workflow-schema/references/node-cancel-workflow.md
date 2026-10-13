@@ -8,10 +8,10 @@ Cancels other **in-progress** runs in the same workspace — for example, stop a
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
-| workflows | array | null | No | slugs of workflows whose in-progress runs should be cancelled. null/empty = no workflow filter |
-| recipient_selection | string | null | No | recipient filter for in-progress executions to be cancelled. empty/null = no recipient filter |
-| recipient_expression | string | null | No | JSONNET expression to derive recipient at runtime. required non-empty string if recipient_selection=expression; otherwise empty/null is allowed |
-| cancellation_key | string | null | No | JSONNET expression to match runs by cancellation key. empty/null = no key filter |
+| workflows | array \| null | No | slugs of workflows whose in-progress runs should be cancelled. null/empty = no workflow filter |
+| recipient_selection | string \| null | No | recipient filter for in-progress executions to be cancelled. empty/null = no recipient filter |
+| recipient_expression | string \| null | No | JSONNET expression to derive recipient at runtime. required non-empty string if recipient_selection=expression; otherwise empty/null is allowed |
+| cancellation_key | string \| null | No | JSONNET expression to match runs by cancellation key. empty/null = no key filter |
 
 At least one filter must be set: a non-empty `workflows` list, a `recipient_selection` of `recipient` / `actor` / `expression`, or a non-empty `cancellation_key`. All filters that are set are combined with **AND**.
 

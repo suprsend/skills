@@ -207,8 +207,8 @@ Each branch has 2-10 items: up to 9 conditional branches and 1 default branch (m
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
 | name | string | Yes | The name of the Branch |
-| description | string | null | No | Branch Description |
-| ref | string | null | No | ref of the branch. Must be unique within a workflow across all nodes and branches |
+| description | string \| null | No | Branch Description |
+| ref | string \| null | No | ref of the branch. Must be unique within a workflow across all nodes and branches |
 | is_default | boolean | Yes | Whether this is the default branch. There can be only one default branch, and it must be the last branch in the list |
 | is_terminal | boolean | No | Whether workflow terminates at the end of this branch |
 | conditions | array | Yes |  |

@@ -79,13 +79,13 @@ This documentation is built and hosted on [Mintlify](https://mintlify.com), a de
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
 | workflow | string | Yes | slug of workflow to invoke |
-| actor_selection | string | null | No | where to pick actor from for invoke-workflow payload |
+| actor_selection | string \| null | No | where to pick actor from for invoke-workflow payload |
 | actor_expression | string | No | if actor_selection=expression, a JSONNET expression to derive actor at runtime |
 | recipient_selection | string | Yes | where to pick recipient from for invoke-workflow payload |
 | recipient_expression | string | No | if recipient_selection=expression, a JSONNET expression to derive recipient at runtime |
-| data | string | null | No | JSONNET expression to derive data field for invoke-workflow payload |
+| data | string \| null | No | JSONNET expression to derive data field for invoke-workflow payload |
 | append_current_run_data | boolean | No | should current workflow-run data be merged with the data field |
-| cancellation_key | string | null | No | JSONNET expression evaluated against current run data; passed as cancellation_key of the invoked workflow run |
+| cancellation_key | string \| null | No | JSONNET expression evaluated against current run data; passed as cancellation_key of the invoked workflow run |
 
 ### Recipient selection values
 
