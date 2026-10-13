@@ -86,7 +86,7 @@ sources:
       - find: |-
           * **Tenant** and **locale** are soft checks with fallback: tenant+locale → tenant+default locale → default tenant+locale → default.
         replace: |-
-          * **Tenant** and **locale** are soft checks with fallback, and **locale comes first**: recipient locale → base language → `en`. Within a base language, if the tenant has any variant for it, tenant-less variants for that language are skipped (even if the tenant's variants don't match); otherwise tenant-less variants are used. So for a French recipient a tenant-less `fr` variant beats the tenant's `en` variant. Sub-tenants don't inherit a parent tenant's variants.
+          * **Tenant** and **locale** are soft checks with fallback, and **locale comes first**: recipient locale → base language → `en`. Within a base language, if the tenant has a variant for it in one of the recipient's fallback locales, tenant-less variants for that language are skipped (even if the tenant's variants don't match); otherwise tenant-less variants are used. So for a French recipient a tenant-less `fr` variant beats the tenant's `en` variant. Sub-tenants don't inherit a parent tenant's variants.
       - find: |-
           3. Select a **Tenant** if your variant has a tenant condition.
         replace: |-
@@ -123,7 +123,7 @@ sources:
       - find: |-
           Falsy values: `false`, `0`, `""`, `null`, `undefined`. An empty array `[]` is truthy in Handlebars.
         replace: |-
-          Falsy values for `if`, `unless`, `with`, and `each`: `false`, `0`, `""`, `null`, `undefined`, and an empty array `[]`. An empty object `{}` is truthy. The custom `and` / `or` helpers treat `[]` as truthy. Add `includeZero=true` (`{{#if count includeZero=true}}`) to treat `0` as truthy.
+          Falsy values for `if`, `unless`, `with`, and `each`: `false`, `0`, `""`, `null`, `undefined`, and an empty array `[]`. An empty object `{}` is truthy for `if` / `unless` / `with`, but `each` over `{}` has nothing to iterate and runs its `else` block. The custom `and` / `or` helpers treat `[]` as truthy. Add `includeZero=true` (`{{#if count includeZero=true}}`) to treat `0` as truthy.
       - find: |-
           If `order.address` is missing or empty, the example renders `No address on file` instead.
         replace: |-
@@ -205,7 +205,7 @@ sources:
     replacements:
       - find: "## Slack Block Kit examples"
         replace: |-
-          > **Critical rule for Slack:** All Slack JSONNET templates MUST be wrapped in `{ "blocks": [...] }`. The bare-array format `[{...}, {...}]` will fail — Slack's API rejects unwrapped arrays.
+          > **Critical rule for Slack:** All Slack JSONNET templates MUST be wrapped in `{ "blocks": [...] }`. The bare-array format `[{...}, {...}]` will fail — SuprSend's JSONNET renderer rejects array output (it must evaluate to a JSON object).
 
           ## Slack Block Kit examples
       - find: "## MS Teams Adaptive Card examples"
@@ -233,7 +233,7 @@ sources:
       - find: "create variants with combined conditions — for example, locale `es` + tenant `acme`"
         replace: "set both the **Locale** and **Tenant** fields on one variant — for example, locale `es` + tenant `acme`"
       - find: "The fallback order: tenant+locale → tenant+default locale → default tenant+locale → default."
-        replace: "The fallback order is locale first: recipient locale → base language → `en`. Within a base language, the tenant's variants replace the tenant-less ones if the tenant has any for that language (even if they don't match); otherwise the tenant-less ones are used. So for a Spanish recipient a tenant-less `es` variant beats Acme's `en` variant. Broadcasts are the exception: there the tenant comes first, so Acme's `en` variant wins."
+        replace: "The fallback order is locale first: recipient locale → base language → `en`. Within a base language, the tenant's variants replace the tenant-less ones if the tenant has any in the recipient's fallback locales for that language (even if they don't match); otherwise the tenant-less ones are used. So for a Spanish recipient a tenant-less `es` variant beats Acme's `en` variant. Broadcasts are the exception: there the tenant comes first, so Acme's `en` variant wins."
 
   - type: docs
     key: docs_tenant_templates

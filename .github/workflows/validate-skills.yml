@@ -50,3 +50,8 @@ jobs:
             fi
             exit 1
           fi
+
+      - name: Run tests
+        run: npm test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

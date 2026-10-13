@@ -234,11 +234,11 @@ Conditions use the `expression_v1` format. `expression_v1.op` is always `"AND"` 
 
 - Every workflow must have `name`, `category`, `trigger_type`, and `tree`
 - The tree must contain at least one action node: delivery (`send_*`), HTTP API, list operation, object operation, `userupdate`, `invokeworkflow`, or `cancelworkflow`. There is no rule about which node comes last.
-- `tree.nodes` holds at most 25 nodes
+- `tree.nodes` holds at most 25 top-level nodes in the published JSON schema (nested branch nodes aren't counted, and the API doesn't enforce it on save)
 - Every branch node has exactly one default branch (`is_default: true`) as the last item. For `branch` its conditions are empty (`"conditions": []`); for `branch_waituntil` it holds **exactly one** `type: "delay"` condition (the timeout)
 - Branch names must be unique within a branch node
 - `branch_waituntil` must have exactly 2 branches: one condition branch and one timeout (default) branch
-- `trigger_events` must not include any wait-until event or delivery success event used in the same workflow
+- `trigger_events` must not include any wait-until event or delivery success event used in the same workflow (checked at publish, not on save; the success-event check is currently skipped when the workflow also has a wait-until event, so don't rely on it)
 - Node `ref` values must be unique across the entire workflow (nodes and branches), match `^[a-zA-Z_][a-zA-Z0-9_]*$` and be at most 64 characters — like a variable name: `welcome_email`, not `welcome-email`
 - `category` must be an existing published category slug; durations must follow the [Duration Format](#duration-format) rules
 

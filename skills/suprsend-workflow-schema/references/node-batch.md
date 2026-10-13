@@ -402,7 +402,7 @@ This documentation is built and hosted on [Mintlify](https://mintlify.com), a de
 
 - `window_type` decides which window field is **required**: `fixed` → `fixed_window`, `dynamic` → `dynamic_window_expr`, `relative_to` → `relative_to`. Fields for the other window types are dropped on save.
 - `fixed_window` (and `relative_to.offset_value` when `offset_value_type` is `fixed`): a duration like `30m`, `1h30m`, `2d12h`. No spaces, hours ≤ 23, minutes and seconds ≤ 59, greater than 0, at most 90 days. See [Duration format](workflow-schema-guide.md#duration-format).
-- `dynamic_window_expr`: a jq expression that must resolve at runtime to a future ISO-8601 timestamp, an integer (seconds), or a duration string without spaces (e.g. `"2h30m"`). If the value is missing or invalid, the run stops with an error.
+- `dynamic_window_expr`: a jq expression that must resolve at runtime to an RFC 3339 timestamp **with** a timezone offset (e.g. `2026-01-02T09:00:00Z`; a past timestamp closes the batch immediately), an integer (seconds), or a duration string without spaces (e.g. `"2h30m"`). If the value is missing or invalid, the run stops with an error.
 - `retain_count`: 1–100, default 10. `retain_order`: `first` (default) keeps the oldest N in arrival order; `last` keeps the newest N, **newest first**. Neither changes `$batched_events_count`.
 - Grouping: one open batch per recipient + tenant + workflow + `batch_key` value.
 - Output variables for later nodes and templates: `$batched_events` (array of event properties), `$batched_events_count` (plural — the singular `$batched_event_count` does not exist and fails the render), and `$batch_key`.

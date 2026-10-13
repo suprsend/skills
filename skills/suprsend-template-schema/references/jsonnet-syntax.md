@@ -9,7 +9,7 @@ JSONNET is an alternative templating language for variants whose `content` schem
 
 Other channels (email, sms, whatsapp, inbox, push) use Handlebars only — see [Handlebars Helpers](handlebars-helpers.md).
 
-Inside Jsonnet, the trigger payload is available as `data`, and the translation function as `t` (e.g. `t("key")`). `t()` works only when translations are enabled for the account and a translation version is published — otherwise the render fails at send time (see [Multi-lingual Variants](multi-lingual-variants.md)). Access tenant properties via `data["$tenant"].<key>` (`data["$brand"]` is the legacy alias — don't emit it), recipient via `data["$recipient"]`, and so on — using the same namespaces documented for conditions and Handlebars variables.
+Inside Jsonnet, the trigger payload is available as `data`, and the translation function as `t` (e.g. `t("key")`). `t()` works only when translations are enabled for the account and a translation version is published — otherwise the render fails at send time (see [Multi-lingual Variants](multi-lingual-variants.md)). Access tenant fields via `data["$tenant"].<key>` for reserved keys (`name`, `logo`, colours, …) and `data["$tenant"].properties.<key>` for custom properties (`data["$brand"]` is the legacy alias — don't emit it), recipient via `data["$recipient"]`, and so on — using the same namespaces documented for conditions and Handlebars variables.
 
 ## Documentation
 
@@ -120,7 +120,7 @@ Or use string concatenation with `+`:
 "text": "Order " + data.order_id + " has shipped to " + data['$recipient'].name
 ```
 
-> **Critical rule for Slack:** All Slack JSONNET templates MUST be wrapped in `{ "blocks": [...] }`. The bare-array format `[{...}, {...}]` will fail — Slack's API rejects unwrapped arrays.
+> **Critical rule for Slack:** All Slack JSONNET templates MUST be wrapped in `{ "blocks": [...] }`. The bare-array format `[{...}, {...}]` will fail — SuprSend's JSONNET renderer rejects array output (it must evaluate to a JSON object).
 
 ## Slack Block Kit examples
 

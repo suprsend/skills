@@ -5,9 +5,9 @@ For variants with `channel: "whatsapp"`.
 **Schema URL:** `https://schema.suprsend.com/template/v2/channel/whatsapp_basic_interactive_schema.json`
 
 > **Note.** WhatsApp templates must be approved before they can be sent. `needs_vendor_approval` is always `true` for WhatsApp. Approval starts when the template is **committed** (not when the variant is saved):
-> - If the template's primary WhatsApp vendor is **Meta Cloud API** (`cloud_api`) or **Twilio**, SuprSend uploads the template for approval automatically.
+> - If the workspace's primary WhatsApp vendor (the level-0 vendor in the default tenant's WhatsApp routing) is **Meta Cloud API** (`cloud_api`) or **Twilio**, SuprSend uploads the template for approval automatically.
 > - For any other WhatsApp vendor, nothing is uploaded: create/approve the template in the vendor's portal, then record the approval for the variant in SuprSend (including the vendor's template ID).
-> - If an approval already exists for identical approval content, its status is reused instead of resubmitting.
+> - If an approval already exists for identical approval content, its status is reused instead of resubmitting. With Meta Cloud API or Twilio, only an approval from the same vendor account (vendor slug + unique identifier) is reused; otherwise the template is resubmitted.
 >
 > `vendor_approvals` is read-only and not part of the variant JSON you author.
 

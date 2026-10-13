@@ -27,7 +27,7 @@ The `channel` selects which schema validates the `content` object. See the per-c
 
 ### `id`
 
-An identifier that is unique **per channel** — `^[a-zA-Z0-9_\-.]+$`, max 128 chars. Variants in the same channel must have distinct `id`s; the same `id` can be reused on different channels (picking several channels when creating a variant creates one variant per channel with that `id`). `default` is reserved for the auto-created base variant: its `locale` / `tenant_id` / `conditions` are fixed, only its `content` can change, and it can't be deleted.
+An identifier that is unique **per channel** — `^[a-zA-Z0-9_\-.]+$`, max 128 chars. Variants in the same channel must have distinct `id`s; the same `id` can be reused on different channels (picking several channels when creating a variant creates one variant per channel with that `id`). `default` is reserved for the auto-created base variant: its `locale` / `tenant_id` / `conditions` are fixed, only its `content` (and `needs_vendor_approval`) can change, and it can't be deleted.
 
 ### `tenant_id`
 
@@ -104,7 +104,7 @@ Read-only priority, assigned `1..n` from the template's **variant order** (dashb
 When a workflow sends a template, SuprSend picks one variant per channel using:
 
 1. **Candidates** — enabled variants for the channel whose `tenant_id` is `null` or exactly the send's tenant, and whose `locale` is in the fallback list: recipient locale → its base language → `en` (e.g. `hi-IN` → `hi` → `en`).
-2. **Tenant preference** — if any tenant-specific variant exists for a base language, the `tenant_id: null` variants for that language are dropped (except `default`) — even when the tenant's variants have conditions that don't match this send.
+2. **Tenant preference** — if a tenant-specific variant exists in one of the recipient's fallback locales for a base language (e.g. `en-US` or `en` for an `en-US` recipient; a tenant `en-GB` variant doesn't count), the `tenant_id: null` variants for that language are dropped (except `default`) — even when the tenant's variants have conditions that don't match this send.
 3. **Order** — by locale fallback position first, then non-`default` variants before `default`, then `seq_no` ascending.
 4. **First match wins** — variants are evaluated in that order and the first whose `conditions` match (or are `null`) is used.
 

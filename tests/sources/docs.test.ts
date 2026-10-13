@@ -427,6 +427,16 @@ describe("cleanMintlifyMarkdown", () => {
     expect(result).not.toContain("<br");
   });
 
+  it("keeps <br /> inside inline code", () => {
+    const input = "| Line break | `<br />` |";
+    expect(cleanMintlifyMarkdown(input)).toBe("| Line break | `<br />` |");
+  });
+
+  it("leaves a space where a removed <br /> joined two tokens", () => {
+    const input = "| List | `- Item 1`<br />`- Item 2` |";
+    expect(cleanMintlifyMarkdown(input)).toBe("| List | `- Item 1` `- Item 2` |");
+  });
+
   it("collapses excessive blank lines", () => {
     const input = "A\n\n\n\n\n\nB";
     const result = cleanMintlifyMarkdown(input);

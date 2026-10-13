@@ -14,6 +14,19 @@ vi.mock("../src/config.js", async () => {
 const { fetchJson, fetchText } = vi.hoisted(() => ({ fetchJson: vi.fn(), fetchText: vi.fn() }));
 vi.mock("../src/utils/fetch.js", () => ({ fetchJson, fetchText }));
 
+// Lets a test make the staging -> target rename fail; every other rename is real.
+const failSwap = vi.hoisted(() => ({ on: false }));
+vi.mock("node:fs/promises", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("node:fs/promises")>();
+  return {
+    ...actual,
+    rename: async (from: string, to: string) => {
+      if (failSwap.on && from.endsWith(".pull-tmp")) throw new Error("EXDEV: rename failed");
+      return actual.rename(from, to);
+    },
+  };
+});
+
 import { pullExternalSkills } from "../src/external.js";
 
 const outDir = () => (globalThis as Record<string, unknown>).__testOutDir as string;
@@ -40,6 +53,7 @@ function mockRemote(failOn?: string) {
 describe("pullExternalSkills", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
+    failSwap.on = false;
     await rm(outDir(), { recursive: true, force: true });
     await mkdir(join(outDir(), "demo", "references"), { recursive: true });
     await writeFile(join(outDir(), "demo", "SKILL.md"), "old skill");
@@ -59,5 +73,14 @@ describe("pullExternalSkills", () => {
     expect(await readFile(join(outDir(), "demo", "SKILL.md"), "utf8")).toBe("old skill");
     expect(await readdir(join(outDir(), "demo", "references"))).toEqual(["stale.md"]);
     expect(await readdir(outDir())).toEqual(["demo"]); // no staging dir left behind
+  });
+
+  it("restores the existing copy when swapping in the new one fails", async () => {
+    mockRemote();
+    failSwap.on = true;
+    await expect(pullExternalSkills()).rejects.toThrow("rename failed");
+    expect(await readFile(join(outDir(), "demo", "SKILL.md"), "utf8")).toBe("old skill");
+    expect(await readdir(join(outDir(), "demo", "references"))).toEqual(["stale.md"]);
+    expect(await readdir(outDir())).toEqual(["demo"]); // no staging or backup dir left behind
   });
 });

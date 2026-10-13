@@ -45,7 +45,7 @@ These are the only keys valid directly under `$tenant.`. Any other key belongs u
 | `\{{$tenant.ancestors}}` | Ancestor tenant ids, root first (excludes the tenant itself) |
 | `\{{$tenant.social_links.<network>}}` | Tenant social link. Built-in `<network>` keys: `x`, `twitter`, `facebook`, `instagram`, `linkedin`, `youtube`, `tiktok`, `discord`, `telegram`, `medium`, `website` |
 
-`brand_id` / `brand_name` and `tenant_id` / `tenant_name` still resolve as legacy aliases of `id` / `name` — never emit them in new content. For sub-tenants, branding and `properties` are inherited per key from the closest ancestor that sets them; `id` and `name` are never inherited. Template **variants are not inherited** — a variant's `tenant_id` matches only that exact tenant.
+`brand_id` / `brand_name` and `tenant_id` / `tenant_name` still resolve as legacy aliases of `id` / `name` — never emit them in new content. For sub-tenants, branding and `properties` are inherited per key from the closest ancestor that sets them; `blocked_channels` accumulate across ancestors; `id` and `name` are never inherited. Template **variants are not inherited** — a variant's `tenant_id` matches only that exact tenant.
 
 ### 2. Custom tenant properties — `$tenant.properties.<key>`
 
@@ -64,9 +64,9 @@ These are injected at send time as top-level variables, not nested under `$tenan
 
 - `\{{$hosted_preference_url}}` — signed link to the SuprSend-hosted preference / unsubscribe page for this notification's recipient. Substituted in **email and SMS** content only.
 - `\{{$embedded_preference_url}}` — your embedded preference page URL: the tenant's `embedded_preference_url`, falling back to the organization-level setting.
-- `\{{$hosted_preference_domain}}` — the hosted preference page domain: the tenant's `hosted_preference_domain`, falling back to the organization-level setting.
+- `\{{$hosted_preference_domain}}` — the hosted preference page domain: the tenant's `hosted_preference_domain`, falling back to the organization-level setting. Resolved at send time; the dashboard preview data doesn't include it.
 
-`\{{$tenant.$hosted_preference_url}}` does not resolve. `$tenant.embedded_preference_url` and `$tenant.hosted_preference_domain` are the tenant's own values (inherited from ancestors for sub-tenants; empty if unset, no organization fallback) — prefer the top-level variables when linking recipients to their preferences.
+`\{{$tenant.$hosted_preference_url}}` does not resolve. `$tenant.embedded_preference_url` and `$tenant.hosted_preference_domain` are the tenant's own values (inherited from ancestors for sub-tenants; no live organization fallback — a root tenant created without them gets a copy of the organization values at creation, and later organization changes don't propagate) — prefer the top-level variables when linking recipients to their preferences.
 
 ### Common anti-patterns — never emit these
 
@@ -86,7 +86,7 @@ For the full multi-tenant variant model and per-tenant overrides, see {{ref-link
 
 Every variant must specify `channel`, `id`, `tenant_id`, `locale`, and `conditions` — even when not using multi-tenant or conditional features (use `null` where applicable). The `content` object is validated against the channel-specific schema.
 
-**Base content goes in the reserved `default` variant.** Enabling a channel auto-creates it with `locale: "en"`, `tenant_id: null`, no conditions; only its `content` can be changed. Never create a second variant with that same `locale` + `tenant_id` + `conditions` combination — it is rejected as a duplicate of `default`.
+**Base content goes in the reserved `default` variant.** Enabling a channel auto-creates it with `locale: "en"`, `tenant_id: null`, no conditions; only its `content` (and `needs_vendor_approval`) can be changed. Never create a second variant with that same `locale` + `tenant_id` + `conditions` combination — it is rejected as a duplicate of `default`.
 
 Minimum shape:
 

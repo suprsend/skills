@@ -287,7 +287,7 @@ For `value` syntax, `EMPTY` semantics, `ARRAY_INTERSECTS` and tenant custom prop
 
 ## Ending the journey on one path
 
-Only one branch runs: the first whose conditions match, in order, else the default. When that branch's `nodes` finish, execution **always continues** with the node that follows the `branch` node in the parent array — whichever branch ran. `is_terminal` (listed in the schema) has no effect at runtime: it is ignored when the workflow JSON is saved, and the engine doesn't read it. A path only stops early if one of its nodes fails.
+Only one branch runs: the first whose conditions match, in order, else the default. When that branch's `nodes` finish, execution **always continues** with the node that follows the `branch` node in the parent array — whichever branch ran. `is_terminal` (listed in the schema) has no effect at runtime: it is ignored when the workflow JSON is saved, and the engine doesn't read it. A path stops early only when a node fails or a batch/digest ends the run (its event was handed to another run, or the digest's `trigger_min_count` wasn't met). Either way the **whole run** ends: nodes after the `branch` node don't run either.
 
 So when one outcome should end the journey (rejection, decline, failure, no response):
 

@@ -70,8 +70,24 @@ export async function pullExternalSkills(): Promise<void> {
       await rm(stagingDir, { recursive: true, force: true });
       throw err;
     }
-    await rm(targetDir, { recursive: true, force: true });
-    await rename(stagingDir, targetDir);
+    // Move the old copy aside rather than deleting it, so a failed swap can restore it.
+    const backupDir = `${targetDir}.pull-old`;
+    await rm(backupDir, { recursive: true, force: true });
+    const hadTarget = await rename(targetDir, backupDir).then(
+      () => true,
+      (err: NodeJS.ErrnoException) => {
+        if (err.code === "ENOENT") return false;
+        throw err;
+      },
+    );
+    try {
+      await rename(stagingDir, targetDir);
+    } catch (err) {
+      await rm(stagingDir, { recursive: true, force: true });
+      if (hadTarget) await rename(backupDir, targetDir);
+      throw err;
+    }
+    await rm(backupDir, { recursive: true, force: true });
     logger.info(`Pulled skill: ${dir.name}`);
   }
 }

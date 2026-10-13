@@ -22,7 +22,7 @@ Use `invokeworkflow` to trigger a workflow from within another workflow. The two
 - **`recipient_selection: "recipient"` fails if the parent run's recipient is an object** (logged; the parent run continues). Use `"expression"` to pick a user instead.
 - **`recipient_expression`** may return a `distinct_id` string, a recipient object (`{ "distinct_id": ... }` or `{ "object_type": ..., "id": ... }`), or an array of these to invoke the workflow for several recipients.
 - **`tenant_id` is always inherited** from the parent run; it can't be set on this node.
-- **`data`** must evaluate to a JSON object; anything else is replaced with `{}`.
+- **`data`** must evaluate to a JSON object. A string or an array is replaced with `{}`; a number, boolean or `null` fails the node, and the child workflow is not invoked.
 
 ## Documentation
 

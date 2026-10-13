@@ -22,7 +22,7 @@ Put the language in the variant's `locale` field — not in `conditions`. The re
 
 Selection: SuprSend tries locales in order — the recipient's locale, then its base language, then `en` (e.g. `fr-CA` → `fr` → `en`). The first variant (in that order, for the matched channel + tenant) whose conditions match is used; the `en` `default` variant is the final fallback. Locale codes are case-sensitive (`fr-CA`, not `fr-ca`).
 
-With tenants, locale is checked first: if the tenant has no variant in the recipient's language, a tenant-less variant in that language beats the tenant's `en` variant. If the tenant has any variant for a base language, the tenant-less variants for that language are skipped (except `default`). See [Template Schema Guide](template-schema-guide.md) → Variant Selection.
+With tenants, locale is checked first: if the tenant has no variant in the recipient's language, a tenant-less variant in that language beats the tenant's `en` variant. If the tenant has a variant in one of the recipient's fallback locales (e.g. `en-US` or `en` for an `en-US` recipient; a tenant `en-GB` variant doesn't count), the tenant-less variants for that base language are skipped (except `default`). See [Template Schema Guide](template-schema-guide.md) → Variant Selection.
 
 **Broadcasts select differently:** variants with `conditions` are never used (only `default` and condition-less variants are candidates), and the tenant comes before the locale — tenant + recipient locale → tenant + base language → tenant + `en` → tenant-less recipient locale → tenant-less base language → tenant-less `en`. So in a broadcast, the tenant's `en` variant beats a tenant-less `fr` variant.
 
@@ -154,7 +154,7 @@ At send time, SuprSend checks the recipient's locale and sends the matching lang
 
 For tenants that need both brand customisation and localisation, set both the **Locale** and **Tenant** fields on one variant — for example, locale `es` + tenant `acme` for Acme's Spanish-speaking users.
 
-The fallback order is locale first: recipient locale → base language → `en`. Within a base language, the tenant's variants replace the tenant-less ones if the tenant has any for that language (even if they don't match); otherwise the tenant-less ones are used. So for a Spanish recipient a tenant-less `es` variant beats Acme's `en` variant. Broadcasts are the exception: there the tenant comes first, so Acme's `en` variant wins.
+The fallback order is locale first: recipient locale → base language → `en`. Within a base language, the tenant's variants replace the tenant-less ones if the tenant has any in the recipient's fallback locales for that language (even if they don't match); otherwise the tenant-less ones are used. So for a Spanish recipient a tenant-less `es` variant beats Acme's `en` variant. Broadcasts are the exception: there the tenant comes first, so Acme's `en` variant wins.
 
 Name these descriptively: `acme-es`, `uber-fr`, `default-hi`.
 

@@ -7,3 +7,6 @@ dist/
 .env.*
 *.key
 *.pem
+# CLI-skill pull staging/backup dirs (src/external.ts)
+skills/*.pull-tmp/
+skills/*.pull-old/

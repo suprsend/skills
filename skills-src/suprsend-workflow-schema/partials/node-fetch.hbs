@@ -4,12 +4,12 @@
 
 ## Verified behaviour (overrides the docs below)
 
-- **Every field except `output_key` is JSONNET** — `url` and each header / query-param `key` **and** `value`. Quote literals: `{ "key": "\"Authorization\"", "value": "\"Bearer \" + data.api_token" }`. A bare word (`"key": "Authorization"`) is an unknown variable and `\{{ }}` is a syntax error: the request is skipped, an error is logged, and the run continues without the data.
+- **Every field except `http_method`, `body_content_type` and `output_key` is JSONNET** — `url` and each header / query-param `key` **and** `value`. Quote literals: `{ "key": "\"Authorization\"", "value": "\"Bearer \" + data.api_token" }`. A bare word (`"key": "Authorization"`) is an unknown variable and `\{{ }}` is a syntax error: the request is skipped, an error is logged, and the run continues without the data. `http_method` (`GET`, `POST`, `PUT`, `PATCH`, `DELETE`) and `body_content_type` (`application/json`) are plain strings: write `"POST"`, not `"\"POST\""`.
 - **Success** is any 2xx. The request times out after **15 s**.
 - **Failures:** a 5xx is retried (up to 3 attempts, with backoff), then the workflow run fails. Everything else — 4xx, 301/302 (redirects aren't followed), timeouts, connection or render errors, unsupported response types, a top-level JSON array, a body over 100 KB — is logged, **not retried**, and the run continues without the data. Make later nodes tolerate a missing `output_key`.
-- **Response types:** `application/json` must be a JSON object. `text/plain`, `text/csv`, `text/html`, `text/markdown` and `application/xml` are stored as a raw string and **require `output_key`**. Any other `Content-Type` is rejected.
+- **Response types:** `application/json` must be a JSON object. `text/plain`, `text/csv`, `text/html`, `text/markdown` and `application/xml` are stored as a raw string and **require `output_key`**. A response with no `Content-Type` (e.g. a 204) succeeds and adds no data; with `output_key`, that key is set to `null`. Any other `Content-Type` is rejected.
 - **`output_key`** can't start with `$` or `ss_` (rejected on save).
-- **Blocked targets:** only `http`/`https` URLs. Private, loopback and link-local IPs and SuprSend's own API hosts are rejected at runtime.
+- **Blocked targets:** only `http`/`https` URLs. Private, loopback, link-local and other reserved IPv4 addresses and SuprSend's own API hosts are rejected at runtime. The IP check covers IPv4 only and is skipped on self-hosted deployments.
 
 ## Documentation
 

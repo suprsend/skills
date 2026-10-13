@@ -46,7 +46,7 @@ The `channel` selects which schema validates the `content` object. See the per-c
 
 ### `id`
 
-An identifier that is unique **per channel** — `^[a-zA-Z0-9_\-.]+$`, max 128 chars. Variants in the same channel must have distinct `id`s; the same `id` can be reused on different channels (picking several channels when creating a variant creates one variant per channel with that `id`). `default` is reserved for the auto-created base variant: its `locale` / `tenant_id` / `conditions` are fixed, only its `content` can change, and it can't be deleted.
+An identifier that is unique **per channel** — `^[a-zA-Z0-9_\-.]+$`, max 128 chars. Variants in the same channel must have distinct `id`s; the same `id` can be reused on different channels (picking several channels when creating a variant creates one variant per channel with that `id`). `default` is reserved for the auto-created base variant: its `locale` / `tenant_id` / `conditions` are fixed, only its `content` (and `needs_vendor_approval`) can change, and it can't be deleted.
 
 ### `tenant_id`
 
@@ -147,7 +147,7 @@ Read-only priority, assigned `1..n` from the template's **variant order** (dashb
 When a workflow sends a template, SuprSend picks one variant per channel using:
 
 1. **Candidates** — enabled variants for the channel whose `tenant_id` is `null` or exactly the send's tenant, and whose `locale` is in the fallback list: recipient locale → its base language → `en` (e.g. `hi-IN` → `hi` → `en`).
-2. **Tenant preference** — if any tenant-specific variant exists for a base language, the `tenant_id: null` variants for that language are dropped (except `default`) — even when the tenant's variants have conditions that don't match this send.
+2. **Tenant preference** — if a tenant-specific variant exists in one of the recipient's fallback locales for a base language (e.g. `en-US` or `en` for an `en-US` recipient; a tenant `en-GB` variant doesn't count), the `tenant_id: null` variants for that language are dropped (except `default`) — even when the tenant's variants have conditions that don't match this send.
 3. **Order** — by locale fallback position first, then non-`default` variants before `default`, then `seq_no` ascending.
 4. **First match wins** — variants are evaluated in that order and the first whose `conditions` match (or are `null`) is used.
 
@@ -265,7 +265,7 @@ For **WhatsApp** and **SMS (DLT)** variants, committing puts the variant into **
 When a notification is triggered, SuprSend picks one variant per channel. Candidates are variants whose **Tenant** is empty or exactly the send's tenant and whose **Locale** is in the recipient's fallback list (for example `hi-IN` → `hi` → `en`). They are tried by locale first, then non-default variants in panel order, and the first whose conditions match is sent. The **default** variant (always at the top of the panel) is tried last, as the fallback. Broadcasts use a simpler rule: variants with conditions are ignored, and the tenant is checked before the locale (a tenant's `en` variant beats a tenant-less variant in the recipient's language).
 
 * Conditions added with **+ OR** are alternatives — the variant matches if any one of them is true. The rules inside a single condition must all be true.
-* **Tenant** and **locale** are soft checks with fallback, and **locale comes first**: recipient locale → base language → `en`. Within a base language, if the tenant has any variant for it, tenant-less variants for that language are skipped (even if the tenant's variants don't match); otherwise tenant-less variants are used. So for a French recipient a tenant-less `fr` variant beats the tenant's `en` variant. Sub-tenants don't inherit a parent tenant's variants.
+* **Tenant** and **locale** are soft checks with fallback, and **locale comes first**: recipient locale → base language → `en`. Within a base language, if the tenant has a variant for it in one of the recipient's fallback locales, tenant-less variants for that language are skipped (even if the tenant's variants don't match); otherwise tenant-less variants are used. So for a French recipient a tenant-less `fr` variant beats the tenant's `en` variant. Sub-tenants don't inherit a parent tenant's variants.
 * All other conditions (like `$recipient.plan == "pro"`) are hard checks - no fallback, the variant is just skipped.
 
 

@@ -29,7 +29,9 @@ For variants with `channel: "webpush"`.
 
 `header` (max 500 characters) and `body` (max 4000 characters) are required — longer values fail validation on save.
 
-### Rejected on save
+### Blocks commit
+
+These are saved, but recorded as variant errors; the template can't be committed until they're fixed:
 
 - `renotify: true` with an empty `group`. Renotify needs a `group`, which becomes the notification tag.
 - `is_silent: true` combined with `vibrate` or `sound`.

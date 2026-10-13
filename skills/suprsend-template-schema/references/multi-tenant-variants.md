@@ -2,7 +2,7 @@
 
 Use a per-tenant variant when a template needs different content (subject line, copy, branding, attachments) for different tenants of the same workflow. Set the variant's `tenant_id` to the tenant slug; leave it `null` for the default fallback. The `tenant_id` field is the only way to scope a variant to a tenant — it is an exact match, and one variant targets one tenant (there is no `in` operator; a condition on `tenant_id` reads the trigger payload instead).
 
-Selection: when a template is sent for a specific `tenant_id`, only variants with exactly that `tenant_id` or `tenant_id: null` are candidates. If the tenant has any variant for a base language, the `tenant_id: null` variants for that language are skipped — even if the tenant's variants have conditions that don't match — except `default`, which always remains the final fallback. If no tenant-specific variant exists for that language, the `null` variants are used. Locale is checked before tenant: if the tenant has no variant in the recipient's language, a tenant-less variant in that language beats the tenant's `en` variant.
+Selection: when a template is sent for a specific `tenant_id`, only variants with exactly that `tenant_id` or `tenant_id: null` are candidates. If the tenant has a variant in one of the recipient's fallback locales (e.g. `en-US` or `en` for an `en-US` recipient; a tenant `en-GB` variant doesn't count), the `tenant_id: null` variants for that base language are skipped — even if the tenant's variants have conditions that don't match — except `default`, which always remains the final fallback. If no tenant-specific variant exists for that language, the `null` variants are used. Locale is checked before tenant: if the tenant has no variant in the recipient's language, a tenant-less variant in that language beats the tenant's `en` variant.
 
 **Broadcasts select differently:** variants with `conditions` are never used (only `default` and condition-less variants are candidates), and the tenant comes before the locale — tenant + recipient locale → tenant + base language → tenant + `en` → tenant-less recipient locale → tenant-less base language → tenant-less `en`. So in a broadcast, the tenant's `en` variant beats a tenant-less `fr` variant.
 
@@ -42,7 +42,7 @@ For tenants nested in a [sub-tenant](https://docs.suprsend.com/docs/sub-tenants)
 | `{{$tenant.level}}` | Depth in the tree, `0` (root) to `4` |
 | `{{$tenant.ancestors}}` | Array of ancestor tenant ids, root first; excludes the tenant itself |
 
-Branding keys (including `embedded_preference_url` and `hosted_preference_domain`) and `properties` are inherited per key from the closest ancestor that sets them, resolved at send time. `id` and `name` are never inherited, and neither are template variants.
+Branding keys (including `embedded_preference_url` and `hosted_preference_domain`) and `properties` are inherited per key from the closest ancestor that sets them, resolved at send time (a key set to `null` or `""` still counts as set). `blocked_channels` is the exception: it accumulates, so a sub-tenant blocks every channel that any ancestor blocks. `id` and `name` are never inherited, and neither are template variants.
 
 ### Social links
 
@@ -83,7 +83,7 @@ These are injected at send time as top-level variables — not nested under `$te
 - `{{$embedded_preference_url}}` — your embedded preference page URL: the tenant's `embedded_preference_url`, falling back to the organization-level setting.
 - `{{$hosted_preference_domain}}` — the hosted preference page domain: the tenant's `hosted_preference_domain`, falling back to the organization-level setting.
 
-`{{$tenant.$hosted_preference_url}}` does not resolve. `{{$tenant.embedded_preference_url}}` and `{{$tenant.hosted_preference_domain}}` are the tenant's own values (inherited from ancestors for sub-tenants; empty if unset, no organization fallback). Prefer the top-level variables when linking recipients to their preferences.
+`{{$tenant.$hosted_preference_url}}` does not resolve. `{{$tenant.embedded_preference_url}}` and `{{$tenant.hosted_preference_domain}}` are the tenant's own values (inherited from ancestors for sub-tenants; no live organization fallback — a root tenant created without them gets a copy of the organization values at creation, and later organization changes don't propagate). Prefer the top-level variables when linking recipients to their preferences.
 
 ## Documentation
 

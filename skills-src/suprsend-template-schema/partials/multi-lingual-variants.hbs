@@ -22,7 +22,7 @@ Put the language in the variant's `locale` field — not in `conditions`. The re
 
 Selection: SuprSend tries locales in order — the recipient's locale, then its base language, then `en` (e.g. `fr-CA` → `fr` → `en`). The first variant (in that order, for the matched channel + tenant) whose conditions match is used; the `en` `default` variant is the final fallback. Locale codes are case-sensitive (`fr-CA`, not `fr-ca`).
 
-With tenants, locale is checked first: if the tenant has no variant in the recipient's language, a tenant-less variant in that language beats the tenant's `en` variant. If the tenant has any variant for a base language, the tenant-less variants for that language are skipped (except `default`). See {{ref-link "template-schema-guide.md" "Template Schema Guide"}} → Variant Selection.
+With tenants, locale is checked first: if the tenant has no variant in the recipient's language, a tenant-less variant in that language beats the tenant's `en` variant. If the tenant has a variant in one of the recipient's fallback locales (e.g. `en-US` or `en` for an `en-US` recipient; a tenant `en-GB` variant doesn't count), the tenant-less variants for that base language are skipped (except `default`). See {{ref-link "template-schema-guide.md" "Template Schema Guide"}} → Variant Selection.
 
 **Broadcasts select differently:** variants with `conditions` are never used (only `default` and condition-less variants are candidates), and the tenant comes before the locale — tenant + recipient locale → tenant + base language → tenant + `en` → tenant-less recipient locale → tenant-less base language → tenant-less `en`. So in a broadcast, the tenant's `en` variant beats a tenant-less `fr` variant.
 

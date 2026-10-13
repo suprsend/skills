@@ -92,7 +92,7 @@ Auto-expire/dismiss the inbox message after a duration or at an absolute time.
 
 `value` formats:
 
-- **Relative** (`format: "relative"`, `expiry_type: "fixed"`): duration `XdYhZmWs` with **no spaces**, e.g. `7d`, `1d30m`, `2d6h`. Validated on save: hours 0–23, minutes and seconds 0–59 (write `1d6h`, not `30h`), and a zero duration is rejected.
+- **Relative** (`format: "relative"`, `expiry_type: "fixed"`): duration `XdYhZmWs` with **no spaces**, e.g. `7d`, `1d30m`, `2d6h`. Validated on save: hours 0–23, minutes and seconds 0–59 (write `1d6h`, not `30h`), and a zero duration is saved as a variant error that blocks commit.
 - **Absolute** (`format: "absolute"`, `expiry_type: "fixed"`): ISO-8601 datetime **with timezone**, e.g. `2026-12-31T23:59:59Z` or `2026-12-31T23:59:59+05:30`. A past datetime is not rejected — check it yourself.
 - **Dynamic** (`expiry_type: "dynamic"`): a variable such as `{{ expiry_time }}` that must render to either an ISO-8601 datetime with timezone, a duration without spaces (`2d6h30m`), or an integer number of seconds. Anything else — including a duration with spaces like `2d 6h` — fails at send time.
 
@@ -156,12 +156,12 @@ Body of the notification. This is where the content of your notification will be
   | - | - | - |
   | Bold | `**bold text**` | `<strong>bold text</strong>` or `<b>bold text</b>` |
   | Italic | `*italic text*` or `_italic text_` | `<em>italic text</em>` or `<i>italic text</i>` |
-  | Line break (single) | End a line with two spaces, then a newline | `` |
-  | Line break (multiple) | NA | `` |
+  | Line break (single) | End a line with two spaces, then a newline | `<br />` |
+  | Line break (multiple) | NA | `<br />` |
   | Link | `[link text](https://example.com)` | `<a href="https://example.com">link text</a>` |
   | Image | `![alt text](https://example.com/image.png)` | `<img src="https://example.com/image.png" alt="alt text" />` |
-  | Unordered list | `- Item 1``- Item 2` | `<ul><li>Item 1</li><li>Item 2</li></ul>` |
-  | Ordered list | `1. Item 1``2. Item 2` | `<ol><li>Item 1</li><li>Item 2</li></ol>` |
+  | Unordered list | `- Item 1` `- Item 2` | `<ul><li>Item 1</li><li>Item 2</li></ul>` |
+  | Ordered list | `1. Item 1` `2. Item 2` | `<ol><li>Item 1</li><li>Item 2</li></ol>` |
   | Blockquote / note | `> This is a note` | `<blockquote>This is a note</blockquote>` |
 
   **Table**

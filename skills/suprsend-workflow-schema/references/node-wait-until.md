@@ -164,7 +164,7 @@ Top-level `expression_v1` conditions are not supported in `branch_waituntil`.
 ### Which runs an event can satisfy
 
 - The event's `distinct_id` must equal the run's **recipient**, and its `tenant_id` must equal the run's tenant (an event without `tenant_id` only matches runs on the `default` tenant). Otherwise the event is ignored and the run times out. With `override_recipients_*`, the awaited event's `distinct_id` must be the overridden recipient — overrides are not applied to it.
-- The event must arrive while the run is **in progress**. An event sent after the run started but before it reaches this node (e.g. during an earlier `delay`) is held and evaluated when the run gets here. Events sent before the run started never match.
+- The event must arrive while the run is **in progress**. An event sent after the run started but before it reaches this node (e.g. during an earlier `delay`) is held and evaluated when the run gets here — unless the run first passes another wait-until node, which reads held events in arrival order and discards the ones it doesn't wait for. Events sent before the run started never match.
 - Events that arrive while the run is waiting at a *different* wait-until node are consumed there and discarded if they don't match it.
 
 ### Future event condition properties

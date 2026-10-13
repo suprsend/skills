@@ -17,7 +17,7 @@ These are overwritten on save or at send time, whatever you put in the variant:
 - `badge` — **never sent.** It is reset to 0 before rendering and left out of the APNs payload, so SuprSend never sets or increments the app badge. Manage the badge count in your app.
 - `content_available` — always `1`. An alert (title + body) is always shown; an iOS push template can't be a silent push.
 - `mutable_content` — always `1`, so a Notification Service Extension can attach the `image_url` media.
-- `thread_identifier` — always set to the workflow's notification category slug, so notifications group by category. A custom value is discarded.
+- `thread_identifier` — always overwritten with the workflow's notification category slug (sent as `aps.thread_identifier`); a custom value is discarded, so don't set it.
 - `notification_type`, `via_suprsend`, `templating_language` — fixed values.
 
 ### URLs and special characters

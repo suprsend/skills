@@ -3,7 +3,7 @@
 ## Verified behaviour (overrides the docs below)
 
 - **The target list must be a static, non-read-only list.** Otherwise the node fails (logged; the run continues).
-- **Static `list_id`** (`is_list_id_dynamic` false/omitted): only `a-z`, `0-9`, `-`, `_`, max 64 characters — checked on save, so a `\{{...}}` in a static `list_id` is rejected.
+- **Static `list_id`** (`is_list_id_dynamic` false/omitted): only letters, digits, `-`, `_` (uppercase is accepted), max 64 characters — checked on save, so a `\{{...}}` in a static `list_id` is rejected.
 - **Handlebars rendering happens only when `is_list_id_dynamic: true`.** `list_id` is then rendered; `list_name` is rendered only if `create_list_if_missing` is also `true`. Otherwise both are used as literal strings.
 
 ## Add User to List
