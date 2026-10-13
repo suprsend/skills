@@ -73,7 +73,7 @@ Set `text`, `url` and optionally `icon`. Any `id` you set is replaced on save.
 ```json
 {
   "header": "Build complete",
-  "body": "{{ repo }} – {{ branch }} built in {{ duration }}",
+  "body": "{{{ repo }}} – {{{ branch }}} built in {{{ duration }}}",
   "icon_url": "{{{ $tenant.logo }}}",
   "action_url": "https://acme.com/builds/{{ build.id }}"
 }

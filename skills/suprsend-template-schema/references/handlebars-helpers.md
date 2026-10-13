@@ -12,7 +12,9 @@ Templates render in **strict mode**:
 
 - **Missing variable = failed render, not empty output.** `{{x}}` fails when `x` is absent (a `null` value renders empty). `{{a.b}}` fails when `a` is absent or `null`, or when `b` is absent.
 - **Inside helper and block arguments** (`if`, `with`, `each`, `default`, `compare`, …) a missing top-level name or a missing *last* key is tolerated (`{{#if x}}`, `{{default a.b "-"}}` with `a: {}`), but a missing or `null` *parent* still fails. Guard each parent level: `{{#if a}}{{#if a.b}}…{{/if}}{{/if}}`.
-- **Escaping:** `{{ }}` escapes `&`, `<`, `>`, `"`, `'`, `` ` ``, `=` in every channel, and nothing un-escapes it later — SMS, push, WhatsApp, and Inbox deliver `O&#x27;Brien &amp; Sons`. Use `{{{ }}}` for text and URLs in those channels; keep `{{ }}` for email HTML.
+- **Escaping: default to `{{ }}`; use `{{{ }}}` only where HTML escaping isn't needed.** `{{ }}` escapes `&`, `<`, `>`, `"`, `'`, `` ` ``, `=` in every channel and field, and nothing un-escapes it later.
+  - **Keep `{{ }}`** where the output is rendered as HTML, so user-supplied values can't inject markup: the email HTML body, and the Inbox `body` (rendered as Markdown with raw HTML allowed, which also decodes the entities).
+  - **Use `{{{ }}}`** where the output is plain text: SMS, push, WhatsApp, Slack text mode, Inbox `header` / `subtext` / URLs, and the email `subject`, `preheader` and plain-text part. There `{{ }}` delivers `O&#x27;Brien &amp; Sons`, and a `preheader` is escaped a second time when it is injected into the HTML.
 - **`datetime-format`:** pass an ISO-8601 string with offset or epoch **milliseconds**, and always pass a timezone: `{{datetime-format created_at "MMM D, YYYY h:mm a" "America/New_York"}}`. Epoch seconds and numeric strings misparse; without a timezone nothing is converted.
 - **Array helpers:** `unique`, `list-agg`, `itemAt`, and `join` return empty for a `null` value but fail the render when the variable is absent.
 - **Two-argument `compare` / `condition`** use `===`: `{{#compare plan "pro"}}…{{/compare}}`.
@@ -41,8 +43,8 @@ SuprSend templates use Handlebars to insert variables and format data. This page
 
 | Syntax | What it does |
 | :- | :- |
-| `{{ var }}` | Default. HTML-escapes `<`, `>`, `"`, `'`, `&`, `` ` ``, `=` into HTML entities — in **every** channel. SMS, push, WhatsApp, and Inbox deliver the entities as-is (`O&#x27;Brien &amp; Sons`). |
-| `{{{ var }}}` | Unescaped. Use for URLs, and for text in non-HTML channels (SMS, push, WhatsApp, Inbox) so `'`, `&`, `=` arrive unchanged. Can inject HTML — in email, use only for trusted values. |
+| `{{ var }}` | Default — use it unless HTML escaping isn't needed. HTML-escapes `<`, `>`, `"`, `'`, `&`, `` ` ``, `=` into HTML entities in **every** channel and field. Safe in HTML outputs (email HTML body, Inbox body). In plain-text outputs (SMS, push, WhatsApp, Slack text, email subject / preheader / plain-text part) the entities are delivered as-is (`O&#x27;Brien &amp; Sons`). |
+| `{{{ var }}}` | Unescaped. Use only where HTML escaping isn't needed: plain-text outputs (SMS, push, WhatsApp, Slack text, Inbox header / subtext / URLs, email subject / preheader / plain-text part), so `'`, `&`, `=` arrive unchanged. Can inject HTML — don't use it for user-supplied values in the email HTML body or Inbox body. |
 | `{{array.[0].name}}` | First element of `array`. Use `[1]`, `[2]`, … for later items. |
 | `{{[first name]}}` | Names with spaces, capitals, or special characters. |
 

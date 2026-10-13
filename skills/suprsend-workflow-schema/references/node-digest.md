@@ -480,7 +480,7 @@ This documentation is built and hosted on [Mintlify](https://mintlify.com), a de
 **Field rules** (these override the table and the docs above):
 
 - `schedule_type` decides which field is **required**: `static` → `schedule`, `dynamic` → `dynamic_schedule_expr`, `category_digest_schedule` → neither.
-- `category_digest_schedule` uses the digest schedule of the workflow's preference category, always in the recipient's timezone. Publishing fails if that category has no digest schedule. At runtime, if the category schedule is missing, invalid or set to "instantly", the digest doesn't wait and the run continues at once. `$batched_events` / `$batched_events_count` are not set in that case.
+- `category_digest_schedule` uses the digest schedule of the workflow's preference category, always in the recipient's timezone. Publishing fails if that category has no digest schedule. At runtime, if the category schedule is missing, invalid or set to "instantly", the digest doesn't wait and the run continues at once with a batch of one: `$batched_events_count` is `1`, `$batched_events` holds just this event, and `$batch_key` is `""`.
 - `trigger_min_count` (digest only; ignore the schema's "in batch" note): integer 1–1,000,000, default 1. If fewer events than this have arrived when the schedule fires, the run ends without executing later nodes.
 - `retain_count`: 1–100, default 10. `retain_order`: `first` (default) keeps the oldest N in arrival order; `last` keeps the newest N, **newest first**.
 - Recipient timezone (`tz_selection: "recipient"`) resolves as user `$timezone` → tenant timezone → account timezone → UTC.

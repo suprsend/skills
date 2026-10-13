@@ -46,7 +46,7 @@ When `button_type` is `CALL_TO_ACTION` or `QUICK_REPLY`, at least one entry in `
 
 ## Validation rules (checked on save; a variant with errors can't be committed)
 
-**Restricted Handlebars.** In `header.text`, `body.text`, `footer.text`, button `text`, `url_static_part` and `url_dynamic_part`, only plain variables (`{{ order.id }}`) and inline helpers are allowed. Block helpers (`{{#if}}`, `{{#each}}`, …), partials (`{{> …}}`) and comments (`{{! …}}`) are rejected. Each variable becomes a positional parameter (`{{1}}`, `{{2}}`, …) in the approval submission.
+**Restricted Handlebars.** In `header.text`, `body.text`, `footer.text`, button `text`, `url_static_part` and `url_dynamic_part`, only plain variables (`{{ order.id }}`) and inline helpers are allowed. Block helpers (`{{#if}}`, `{{#each}}`, …), partials (`{{> …}}`) and comments (`{{! …}}`) are rejected. Each variable becomes a positional parameter (`{{1}}`, `{{2}}`, …) in the approval submission. The translation helper `{{t "key"}}` always fails at send in WhatsApp; localize with one variant per `locale`.
 
 **Mock data must cover every variable.** The template's mock data (the sample data in the Variables panel) is rendered to produce the example values sent for approval. Every variable in the header, body, `media_url` and `url_dynamic_part` must render to a **non-empty** value, otherwise the variant gets a `mock_data issue` error and the template can't be committed. Set mock data before committing.
 
@@ -139,7 +139,7 @@ Optional.
 {
   "category": "UTILITY",
   "subcategory": "basic_interactive",
-  "body": { "text": "Hi {{ first_name }}, your order {{ order.id }} has shipped and should arrive by {{ order.eta }}. Reply HELP if you need anything." }
+  "body": { "text": "Hi {{{ first_name }}}, your order {{ order.id }} has shipped and should arrive by {{ order.eta }}. Reply HELP if you need anything." }
 }
 ```
 

@@ -6,7 +6,11 @@ SuprSend docs are available at [docs.suprsend.com](https://docs.suprsend.com). E
 
 ### Find, then fetch
 
-1. **Find the page** — fetch `https://docs.suprsend.com/llms.txt`, the page index (every page with a one-line description). Pick the page(s) that match the question.
+1. **Find the page** — use the `llms.txt` indexes. `https://docs.suprsend.com/llms.txt` is the top-level index: it lists mostly API reference pages and links to sub-indexes, and many guide pages (e.g. batch, digest) appear **only** in a sub-index:
+   - Product guides → `https://docs.suprsend.com/_llms/documentation.txt`
+   - SDKs and developer guides → `https://docs.suprsend.com/_llms/developer-resources.txt`
+
+   For a conceptual or how-to question, start with the guides index. Follow any other `/_llms/` link the same way, then pick the page(s) that match the question.
 2. **Fetch only that page as Markdown** — append `.md` to its URL:
    - HTML page → `https://docs.suprsend.com/docs/quick-start-guide`
    - Markdown for the same page → `https://docs.suprsend.com/docs/quick-start-guide.md`

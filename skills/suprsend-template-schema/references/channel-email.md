@@ -19,7 +19,7 @@ For variants with `channel: "email"`.
 | subject | string | Yes |  |
 | body | any | Yes |  |
 
-`subject` and `body` are required. `templating_language` is fixed to `handlebars` — use `{{ variable }}` and standard Handlebars helpers inside string fields.
+`subject` and `body` are required. `templating_language` is fixed to `handlebars` — use `{{ variable }}` and standard Handlebars helpers inside string fields. Keep `{{ }}` in the HTML (safe by default). `subject`, `preheader` and the plain-text part aren't HTML, so escaping isn't needed there: use `{{{ variable }}}` (`{{ }}` would deliver `O&#x27;Brien`).
 
 ## Body
 
@@ -91,7 +91,7 @@ If the HTML has no `<body>` tag (or no `</head>`), the preheader (or markup) is 
 
 ```json
 {
-  "subject": "Welcome, {{ first_name }}",
+  "subject": "Welcome, {{{ first_name }}}",
   "body": {
     "type": "plain_text",
     "plain_text": { "text": "Thanks for joining Acme." }
@@ -103,7 +103,7 @@ If the HTML has no `<body>` tag (or no `</head>`), the preheader (or markup) is 
 
 ```json
 {
-  "subject": "Your receipt #{{ order.id }}",
+  "subject": "Your receipt #{{{ order.id }}}",
   "from_name": "Acme Billing",
   "from_address": "billing@acme.com",
   "reply_to": "support@acme.com",
@@ -112,7 +112,7 @@ If the HTML has no `<body>` tag (or no `</head>`), the preheader (or markup) is 
     "preheader": "Order summary attached",
     "raw": {
       "html": "<!DOCTYPE html><html><head><meta charset=\"utf-8\"></head><body><h1>Thanks for your order</h1><p>Total: {{ order.total_formatted }}</p></body></html>",
-      "text": "Thanks for your order. Total: {{ order.total_formatted }}"
+      "text": "Thanks for your order. Total: {{{ order.total_formatted }}}"
     }
   }
 }

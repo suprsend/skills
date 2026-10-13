@@ -4,6 +4,8 @@ Use a per-tenant variant when a template needs different content (subject line, 
 
 Selection: when a template is sent for a specific `tenant_id`, only variants with exactly that `tenant_id` or `tenant_id: null` are candidates. If the tenant has any variant for a base language, the `tenant_id: null` variants for that language are skipped — even if the tenant's variants have conditions that don't match — except `default`, which always remains the final fallback. If no tenant-specific variant exists for that language, the `null` variants are used. Locale is checked before tenant: if the tenant has no variant in the recipient's language, a tenant-less variant in that language beats the tenant's `en` variant.
 
+**Broadcasts select differently:** variants with `conditions` are never used (only `default` and condition-less variants are candidates), and the tenant comes before the locale — tenant + recipient locale → tenant + base language → tenant + `en` → tenant-less recipient locale → tenant-less base language → tenant-less `en`. So in a broadcast, the tenant's `en` variant beats a tenant-less `fr` variant.
+
 - **Channels are per template, not per variant.** Each channel picks its own variant, so a channel with no variant for the tenant still sends its tenant-less (usually `default`) content. To stop a channel for one tenant, use the tenant's `blocked_channels`.
 - **Sub-tenants don't inherit variants.** A variant for `acme` is not used for `acme`'s sub-tenants; create one per sub-tenant that needs it.
 

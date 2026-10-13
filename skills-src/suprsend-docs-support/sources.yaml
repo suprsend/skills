@@ -3,7 +3,7 @@ description: >
   Default skill for any SuprSend question that isn't strictly authoring JSON
   or running a CLI command. Fetch, search, read, and explain SuprSend
   documentation; answer "how does X work", "what is X", "show me the docs
-  for X". Provides the llms.txt page index + .md-suffix raw markdown
+  for X". Provides the llms.txt indexes + .md-suffix raw markdown
   workflow, the SuprSend MCP docs tools, the in-dashboard AI agent, in-app
   chat, Slack community, and email support. Examples that should load
   this skill: "fetch batching documentation", "explain digest nodes", "show

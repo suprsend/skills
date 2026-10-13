@@ -12,6 +12,7 @@ SuprSend offers two ways to localize a template:
 - Translations are **enabled for the account**. They are off by default on every plan; if they aren't on, use language variants instead.
 - A translation version has been **published** (draft files are not used).
 - The key exists in the recipient's locale file, its base language, or `en`.
+- The channel is **not WhatsApp**. WhatsApp templates render with no translation data, so `\{{t "key"}}` always fails there. Use one WhatsApp variant per `locale` instead.
 
 **Namespaces:** `\{{t "key"}}` reads only the `common` namespace — files named `{locale}.json` (e.g. `en.json`, `fr.json`). Keys in a namespaced file `{ns}.{locale}.json` (e.g. `billing.en.json`) need the prefix: `\{{t "billing:key"}}`.
 
@@ -22,6 +23,8 @@ Put the language in the variant's `locale` field — not in `conditions`. The re
 Selection: SuprSend tries locales in order — the recipient's locale, then its base language, then `en` (e.g. `fr-CA` → `fr` → `en`). The first variant (in that order, for the matched channel + tenant) whose conditions match is used; the `en` `default` variant is the final fallback. Locale codes are case-sensitive (`fr-CA`, not `fr-ca`).
 
 With tenants, locale is checked first: if the tenant has no variant in the recipient's language, a tenant-less variant in that language beats the tenant's `en` variant. If the tenant has any variant for a base language, the tenant-less variants for that language are skipped (except `default`). See {{ref-link "template-schema-guide.md" "Template Schema Guide"}} → Variant Selection.
+
+**Broadcasts select differently:** variants with `conditions` are never used (only `default` and condition-less variants are candidates), and the tenant comes before the locale — tenant + recipient locale → tenant + base language → tenant + `en` → tenant-less recipient locale → tenant-less base language → tenant-less `en`. So in a broadcast, the tenant's `en` variant beats a tenant-less `fr` variant.
 
 ## Documentation
 

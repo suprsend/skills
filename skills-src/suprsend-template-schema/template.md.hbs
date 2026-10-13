@@ -118,7 +118,7 @@ For the template syntax used inside content fields, see:
 - {{ref-link "handlebars-helpers.md" "Handlebars Helpers"}} — variables, conditionals, comparisons, date/array helpers. Default for every channel.
 - {{ref-link "jsonnet-syntax.md" "JSONNET Syntax"}} — always used for Slack `body_block` and MS Teams `body_card` (`body_type: "block"` / `"card"` forces `templating_language: "jsonnet"`).
 
-**Escaping:** `\{{ }}` HTML-escapes its output (`&` → `&amp;`, `'` → `&#x27;`, `=` → `&#x3D;`) and SuprSend does not unescape it for SMS, push, WhatsApp, or inbox — URLs and text arrive escaped. Use triple braces `\{{{ }}}` for URLs and raw text in non-HTML channels.
+**Escaping:** default to `\{{ }}`. It HTML-escapes its output (`&` → `&amp;`, `'` → `&#x27;`, `=` → `&#x3D;`), which keeps HTML outputs (email HTML body, Inbox body) safe from injected markup. Use triple braces `\{{{ }}}` only where HTML escaping isn't needed — SMS, push, WhatsApp, Slack text mode, Inbox header / subtext / URLs, and the email subject, preheader and plain-text part. SuprSend never unescapes, so `\{{ }}` there delivers `O&#x27;Brien`.
 
 ## Related skills
 

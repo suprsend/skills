@@ -108,6 +108,8 @@ When a workflow sends a template, SuprSend picks one variant per channel using:
 3. **Order** — by locale fallback position first, then non-`default` variants before `default`, then `seq_no` ascending.
 4. **First match wins** — variants are evaluated in that order and the first whose `conditions` match (or are `null`) is used.
 
+**Broadcasts select differently:** variants with `conditions` are never used (only `default` and condition-less variants are candidates), and the tenant comes before the locale — tenant + recipient locale → tenant + base language → tenant + `en` → tenant-less recipient locale → tenant-less base language → tenant-less `en`. So in a broadcast, the tenant's `en` variant beats a tenant-less `fr` variant.
+
 Consequences:
 
 - **Locale beats tenant.** If the tenant has no variant in the recipient's language, a tenant-less variant in that language wins over the tenant's `en` variant (e.g. recipient `fr`, variants `acme-en` and `default-fr` → `default-fr`).

@@ -49,7 +49,7 @@ The table lists every delivery property. Each node type keeps only some of them,
 |---|---|
 | Single-channel (`send_email`, `send_sms`, …) | `template`, `success`. The channel is fixed by the node type (`send_mobile_push` = `androidpush` + `iospush`). |
 | `send_multi_channel` | `template`, `channels`, `channels_expr`, `success` |
-| `send_smart_channel_routing` | `template`, `channels_expr`, `success`, `ttl_value`, `mandatory_channels`, `routing_basis`, `routing_channels_sequence`. There is **no `channels`**: it routes across all live template channels unless `channels_expr` narrows them. |
+| `send_smart_channel_routing` | `template`, `channels_expr`, `success`, `ttl_value`, `mandatory_channels`. There is **no `channels`**: it routes across all live template channels unless `channels_expr` narrows them. `routing_basis` and `routing_channels_sequence` are also dropped. |
 
 {{schema-table (get send_schema "$definitions.send_node_props")}}
 
@@ -58,7 +58,7 @@ The table lists every delivery property. Each node type keeps only some of them,
 - `template`: slug of an existing, **published** template. Otherwise the node errors on save.
 - `success`: `delivered` | `seen` | `interaction` | a custom event name. **Required on `send_smart_channel_routing`** — workflow JSON without it is rejected on save. On other delivery nodes it defaults to `seen`. A custom event counts only if it happens within 1 day of the send (fixed window). On an event-triggered workflow, a success event that is also a trigger event is rejected at publish. Only smart routing acts on it by stopping the remaining channels. On other nodes it is analytics only.
 - `ttl_value` (smart routing): default `1h`. Use a duration like `30m` or `1h30m`: no spaces, hours ≤ 23, minutes and seconds ≤ 59, greater than 0, at most 90 days ([Duration format](workflow-schema-guide.md#duration-format)).
-- `routing_basis` (smart routing): `cost_low_to_high` (default) | `channels_sequence`. With `channels_sequence`, `routing_channels_sequence` (non-empty channel list) is required. Listed channels go first and the rest follow by cost. The saved order may not match what you sent, so read the node back to check.
+- **Channel order (smart routing):** workflow JSON can't set a channel sequence. `routing_basis` and `routing_channels_sequence` are dropped on save without an error, and the node always routes by cost, lowest first. Don't include them.
 - `mandatory_channels` (smart routing): sent at T+0. Setting it turns off the automatic "inbox at T+0" behaviour, and when a listed channel is reachable for the user, the routed channels start one interval after T+0 (interval = `ttl_value` ÷ number of routed channels). See the example below.
 
 ### Channel values
@@ -98,7 +98,6 @@ The table lists every delivery property. Each node type keeps only some of them,
   "properties": {
     "template": "payment-reminder",
     "ttl_value": "1h",
-    "routing_basis": "cost_low_to_high",
     "mandatory_channels": ["inbox"],
     "success": "seen"
   }

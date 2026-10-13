@@ -100,7 +100,7 @@ NEVER mix Handlebars `{{ }}` and JSONNET in the same template.
 ```json
 {
   "body_type": "text",
-  "body_text": "Build failed for {{ repo }} on branch {{ branch }} — {{ commit.author }} broke main"
+  "body_text": "Build failed for {{{ repo }}} on branch {{{ branch }}} — {{{ commit.author }}} broke main"
 }
 ```
 

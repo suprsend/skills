@@ -244,7 +244,7 @@ sources:
     replacements:
       # Inbox is only auto-first when neither mandatory_channels nor a channel sequence is set.
       - find: 'Inbox is always delivered at T+0** - it is exempt from channel routing entirely. Regardless of the optimize-on setting, channel order, or cost, Inbox fires immediately alongside the first outside-app channel whenever it is active on the template and user profile. It does not count toward the outside-app channel sequence or interval calculation.'
-        replace: 'Inbox is delivered at T+0 only in the default setup** - when neither Must Send To (`mandatory_channels`) nor a channel sequence (`routing_basis: "channels_sequence"`) is set. Then Inbox fires immediately alongside the first outside-app channel and does not count toward the sequence or interval calculation. If either setting is used, Inbox gets no special treatment: it is ordered like any other channel (by cost, or by its position in the sequence) unless you list it in `mandatory_channels`.'
+        replace: 'Inbox is delivered at T+0 only in the default setup** - when neither Must Send To (`mandatory_channels`) nor a channel sequence is set. Then Inbox fires immediately alongside the first outside-app channel and does not count toward the sequence or interval calculation. If either setting is used, Inbox gets no special treatment: it is ordered like any other channel (by cost, or by its position in the sequence) unless you list it in `mandatory_channels`.'
       - find: 'Notifications go out in this sequence:'
         replace: 'Default sequence (no Must Send To channel, no channel sequence):'
       # Interval differs when a Must Send To channel is sent at T+0.
@@ -259,7 +259,7 @@ sources:
         replace: |-
           Sets the order in which outside-app channels are attempted. The default is **cost** - channels are tried from lowest to highest cost based on your vendor settings.
 
-          In workflow JSON this is `routing_basis`: `"cost_low_to_high"` (default) or `"channels_sequence"`. With `"channels_sequence"`, also pass `routing_channels_sequence` (non-empty list of channel values): listed channels go first in list order, unlisted ones follow by cost. The saved sequence may not keep the order you sent, so read the node back after saving to check it.
+          Workflow JSON can't set the channel order: `routing_basis` and `routing_channels_sequence` are dropped on save without an error, so a node saved from JSON always routes by cost.
       - find: 'Channels listed here are delivered to **immediately at T+0**, outside of routing order. Use this for channels that must always receive the notification regardless of sequencing.'
         replace: 'Channels listed here (`mandatory_channels`) are delivered to **immediately at T+0**, outside of routing order. Use this for channels that must always receive the notification regardless of sequencing. Setting it turns off the automatic Inbox-at-T+0 rule (add `inbox` here if you need it immediately), and when a must-send channel is sent, the first routed channel waits one full interval instead of going at T+0.'
       - find: 'This is expected. Inbox is exempt from routing logic and always fires at T+0 - alongside the first outside-app channel (Email, in this case).'

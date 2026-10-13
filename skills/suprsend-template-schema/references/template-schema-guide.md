@@ -151,6 +151,8 @@ When a workflow sends a template, SuprSend picks one variant per channel using:
 3. **Order** — by locale fallback position first, then non-`default` variants before `default`, then `seq_no` ascending.
 4. **First match wins** — variants are evaluated in that order and the first whose `conditions` match (or are `null`) is used.
 
+**Broadcasts select differently:** variants with `conditions` are never used (only `default` and condition-less variants are candidates), and the tenant comes before the locale — tenant + recipient locale → tenant + base language → tenant + `en` → tenant-less recipient locale → tenant-less base language → tenant-less `en`. So in a broadcast, the tenant's `en` variant beats a tenant-less `fr` variant.
+
 Consequences:
 
 - **Locale beats tenant.** If the tenant has no variant in the recipient's language, a tenant-less variant in that language wins over the tenant's `en` variant (e.g. recipient `fr`, variants `acme-en` and `default-fr` → `default-fr`).
@@ -260,7 +262,7 @@ For **WhatsApp** and **SMS (DLT)** variants, committing puts the variant into **
 
 ## How selection works at send time
 
-When a notification is triggered, SuprSend picks one variant per channel. Candidates are variants whose **Tenant** is empty or exactly the send's tenant and whose **Locale** is in the recipient's fallback list (for example `hi-IN` → `hi` → `en`). They are tried by locale first, then non-default variants in panel order, and the first whose conditions match is sent. The **default** variant (always at the top of the panel) is tried last, as the fallback.
+When a notification is triggered, SuprSend picks one variant per channel. Candidates are variants whose **Tenant** is empty or exactly the send's tenant and whose **Locale** is in the recipient's fallback list (for example `hi-IN` → `hi` → `en`). They are tried by locale first, then non-default variants in panel order, and the first whose conditions match is sent. The **default** variant (always at the top of the panel) is tried last, as the fallback. Broadcasts use a simpler rule: variants with conditions are ignored, and the tenant is checked before the locale (a tenant's `en` variant beats a tenant-less variant in the recipient's language).
 
 * Conditions added with **+ OR** are alternatives — the variant matches if any one of them is true. The rules inside a single condition must all be true.
 * **Tenant** and **locale** are soft checks with fallback, and **locale comes first**: recipient locale → base language → `en`. Within a base language, if the tenant has any variant for it, tenant-less variants for that language are skipped (even if the tenant's variants don't match); otherwise tenant-less variants are used. So for a French recipient a tenant-less `fr` variant beats the tenant's `en` variant. Sub-tenants don't inherit a parent tenant's variants.

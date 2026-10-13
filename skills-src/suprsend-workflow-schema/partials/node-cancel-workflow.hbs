@@ -4,6 +4,8 @@
 
 Cancels other **in-progress** runs in the same workspace — for example, stop a pending payment-reminder sequence once the payment arrives. Runs paused in a delay, batch, digest, or wait-until node count as in-progress. The node never cancels the run it is executing in.
 
+**Batch and digest:** when a run's event joins a batch or digest that is already open, that run ends at once and the event is carried by the run that opened the batch. A `cancellation_key` taken from a later event therefore matches nothing, because its run has already ended. Only the run that opened the batch can be cancelled (it has the first event's key), and cancelling it drops every event in the batch.
+
 ## Schema Properties
 
 {{schema-table (get other_funcs_schema "$definitions.cancelworkflow_props")}}
@@ -29,8 +31,8 @@ If a filter can't be resolved — an expression fails, `actor` is selected but t
 A run only has a cancellation key if one was assigned when it started:
 
 1. **API trigger** — a literal `cancellation_key` in the trigger request body.
-2. **Workflow root `cancellation_key`** — a JSONNET expression evaluated at trigger time against the trigger data plus `$recipient`, `$actor`, and `$tenant` (used when the API request doesn't pass one). If it fails to evaluate, the run starts without a key.
-3. **`invokeworkflow` `cancellation_key`** — sets the key on the invoked child run.
+2. **Workflow root `cancellation_key`** — a JSONNET expression evaluated at trigger time against the trigger data plus `$recipient`, `$actor`, and `$tenant` (used when the trigger doesn't pass a non-empty key). If it fails to evaluate, the run starts without a key.
+3. **`invokeworkflow` `cancellation_key`** — evaluated in the parent run and sent as the child's trigger key (case 1), so it overrides the child's root expression. If it evaluates to `null` or `""`, the child's root expression is used instead. If it fails to evaluate, the child workflow is **not invoked at all**. Don't copy the `error "..."` guard from the warning above into an `invokeworkflow` node unless skipping the invoke is what you want.
 
 Keys are trimmed, truncated to 512 characters, must evaluate to a scalar, and are matched exactly.
 

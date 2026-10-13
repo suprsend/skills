@@ -78,7 +78,7 @@ sources:
       - find: |-
           When a notification is triggered, SuprSend evaluates all non-default variants in the order they appear in the panel. The first one whose conditions all match is sent. If no variant matches, the **default** (always at the top) is sent as the fallback.
         replace: |-
-          When a notification is triggered, SuprSend picks one variant per channel. Candidates are variants whose **Tenant** is empty or exactly the send's tenant and whose **Locale** is in the recipient's fallback list (for example `hi-IN` → `hi` → `en`). They are tried by locale first, then non-default variants in panel order, and the first whose conditions match is sent. The **default** variant (always at the top of the panel) is tried last, as the fallback.
+          When a notification is triggered, SuprSend picks one variant per channel. Candidates are variants whose **Tenant** is empty or exactly the send's tenant and whose **Locale** is in the recipient's fallback list (for example `hi-IN` → `hi` → `en`). They are tried by locale first, then non-default variants in panel order, and the first whose conditions match is sent. The **default** variant (always at the top of the panel) is tried last, as the fallback. Broadcasts use a simpler rule: variants with conditions are ignored, and the tenant is checked before the locale (a tenant's `en` variant beats a tenant-less variant in the recipient's language).
       - find: |-
           * All conditions on a variant must be true - partial matches are skipped.
         replace: |-
@@ -111,11 +111,11 @@ sources:
       - find: |-
           | `{{ var }}` | Default. HTML-escapes `<`, `>`, `"`, `'`, `&` into HTML entities. |
         replace: |-
-          | `{{ var }}` | Default. HTML-escapes `<`, `>`, `"`, `'`, `&`, `` ` ``, `=` into HTML entities — in **every** channel. SMS, push, WhatsApp, and Inbox deliver the entities as-is (`O&#x27;Brien &amp; Sons`). |
+          | `{{ var }}` | Default — use it unless HTML escaping isn't needed. HTML-escapes `<`, `>`, `"`, `'`, `&`, `` ` ``, `=` into HTML entities in **every** channel and field. Safe in HTML outputs (email HTML body, Inbox body). In plain-text outputs (SMS, push, WhatsApp, Slack text, email subject / preheader / plain-text part) the entities are delivered as-is (`O&#x27;Brien &amp; Sons`). |
       - find: |-
           | `{{{ var }}}` | Unescaped. Use for URLs and values that must keep `&`, `?`, `=`. Can inject HTML. |
         replace: |-
-          | `{{{ var }}}` | Unescaped. Use for URLs, and for text in non-HTML channels (SMS, push, WhatsApp, Inbox) so `'`, `&`, `=` arrive unchanged. Can inject HTML — in email, use only for trusted values. |
+          | `{{{ var }}}` | Unescaped. Use only where HTML escaping isn't needed: plain-text outputs (SMS, push, WhatsApp, Slack text, Inbox header / subtext / URLs, email subject / preheader / plain-text part), so `'`, `&`, `=` arrive unchanged. Can inject HTML — don't use it for user-supplied values in the email HTML body or Inbox body. |
       - find: |-
           | `{{$actor.name}}` | Actor on the trigger. Empty if the trigger has no actor. |
         replace: |-
@@ -233,7 +233,7 @@ sources:
       - find: "create variants with combined conditions — for example, locale `es` + tenant `acme`"
         replace: "set both the **Locale** and **Tenant** fields on one variant — for example, locale `es` + tenant `acme`"
       - find: "The fallback order: tenant+locale → tenant+default locale → default tenant+locale → default."
-        replace: "The fallback order is locale first: recipient locale → base language → `en`. Within a base language, the tenant's variants replace the tenant-less ones if the tenant has any for that language (even if they don't match); otherwise the tenant-less ones are used. So for a Spanish recipient a tenant-less `es` variant beats Acme's `en` variant."
+        replace: "The fallback order is locale first: recipient locale → base language → `en`. Within a base language, the tenant's variants replace the tenant-less ones if the tenant has any for that language (even if they don't match); otherwise the tenant-less ones are used. So for a Spanish recipient a tenant-less `es` variant beats Acme's `en` variant. Broadcasts are the exception: there the tenant comes first, so Acme's `en` variant wins."
 
   - type: docs
     key: docs_tenant_templates
