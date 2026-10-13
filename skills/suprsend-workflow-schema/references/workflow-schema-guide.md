@@ -31,24 +31,27 @@ A workflow JSON has top-level metadata and a `tree` containing an array of `node
 | --- | --- | --- | --- |
 | $schema | string | No |  |
 | name | string | Yes | Workflow name |
-| description | string | null | No | Workflow description |
+| description | string \| null | No | Workflow description |
 | category | string | Yes | Preference category slug |
 | trigger_type | string | Yes | trigger type |
-| trigger_events | array | null | No | Array of event names that can trigger this workflow |
-| tags | array | null | No | optional tags for workflow |
-| ratelimit | object | null | No | ratelimit for a workflow/recipient. [count=2 in window=30d] |
-| conditions | array | null | No | trigger workflow only if these conditions satisfy |
-| override_recipients_type | string | null | No | override recipients using trigger payload. (applicable only if trigger_type=event) |
-| override_recipients_user_expr | string | null | No | a jq-expression to evaluate new recipients of type user (if override_recipients_type=user) |
-| override_recipients_single_object_fields_expr | object | null | No | overrides original recipient with an object. object-type and id are evaluated using jq-expr (if override_recipients_type=single_object_fields) |
-| override_actor_user_expr | string | null | No | a jq-expression to evaluate actor. (applicable only if trigger_type=event) |
-| override_tenant_expr | string | null | No | a jq-expression to evaluate tenant. (applicable only if trigger_type=event) |
+| trigger_events | array \| null | No | Array of event names that can trigger this workflow |
+| tags | array \| null | No | optional tags for workflow |
+| ratelimit | object \| null | No | ratelimit for a workflow/recipient. [count=2 in window=30d] |
+| conditions | array \| null | No | trigger workflow only if these conditions satisfy |
+| override_recipients_type | string \| null | No | override recipients using trigger payload. (applicable only if trigger_type=event) |
+| override_recipients_user_expr | string \| null | No | a jq-expression to evaluate new recipients of type user (if override_recipients_type=user) |
+| override_recipients_single_object_fields_expr | object \| null | No | overrides original recipient with an object. object-type and id are evaluated using jq-expr (if override_recipients_type=single_object_fields) |
+| override_actor_user_expr | string \| null | No | a jq-expression to evaluate actor. (applicable only if trigger_type=event) |
+| override_tenant_expr | string \| null | No | a jq-expression to evaluate tenant. (applicable only if trigger_type=event) |
+| cancellation_key | string \| null | No | JSONNET expression evaluated at trigger time to set a cancellation key for this workflow run |
 | tree | object | Yes |  |
 
 ### Required fields
 
 - `name`, `category`, `trigger_type`, `tree`
 - When `trigger_type` is `"event"`, `trigger_events` is also required
+- `category` must be the slug of a **published** notification category in the workspace; otherwise the save fails with `{"category": "'<slug>' not found"}`. The slugs in this guide (`billing`, `collaboration`, …) are placeholders — use an existing one.
+- `ratelimit` (optional): `count` is an integer 1–100; `sliding_window` follows the [Duration Format](#duration-format) rules.
 
 ### Trigger type values
 
@@ -112,6 +115,7 @@ Every node in the `tree.nodes` array has a `node_type` field. Valid types:
 - `send_ms_teams`
 - `transform`
 - `invokeworkflow`
+- `cancelworkflow`
 - `userupdate`
 - `subscriberlistoperation_adduser`
 - `subscriberlistoperation_removeuser`
@@ -125,18 +129,18 @@ Every node in the `tree.nodes` array has a `node_type` field. Valid types:
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
 | node_type | string | Yes | The type of the Node |
-| name | string | null | No | The name of the Node |
-| description | string | null | No | Node Description |
-| ref | string | null | No | ref of the Node. Must be unique within a workflow across all nodes and branches |
-| properties | object | null | Yes |  |
+| name | string \| null | No | The name of the Node |
+| description | string \| null | No | Node Description |
+| ref | string \| null | No | ref of the Node. Must be unique within a workflow across all nodes and branches |
+| properties | object \| null | Yes |  |
 | branches | array | No |  |
 
 ## How Nodes Connect
 
 - Nodes in the `tree.nodes` array execute **sequentially** from first to last.
 - **Branch nodes** (`branch`, `branch_waituntil`) contain a `branches` array. Each branch has its own `nodes` array for the sub-workflow within that branch.
-- After all branches of a branch node complete, execution continues with the next node in the parent array.
-- Every workflow must include at least one **delivery node** (`send_*`) or HTTP API node.
+- Only **one** branch runs: the first whose conditions match (in order), else the default branch. After its nodes finish, execution continues with the next node in the parent array — for every branch. To stop a path, put the follow-on nodes inside the branches that should continue instead of after the branch node.
+- Every workflow must include at least one action node: delivery (`send_*`), HTTP API, list operation, object operation, `userupdate`, `invokeworkflow`, or `cancelworkflow`.
 
 ## Common Workflow Patterns
 
@@ -160,7 +164,7 @@ Every node in the `tree.nodes` array has a `node_type` field. Valid types:
   "tree": {
     "nodes": [
       { "node_type": "batch", "properties": { "mode": "accumulate_all", "window_type": "fixed", "fixed_window": "1h" } },
-      { "node_type": "transform", "properties": { "variables": [{ "key": "summary", "value_lang": "handlebars", "value": "You have  new updates" }] } },
+      { "node_type": "transform", "properties": { "variables": [{ "key": "summary", "value_lang": "handlebars", "value": "You have {{$batched_events_count}} new updates" }] } },
       { "node_type": "send_multi_channel", "properties": { "template": "activity-digest", "channels": ["email", "inbox"] } }
     ]
   }
@@ -179,12 +183,12 @@ Every node in the `tree.nodes` array has a `node_type` field. Valid types:
         "branches": [
           {
             "name": "VIP users", "is_default": false,
-            "conditions": [{ "type": "expression_v1", "expression_v1": { "op": "AND", "args": [{ "variable_ns": "$recipient", "variable": "plan", "op": "==", "value": "enterprise" }] } }],
+            "conditions": [{ "type": "expression_v1", "expression_v1": { "op": "AND", "args": [{ "variable_ns": "$recipient", "variable": "plan", "op": "==", "value": "\"enterprise\"" }] } }],
             "nodes": [{ "node_type": "send_smart_channel_routing", "properties": { "template": "vip-alert", "success": "seen" } }]
           },
           {
             "name": "Default", "is_default": true,
-            "conditions": [{ "type": "expression_v1", "expression_v1": { "op": "AND", "args": [] } }],
+            "conditions": [],
             "nodes": [{ "node_type": "send_email", "properties": { "template": "standard-alert" } }]
           }
         ]
@@ -224,15 +228,21 @@ Every node in the `tree.nodes` array has a `node_type` field. Valid types:
 
 ## Duration Format
 
-Used across delay, batch, digest, and ratelimit properties.
+Used by fixed delay `value`, fixed `relative_to.offset_value`, the wait-until timeout's fixed delay, batch `fixed_window`, the send node's `ttl_value`, and the workflow `ratelimit.sliding_window`.
 
-Pattern: `^(\d+[dhms])+$`
+Pattern: `^(\d+[dhms])+$` — but the pattern alone is not enough. On save the value is also rejected unless:
 
-Examples: `30s`, `5m`, `1h30m`, `2d`, `1d12h30m`
+- **hours are 0–23, minutes 0–59, seconds 0–59** — roll over into the next unit: write `2d`, not `48h`; `1h30m`, not `90m`; `2d12h`, not `1d36h`;
+- the total is **greater than 0** (`0s` is rejected) and **at most 90 days** (`90d`);
+- there are **no spaces** between units (`1h 30m` is rejected).
+
+Valid: `30s`, `5m`, `1h30m`, `2d`, `1d12h30m`, `90d`. Rejected: `48h`, `90m`, `36h`, `1d36h`, `0s`, `91d`.
+
+Dynamic values (jq-expressions resolved at run time) are not checked on save.
 
 ## Condition Expressions
 
-Conditions use the `expression_v1` format with an AND/OR operator and comparison args:
+Conditions use the `expression_v1` format. `expression_v1.op` is always `"AND"` — all `args` must match. For OR, add multiple objects to the `conditions` array (each is OR'd). Limits (rejected on save): 10 `args` per `expression_v1`, 10 conditions per branch, `variable` and `value` at most 512 characters each.
 
 ```json
 {
@@ -241,22 +251,30 @@ Conditions use the `expression_v1` format with an AND/OR operator and comparison
     "op": "AND",
     "args": [
       { "variable": "amount", "op": ">=", "value": "100" },
-      { "variable_ns": "$recipient", "variable": "plan", "op": "==", "value": "premium" }
+      { "variable_ns": "$recipient", "variable": "plan", "op": "==", "value": "\"premium\"" }
     ]
   }
 }
 ```
 
+`value` is parsed as an expression: wrap string literals in escaped quotes (`"\"premium\""`). Numbers (`"100"`), `true` / `false`, `null`, and arrays (`"[\"a\", \"b\"]"`) can be bare; a bare word such as `"premium"` is read as a **variable path** in the trigger payload, not a string.
+
+- **`EMPTY` / `NON_EMPTY`** (no `value` needed): `EMPTY` is true when the key is missing or is `null`, `""`, `false`, `0`, `[]` or `{}`. So `NON_EMPTY` is **false** for `0` and `false` — use `==` / `!=` to test numbers and booleans.
+- **`ARRAY_INTERSECTS` / `NOT_ARRAY_INTERSECTS`**: write `value` as an array literal, e.g. `"[\"admin\", \"owner\"]"` (or a variable holding an array). A comma-separated string like `"\"admin,owner\""` is not split.
+- **Tenant custom properties**: on the left use `"variable_ns": "$tenant"`, `"variable": "properties.<key>"`; inside `value` write `$tenant.properties.<key>`. A bare `properties.<key>` in `value` reads the **trigger payload**, not the tenant.
+
 ### Variable namespaces
 
 | Namespace | Data Source |
 |---|---|
-| *(empty string)* | Input payload — data from trigger event properties |
+| *(empty string)* | Trigger payload plus outputs of earlier nodes (transform variables, fetch `output_key`); after a batch/digest also `$batched_events`, `$batched_events_count`, `$batch_key` |
 | `$actor` | Properties of the user who performed the action |
 | `$recipient` | Properties of the user receiving the notification |
-| `$brand` | Properties of the tenant/brand |
+| `$tenant` | Properties of the tenant (`$brand` is the legacy alias — don't emit it). Custom properties: `variable: "properties.<key>"` |
 | `$organization` | Organization-level properties |
-| `$future_event` | Properties of a future event (used in wait-until conditions) |
+| `$category` | The workflow category's `properties.<key>` or `digest_schedule.<key>` (branch node only) |
+| `$ref` | Output of an earlier send node, set via `ref` — e.g. `message_status` with `IS` / `IS_NOT` and `$message.delivered` / `seen` / `clicked` / `delivery_failed` (branch node only) |
+| `$future_event` | Properties of the awaited event (wait-until `event_conditions` only) |
 
 ### Comparison operators
 
@@ -279,10 +297,14 @@ Conditions use the `expression_v1` format with an AND/OR operator and comparison
 ## Validation Rules
 
 - Every workflow must have `name`, `category`, `trigger_type`, and `tree`
-- `tree.nodes` must contain at least one delivery node (`send_*`) or HTTP API node
-- Branch nodes must have exactly one default branch (`is_default: true`) as the last item
+- The tree must contain at least one action node: delivery (`send_*`), HTTP API, list operation, object operation, `userupdate`, `invokeworkflow`, or `cancelworkflow`. There is no rule about which node comes last.
+- `tree.nodes` holds at most 25 top-level nodes in the published JSON schema (nested branch nodes aren't counted, and the API doesn't enforce it on save)
+- Every branch node has exactly one default branch (`is_default: true`) as the last item. For `branch` its conditions are empty (`"conditions": []`); for `branch_waituntil` it holds **exactly one** `type: "delay"` condition (the timeout)
+- Branch names must be unique within a branch node
 - `branch_waituntil` must have exactly 2 branches: one condition branch and one timeout (default) branch
-- Node `ref` values must be unique across the entire workflow (nodes and branches)
+- `trigger_events` must not include any wait-until event or delivery success event used in the same workflow (checked at publish, not on save; the success-event check is currently skipped when the workflow also has a wait-until event, so don't rely on it)
+- Node `ref` values must be unique across the entire workflow (nodes and branches), match `^[a-zA-Z_][a-zA-Z0-9_]*$` and be at most 64 characters — like a variable name: `welcome_email`, not `welcome-email`
+- `category` must be an existing published category slug; durations must follow the [Duration Format](#duration-format) rules
 
 ## Schema References
 

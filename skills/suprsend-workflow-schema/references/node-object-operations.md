@@ -1,5 +1,9 @@
 # Object Operation Nodes
 
+## Verified behaviour (overrides the docs below)
+
+- **Only users are subscribed / unsubscribed.** A selected actor or recipient that is an object is skipped; if none of the selected entities is a user, the node fails (logged; the run continues).
+
 ## Subscribe to Object
 
 **Schema `node_type`:** `objectoperation_addsubscription`
@@ -8,7 +12,7 @@
 
 # Subscribe to Object
 
-> Dynamically add users in object subscription within a workflow.
+> Use the Subscribe to Object workflow node to dynamically add recipients or actors to an object subscription based on incoming events without custom APIs.
 
 You can use this node to dynamically add recipient or actor in [object subscription](/docs/object-subscriptions) based on an event or action.
 
@@ -29,9 +33,12 @@ One common use case of creating object dynamically is when you need to create di
 
 ### Subscription properties
 
-Subscription properties are the set of variables defining relationship between a subscriber and an object. During a workflow execution, these properties can be accessed under the `recipient.subscription` namespace as `recipient.subscription.property_key`. Subscription properties are added in [JSONNET](https://jsonnet.org/ref/language.html) format. You can [read more about object subscription here](/docs/object-subscriptions).
+Subscription properties are the set of variables defining relationship between a subscriber and an object. During a workflow execution, these properties can be accessed as `$recipient.subscription.<key>` (Handlebars) or `data["$recipient"].subscription.<key>` (JSONNET) — only in runs that reached the recipient through an object fan-out (workflow triggered on the object, sent to its subscribers). Subscription properties are added in [JSONNET](https://jsonnet.org/ref/language.html) format. You can [read more about object subscription here](/docs/object-subscriptions).
 
 ***
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 
 ## Unsubscribe from Object
 
@@ -41,7 +48,7 @@ Subscription properties are the set of variables defining relationship between a
 
 # Unsubscribe from Object
 
-> Dynamically remove users from object subscription within a workflow.
+> Use the unsubscribe from object node to dynamically remove recipients from an object subscription inside a workflow based on events, conditions, or actions.
 
 You can use this node to dynamically remove recipient or actor from [object subscription](/docs/object-subscriptions) based on an event or action.
 
@@ -60,9 +67,12 @@ One common use case of creating object dynamically is when you need to compute o
 
 ### Subscription properties
 
-Subscription properties are the set of variables defining relationship between a subscriber and an object. During a workflow execution, these properties can be accessed under the `recipient.subscription` namespace as `recipient.subscription.property_key`. Subscription properties are added in [JSONNET](https://jsonnet.org/ref/language.html) format. You can [read more about object subscription here](/docs/object-subscriptions).
+Subscription properties are the set of variables defining relationship between a subscriber and an object. During a workflow execution, these properties can be accessed as `$recipient.subscription.<key>` (Handlebars) or `data["$recipient"].subscription.<key>` (JSONNET) — only in runs that reached the recipient through an object fan-out (workflow triggered on the object, sent to its subscribers). Subscription properties are added in [JSONNET](https://jsonnet.org/ref/language.html) format. You can [read more about object subscription here](/docs/object-subscriptions).
 
 ***
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 
 ## Schema Properties (shared)
 
@@ -73,7 +83,7 @@ Subscription properties are the set of variables defining relationship between a
 | object_id | string | Yes | static literal OR a handlebars expression (if dynamic) |
 | create_object_if_missing | boolean | No | applicable when op=add_subscription. should object be created in doesn't exist? |
 | user_selection | array | Yes |  |
-| subscription_properties | string | null | No | subscription properties. JSONNET expression that evaluates to a map/dictionary |
+| subscription_properties | string \| null | No | subscription properties. JSONNET expression that evaluates to a map/dictionary |
 
 ### User selection values
 
@@ -106,8 +116,8 @@ Subscription properties are the set of variables defining relationship between a
   "properties": {
     "op": "add_subscription",
     "is_object_id_dynamic": true,
-    "object_type": "",
-    "object_id": "",
+    "object_type": "{{group_type}}",
+    "object_id": "{{group_id}}",
     "user_selection": ["recipient"],
     "create_object_if_missing": true
   }

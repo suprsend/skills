@@ -24,11 +24,13 @@ export function registerHelpers(hbs: typeof Handlebars): void {
   hbs.registerHelper("schema-table", (schema: SchemaObj) => {
     if (!schema?.properties) return "";
     const required = new Set(schema.required ?? []);
+    // Escape pipes and flatten newlines so every row keeps exactly 4 columns
+    const cell = (s: string) => s.replace(/\|/g, "\\|").replace(/\n/g, " ");
     const rows = Object.entries(schema.properties).map(([name, prop]) => {
       const type = Array.isArray(prop.type) ? prop.type.join(" | ") : (prop.type ?? "any");
       const req = required.has(name) ? "Yes" : "No";
-      const desc = (prop.description ?? "").replace(/\|/g, "\\|").replace(/\n/g, " ");
-      return `| ${name} | ${type} | ${req} | ${desc} |`;
+      const desc = prop.description ?? "";
+      return `| ${cell(name)} | ${cell(type)} | ${req} | ${cell(desc)} |`;
     });
     const header = "| Property | Type | Required | Description |\n| --- | --- | --- | --- |";
     return new hbs.SafeString(`${header}\n${rows.join("\n")}`);
@@ -84,9 +86,15 @@ export function registerHelpers(hbs: typeof Handlebars): void {
   });
 
   // {{ref-link "file.md" "Label"}} — Link to references/ file
-  hbs.registerHelper("ref-link", (filename: string, label: unknown) => {
+  // Resolves relative to the file being rendered: SKILL.md (no outputSubdir),
+  // a sibling inside references/, or ../references/ from scripts/ or assets/.
+  hbs.registerHelper("ref-link", (filename: string, ...rest: unknown[]) => {
+    const options = rest[rest.length - 1] as Handlebars.HelperOptions;
+    const label = rest.length > 1 ? rest[0] : undefined;
     const displayLabel = typeof label === "string" ? label : filename;
-    return new hbs.SafeString(`[${displayLabel}](references/${filename})`);
+    const subdir = options?.data?.outputSubdir;
+    const prefix = !subdir ? "references/" : subdir === "references" ? "" : "../references/";
+    return new hbs.SafeString(`[${displayLabel}](${prefix}${filename})`);
   });
 
   // {{truncate text 500}} — Truncate text to N chars

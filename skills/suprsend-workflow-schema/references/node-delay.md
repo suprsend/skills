@@ -8,7 +8,7 @@
 
 # Delay
 
-> Learn about delay node in workflow and how to use it to add wait between workflow steps.
+> Use the delay node in SuprSend workflows to pause execution for a fixed, dynamic, or specific time before moving to the next step for reminders and follow ups.
 
 Delay node halts the workflow for a given time period before moving to the next step. It is best used in case of reminders and re-engagement notifications where you want to bring back user to the product after a period of their last action.
 
@@ -16,7 +16,7 @@ There are 3 types of delay types available: **Fixed** (fixed for all users), **D
 
 
   ### Fixed
-    Fixed delay is defined in your workflow form as `**d **h **m **s` and it delays the workflow for a fixed duration for all users.
+    Fixed delay is defined in your workflow form as `xxd xxh xxm xxs` (in workflow JSON: no spaces, hours 0–23, minutes/seconds 0–59, total > 0 and ≤ 90d — e.g. `"value": "2d"`, not `"48h"`) and it delays the workflow for a fixed duration for all users.
 
     
 
@@ -54,7 +54,7 @@ There are 3 types of delay types available: **Fixed** (fixed for all users), **D
 
     Your duration key variable can be computed to either:
 
-    * An ISO-8601 timestamp (for example 2024-03-02T20:34:07Z) which must be a datetime in the future, or
+    * An ISO-8601 timestamp (for example 2024-03-02T20:34:07Z). A timestamp already in the past gives zero delay (the workflow continues immediately, no error), or
     * A relative duration unit, which can be
       * an integer like `50`, considered as duration in seconds.
       * an interval string defined as `xxdxxhxxmxxs`, where d = day, h = hour, m = minutes and s = seconds
@@ -71,9 +71,9 @@ There are 3 types of delay types available: **Fixed** (fixed for all users), **D
       * **Fixed** (for example always 30 minutes before).
       * **Dynamic**, where the value is retrieved from the payload (for example in Google Calendar, users can set reminders for 10 or 20 minutes before an event).
     * **Before/After**: Determines whether the interval is subtracted (before) or added (after) to the timestamp.
-    * **Timestamp**: An ISO-8601 format datetime (for example 2024-03-02T20:34:07Z), which must be in the future.
+    * **Timestamp**: An ISO-8601 format datetime (for example 2024-03-02T20:34:07Z). If timestamp ± interval is already in the past, the delay is zero and the workflow continues immediately (no error).
 
-    Dynamic Interval & Timestamp must be passed as a . Examples:
+    Dynamic Interval & Timestamp must be passed as a JQ expression. Examples:
 
     * Timestamp at the parent level: `.timestamp`
     * If the dynamic interval is set as recipient property: `."$recipient".interval`
@@ -81,6 +81,9 @@ There are 3 types of delay types available: **Fixed** (fixed for all users), **D
 
 
 ***
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 
 ## Schema Properties
 
@@ -107,9 +110,13 @@ There are 3 types of delay types available: **Fixed** (fixed for all users), **D
 
 ### Duration format
 
-Pattern: `^(\d+[dhms])+$`
+Pattern: `^(\d+[dhms])+$` — applies to `value` when `delay_type` is `fixed` and to `relative_to.offset_value` when `offset_value_type` is `fixed`. On save, hours must be 0–23, minutes and seconds 0–59, the total > 0 and ≤ 90 days, with no spaces.
 
-Examples: `30s`, `5m`, `1h30m`, `2d12h`
+Valid: `30s`, `5m`, `1h30m`, `2d12h`. Rejected: `48h` (write `2d`), `90m` (write `1h30m`), `1d36h` (write `2d12h`), `0s`, `1h 30m`. Full rules: [Workflow Schema Guide → Duration Format](workflow-schema-guide.md#duration-format).
+
+### Timestamps in the past
+
+For `dynamic` (ISO-8601 timestamp) and `relative_to` delays, a computed time that is already past gives a **zero delay**: the workflow continues immediately — it is not an error.
 
 ## Example
 

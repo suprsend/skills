@@ -1,10 +1,10 @@
 # Delivery Nodes
 
-Delivery nodes send notifications to users. Every workflow must end with at least one delivery node.
+Delivery nodes send notifications to users.
 
 ## Single Channel Nodes
 
-Send via one specific channel. Each uses a different `node_type` but shares the same schema properties.
+Send via one specific channel. Each uses a different `node_type`, and only `template` and `success` apply (see [Schema Properties](#schema-properties)).
 
 | `node_type` | Channel |
 |---|---|
@@ -41,9 +41,25 @@ Sends sequentially across channels with delays until the user engages on one cha
 
 {{{docs_smart_delivery}}}
 
-## Schema Properties (shared by all delivery nodes)
+## Schema Properties
+
+The table lists every delivery property. Each node type keeps only some of them, and **other keys are silently dropped on save**:
+
+| `node_type` | Properties kept |
+|---|---|
+| Single-channel (`send_email`, `send_sms`, …) | `template`, `success`. The channel is fixed by the node type (`send_mobile_push` = `androidpush` + `iospush`). |
+| `send_multi_channel` | `template`, `channels`, `channels_expr`, `success` |
+| `send_smart_channel_routing` | `template`, `channels_expr`, `success`, `ttl_value`, `mandatory_channels`. There is **no `channels`**: it routes across all live template channels unless `channels_expr` narrows them. `routing_basis` and `routing_channels_sequence` are also dropped. |
 
 {{schema-table (get send_schema "$definitions.send_node_props")}}
+
+**Field rules:**
+
+- `template`: slug of an existing, **published** template. Otherwise the node errors on save.
+- `success`: `delivered` | `seen` | `interaction` | a custom event name. **Required on `send_smart_channel_routing`** — workflow JSON without it is rejected on save. On other delivery nodes it defaults to `seen`. A custom event counts only if it happens within 1 day of the send (fixed window). On an event-triggered workflow, a success event that is also a trigger event is rejected at publish. Only smart routing acts on it by stopping the remaining channels. On other nodes it is analytics only.
+- `ttl_value` (smart routing): default `1h`. Use a duration like `30m` or `1h30m`: no spaces, hours ≤ 23, minutes and seconds ≤ 59, greater than 0, at most 90 days ([Duration format](workflow-schema-guide.md#duration-format)).
+- **Channel order (smart routing):** workflow JSON can't set a channel sequence. `routing_basis` and `routing_channels_sequence` are dropped on save without an error, and the node always routes by cost, lowest first. Don't include them.
+- `mandatory_channels` (smart routing): sent at T+0. Setting it turns off the automatic "inbox at T+0" behaviour, and when a listed channel is reachable for the user, the routed channels start one interval after T+0 (interval = `ttl_value` ÷ number of routed channels). See the example below.
 
 ### Channel values
 
@@ -81,8 +97,16 @@ Sends sequentially across channels with delays until the user engages on one cha
   "node_type": "send_smart_channel_routing",
   "properties": {
     "template": "payment-reminder",
+    "ttl_value": "1h",
     "mandatory_channels": ["inbox"],
     "success": "seen"
   }
 }
 ```
+
+Timing for a user reachable on inbox, email and SMS (email cheaper than SMS):
+
+- **As written** (`mandatory_channels: ["inbox"]`): inbox at T+0, email at **T+30m**, SMS at T+60m. The interval is 1h ÷ 2 routed channels.
+- **Without `mandatory_channels`** (default): inbox **and** email at T+0, SMS at T+60m. The interval is 1h ÷ (2 − 1).
+
+Delivery stops as soon as the user reaches `success`. Omit `mandatory_channels` if the first paid channel should go out immediately.

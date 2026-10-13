@@ -2,13 +2,13 @@
 
 **Schema `node_type`:** `digest`
 
-> **Grouping is fixed.** A digest node aggregates events keyed on `(workflow recipient, workflow slug)`. There is no `group_by` field. If a digest needs to batch across a key other than the workflow's trigger recipient — for example, one digest per seller across many buyer-triggered orders — the digest must live in a **separate workflow** whose trigger recipient is the digest key, invoked from the parent via [`invokeworkflow`](node-invoke-workflow.md). A digest placed inside a workflow triggered for recipient A will always produce per-A digests, never per-B.
+> **Grouping is fixed.** A digest node aggregates events keyed on `(workflow recipient, workflow, tenant)`. There is no `group_by` field. If a digest needs to batch across a key other than the workflow's trigger recipient — for example, one digest per seller across many buyer-triggered orders — the digest must live in a **separate workflow** whose trigger recipient is the digest key, invoked from the parent via [`invokeworkflow`](node-invoke-workflow.md). A digest placed inside a workflow triggered for recipient A will always produce per-A digests, never per-B.
 
 ## Documentation
 
 # Digest
 
-> Batch multiple alerts & send summary of notifications at a recurring schedule to the user.
+> Use the Digest node to batch repeated alerts and send a scheduled summary of notifications to users, reducing noise and notification fatigue.
 
 The Digest node aggregates multiple triggers into a single, summarized notification sent at a recurring schedule. Some common use cases include sending recommendations or top stories like you get for LinkedIn or Quora, or to send a weekly / daily summary of activities in a company workspace or SaaS application.
 
@@ -24,7 +24,7 @@ Digest can be configured to be timezone-aware, ensuring that final notifications
   
 
   **Accumulates trigger until the next digest schedule**
-    During the batch period, all events for the same recipient with the same workflow slug are accumulated. A unique batch is created for each recipient.
+    During the batch period, all events for the same recipient with the same workflow slug are accumulated. A unique batch is created for each recipient and tenant.
   
 
   **Moves to next workflow step**
@@ -41,21 +41,19 @@ Digest can be configured to be timezone-aware, ensuring that final notifications
 A workflow sends a summary of task status changes daily at 7:00 PM for a workflow management tool. In this case, the workflow will batch all triggers for 11 hours (until July 30, 7:00 PM Europe/London) and the email will be sent at the same time as soon as batch is closed.
 
 * **Trigger**: When task status is changed (First task status change is received at Jul 30, 7:00 AM UTC)
-* **Digest Schedule**: Daily at 7:00 PM (in recipient's timezone)
+* **Digest Schedule**: Daily at 7:00 PM (in recipient’s timezone)
 * **Recipient’s Timezone**: Europe/London (UTC+1).
-
-In this case, the workflow will batch all triggers for 11 hours (until July 30, 7:00 PM Europe/London) and the email will be sent at the same time as soon as batch is closed.
 
 
 ## Configuring Digest schedule
 
-It is the recurring schedule when an open digest should be closed. This schedule might differ from the time notifications are actually sent. for example, if you want to send a daily digest summarizing activities from the previous day at 9:00 AM, you would set the Digest schedule to close daily at midnight and follow it with Time Window or Delay node to send the notification at 9:00 AM.
+It is the recurring schedule when an open digest should be closed. This schedule might differ from the time notifications are actually sent. For example, if you want to send a daily digest summarizing activities from the previous day at 9:00 AM, you would set the Digest schedule to close daily at midnight and follow it with Time Window or Delay node to send the notification at 9:00 AM.
 
 
   ### Fixed Schedule
     Fixed schedule is same for all users and hard coded in the workflow logic. It has 4 inputs:
 
-    1. **Repeat every**: Defines the recurrence of the digest, such as every 5 minutes, hourly, daily, etc. It is a combination interval (1,2,3 etc.) and frequency (daily, weekly, monthly, hourly and minutely). for example you can set frequencies as:
+    1. **Repeat every**: Defines the recurrence of the digest, such as every 5 minutes, hourly, daily, etc. It is a combination interval (1,2,3 etc.) and frequency (daily, weekly, monthly, hourly and minutely). For example, you can set frequencies as:
        * every 5 minutes (here, interval is `5 `with `minutely `frequency)
        * every hour
        * every 3 days
@@ -63,11 +61,11 @@ It is the recurring schedule when an open digest should be closed. This schedule
        * every 2 weeks on selected days of the week (for example Mondays and Wednesdays of the week)
        * every month on selected days of the month (for example 1st, 3rd, and 5th Mondays of the month or 1st - 5th day of the month)
     2. **Time**: Specifies when the digest should be closed for daily, weekly or monthly frequency. The time is always in reference to the timezone selected.
-    3. **Timezone**: Set the timezone for the Time specified. You can select **recipient's timezone**, which will be dynamically calculated for each recipient. You can set recipient timezone in user profile with`$timezone`key in HTTP API or`user.set_timezone()`method from your backend or Frontend SDKs. Timezones should be in [IANA (TZ identifier)](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List) format, such as `America/New_York`.
-    4. **Starting from**: Defines the starting point for recurring schedule. for example, if starting from is`2024-07-17 17:00`and repeat every is set to daily at 4pm IST, first schedule will be 18th July 4pm IST. You can set a future starting point if you want the first digest to be sent later. Note that in this case, all triggers from when the workflow is activated until the first schedule after the "starting from" time will be included in the first digest. Referred to as`dtstart`in dynamic schedule expression.
+    3. **Timezone**: Set the timezone for the Time specified. You can select **recipient's timezone**, which will be dynamically calculated for each recipient. You can set recipient timezone in user profile with `$timezone` key in HTTP API or `user.set_timezone()` method from your backend or Frontend SDKs. Timezones should be in [IANA (TZ identifier)](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List) format, such as `America/New_York`.
+    4. **Starting from**: Defines the starting point for recurring schedule. For example, if starting from is `2024-07-17 17:00` and repeat every is set to daily at 4pm IST, first schedule will be 18th July 4pm IST. You can set a future starting point if you want the first digest to be sent later. Note that in this case, all triggers from when the workflow is activated until the first schedule after the "starting from" time will be included in the first digest. Referred to as `dtstart` in dynamic schedule expression.
 
     > **Note:**
-      📘 If a recipient's timezone is not set, it will default to the account timezone specified in the [SuprSend dashboard -> Account settings](https://app.suprsend.com/en/account-settings/general). If no account timezone is set, UTC (Coordinated Universal Time) will be used as the final fallback.
+      📘 If a recipient's timezone is not set, it falls back to the tenant's timezone, then to the account timezone specified in the [SuprSend dashboard -> Account settings](https://app.suprsend.com/en/account-settings/general). If no account timezone is set, UTC (Coordinated Universal Time) will be used as the final fallback.
     
   
 
@@ -80,7 +78,7 @@ It is the recurring schedule when an open digest should be closed. This schedule
       ```json Dynamic Schedule Schema theme={"system"}
       {
         "frequency": "minutely"/"hourly"/"daily"/"weekly_mo2fr"/"weekly"/"monthly",
-        "interval": 1, //you can pass any integer value here, default value 1
+        "interval": 1, // integer >= 1, default 1. Max: minutely 1440, hourly 100, daily 100, weekly_mo2fr 25, weekly 25, monthly 6
 
         //mandatory to pass for weekly frequency, weekly_mo2fr assumes weekdays: [ "mo", "tu", "we", "th", "fr"]
         "weekdays": ["su", "mo", "tu", "we", "th", "fr", "sa"],
@@ -89,9 +87,9 @@ It is the recurring schedule when an open digest should be closed. This schedule
         //pass first 2 character of weekday to set frequency like 1st Monday of the month
         "monthdays": [{"pos": 1, "day": ""/"<weekday>"}],
 
-        "time": "08:00", // defaults to 00:00 if not passed
+        "time": "08:00", // HH:MM. REQUIRED for daily, weekly_mo2fr, weekly, monthly (no default; missing time fails the run)
 
-        "dtstart": "2024-08-01T10:40:50", // defaults to current_timestamp if not passed
+        "dtstart": "2024-08-01T10:40:50", // optional, defaults to now. Must be >= 2024-01-01 and <= 6 months ahead
 
         "tz_selection": "recipient", // pass empty for fixed timezone
         "tz_fixed": "UTC", // pass this if tz_selection is empty, defaults to UTC if not set
@@ -99,20 +97,20 @@ It is the recurring schedule when an open digest should be closed. This schedule
       ```
     
 
-    | Variable       | Type                                            | Description                                                                                                                                                                                                                                                                                                                                                                                   |
-    | -------------- | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-    | `frequency`    | string (mandatory)                              | Choose from one of the below options:  **minutely**  **hourly**  **daily**  **weekly** (mandatory to pass `weekdays` in this case)  **weekly_mo2fr** (weekly on Monday to Friday)  **monthly** (mandatory to pass `monthdays` in this case)                                                                                                                                                  |
-    | `interval`     | integer (optional)                              | Interval at which the frequency will repeat. Interval `2` with frequency `daily` would mean repeat every 2 days. Defaults to `1` if not set.                                                                                                                                                                                                                                                  |
-    | `weekdays`     | array\[] (mandatory for `weekly` frequency)     | Days of the week for weekly frequency. Pass the first 2 characters of days of the week in an array as `["su", "mo", "tu", "we", "th", "fr", "sa"]`                                                                                                                                                                                                                                            |
-    | `monthdays`    | array\[map] (mandatory for `monthly` frequency) | Days of the month for monthly frequency (for example 1st, 3rd, and 5th Mondays of the month or 1st - 5th day of the month). Pass as `[{"pos": 1, "day": "mo"}]`, where `pos` defines the day index and `day` defines the type of day (can be referred to define the day of the week). for example, `1st,2nd day of the month` will be set as `[{"pos": 1, "day": ""},{"pos": 2, "day": ""}]`. |
-    | `time`         | string (optional)                               | Time for daily, weekly, or monthly frequency when the digest will close. Defined in hour and minute as `hh:mm`. Defaults to `00:00` if not set.                                                                                                                                                                                                                                               |
-    | `dtstart`      | datetime (ISO-8601 format) (optional)           | Starting time from which the first schedule will be calculated. Set as `2024-08-01T10:40:50` in ISO-8601 format. Defaults to `current_timestamp` at the time of setting the schedule if not defined.                                                                                                                                                                                          |
-    | `tz_selection` | string (optional)                               | Timezone selection. `time` and `dtstart` will both be in this timezone.  - Leave empty `""` for fixed timezone  - Set to `"recipient"` if the timezone needs to be picked dynamically from user property or trigger data.                                                                                                                                                                     |
-    | `tz_fixed`     | string (mandatory if `"tz_selection": ""`)      | Timezone to pick in case of fixed `tz_selection`. Add timezone in [IANA (TZ identifier)](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List) format as `America/New_York`. Defaults to `UTC` if not set.                                                                                                                                                                       |
+    | Variable | Type | Description |
+    | - | - | - |
+    | `frequency` | string (mandatory) | Choose from one of the below options:  **minutely**  **hourly**  **daily**  **weekly** (mandatory to pass `weekdays` in this case)  **weekly_mo2fr** (weekly on Monday to Friday)  **monthly** (mandatory to pass `monthdays` in this case) |
+    | `interval` | integer (optional) | Interval at which the frequency will repeat. Interval `2` with frequency `daily` would mean repeat every 2 days. Defaults to `1` if not set. Max: `minutely` 1440, `hourly` 100, `daily` 100, `weekly_mo2fr` 25, `weekly` 25, `monthly` 6. |
+    | `weekdays` | array\[] (mandatory for `weekly` frequency) | Days of the week for weekly frequency. Pass the first 2 characters of days of the week in an array as `["su", "mo", "tu", "we", "th", "fr", "sa"]` |
+    | `monthdays` | array\[map] (mandatory for `monthly` frequency) | Days of the month for monthly frequency (for example 1st, 3rd, and 5th Mondays of the month or 1st - 5th day of the month). Pass as `[{"pos": 1, "day": "mo"}]`, where `pos` defines the day index and `day` defines the type of day (can be referred to define the day of the week). for example, `1st,2nd day of the month` will be set as `[{"pos": 1, "day": ""},{"pos": 2, "day": ""}]`. |
+    | `time` | string (mandatory for `daily`, `weekly_mo2fr`, `weekly`, `monthly`) | Time when the digest will close, as `HH:MM` (24-hour). No default: if it is missing, the schedule is invalid and the workflow run stops with an error. |
+    | `dtstart` | datetime (ISO-8601 format) (optional) | Starting time from which the first schedule will be calculated. Set as `2024-08-01T10:40:50` in ISO-8601 format. Defaults to `current_timestamp` at the time of setting the schedule if not defined. Must be on or after `2024-01-01T00:00:00` and at most 6 months in the future. |
+    | `tz_selection` | string (optional) | Timezone selection. `time` and `dtstart` will both be in this timezone.  - Leave empty `""` for fixed timezone  - Set to `"recipient"` if the timezone needs to be picked dynamically from user property or trigger data. |
+    | `tz_fixed` | string (mandatory if `"tz_selection": ""`) | Timezone to pick in case of fixed `tz_selection`. Add timezone in [IANA (TZ identifier)](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List) format as `America/New_York`. Defaults to `UTC` if not set. |
 
     ### Passing dynamic schedule for users
 
-    You can either pass dynamic schedule in each workflow trigger or a better way to handle is to store it in user profile. You can store any number of schedules in user profile or in tenant properties. It's a good practice to map the digest schedule to either workflow or category identifier in user profile (If you have multiple notification categories in your system). Refer [create user profile section](/docs/users#creating-user-profile-on-suprsend) to understand how user properties are set in user profile.
+    You can either pass dynamic schedule in each workflow trigger or a better way to handle is to store it in user profile. You can store any number of schedules in user profile or in tenant properties. It's a good practice to map the digest schedule to either workflow or category identifier in user profile (If you have multiple preference categories in your system). Refer [create user profile section](/docs/users#creating-user-profile-on-suprsend) to understand how user properties are set in user profile.
 
     
       ```json Storing Schedule as user property theme={"system"}
@@ -165,7 +163,7 @@ It is the recurring schedule when an open digest should be closed. This schedule
 
 
   ### Retain Items
-    Defines the number of trigger data that will be included in your Digest Batch. You have the option to display either the first n triggers or the last n triggers in your digest output. By default, the first 10 triggers are included. You can customize the number of triggers to any value between 2 and 100.
+    Defines the number of trigger data that will be included in your Digest Batch. You have the option to display either the first n triggers or the last n triggers in your digest output. By default, the first 10 triggers are included. You can customize the number of triggers (`retain_count`) to any value between 1 and 100.
   
 
   ### Min Trigger Count
@@ -178,7 +176,7 @@ It is the recurring schedule when an open digest should be closed. This schedule
 Batch output variable has 2 type of variables:
 
 1. `$batched_events`array : All the event properties corresponding to a batched event is appended to this array and can be used in the template in the array format. The number of event properties returned here is limited by retain batch events.
-2. `$batched_event_count`: This count represents the number of events in a batch and is utilized to render the batch count in a template. For instance, you might send a message like,`Joe left 5 comments in the last 1 hour`where 5 corresponds to \$batched_event_count.
+2. `$batched_events_count` (plural "events"): This count represents the number of events in a batch and is utilized to render the batch count in a template. For instance, you might send a message like, `Joe left 5 comments in the last 1 hour` where 5 corresponds to `$batched_events_count`.
 
 > **Note:**
   📘 Please note that **Retain items** setting doesn't impact the count, it just limits the number of trigger data returned in `$batched_events` array.
@@ -465,6 +463,9 @@ After data transform node, output variables will contain 3 additional keys gener
 
 ***
 
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
+
 ## Schema Properties
 
 | Property | Type | Required | Description |
@@ -476,10 +477,30 @@ After data transform node, output variables will contain 3 additional keys gener
 | retain_order | string | No | retain items in this order. first -> first n items. last -> last n items |
 | trigger_min_count | integer | No | TODO: in batch, min number of items needed to proceed to next step in workflow |
 
+**Field rules** (these override the table and the docs above):
+
+- `schedule_type` decides which field is **required**: `static` → `schedule`, `dynamic` → `dynamic_schedule_expr`, `category_digest_schedule` → neither.
+- `category_digest_schedule` uses the digest schedule of the workflow's preference category, always in the recipient's timezone. Publishing fails if that category has no digest schedule. At runtime, if the category schedule is missing, invalid or set to "instantly", the digest doesn't wait and the run continues at once with a batch of one: `$batched_events_count` is `1`, `$batched_events` holds just this event, and `$batch_key` is `""`.
+- `trigger_min_count` (digest only; ignore the schema's "in batch" note): integer 1–1,000,000, default 1. If fewer events than this have arrived when the schedule fires, the run ends without executing later nodes.
+- `retain_count`: 1–100, default 10. `retain_order`: `first` (default) keeps the oldest N in arrival order; `last` keeps the newest N, **newest first**.
+- Recipient timezone (`tz_selection: "recipient"`) resolves as user `$timezone` → tenant timezone → account timezone → UTC.
+
+### Schedule object rules
+
+These rules apply to the static `schedule` and to the value a `dynamic_schedule_expr` resolves to.
+
+- `frequency` (required): `minutely` | `hourly` | `daily` | `weekly_mo2fr` | `weekly` | `monthly`.
+- `interval`: integer ≥ 1, default 1. Max: `minutely` 1440, `hourly` 100, `daily` 100, `weekly_mo2fr` 25, `weekly` 25, `monthly` 6.
+- `time` (`HH:MM`): **required** for `daily`, `weekly_mo2fr`, `weekly` and `monthly`. It has no default. A static schedule without it is rejected on save, and a dynamic schedule without it stops the run with an error.
+- `weekdays` is required for `weekly`. `monthdays` is required for `monthly`: `pos` is 1–31 or −31…−1 for a day of the month, or ±1…5 together with a weekday `day`.
+- `dtstart` (optional ISO-8601; any offset is ignored and the value is read in the schedule's timezone): must be on or after `2024-01-01T00:00:00` and at most 6 months in the future. A static schedule's `dtstart` may be missing when you read or pull the workflow back. Re-add it before pushing an edited copy.
+- `tz_selection`: `fixed` (default; uses `tz_fixed`, default `UTC`) or `recipient`.
+
 ### Schedule type values
 
 - `static`
 - `dynamic`
+- `category_digest_schedule`
 
 ### Retain order values
 

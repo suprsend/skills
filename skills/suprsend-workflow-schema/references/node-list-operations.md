@@ -1,5 +1,11 @@
 # List Operation Nodes
 
+## Verified behaviour (overrides the docs below)
+
+- **The target list must be a static, non-read-only list.** Otherwise the node fails (logged; the run continues).
+- **Static `list_id`** (`is_list_id_dynamic` false/omitted): only letters, digits, `-`, `_` (uppercase is accepted), max 64 characters — checked on save, so a `{{...}}` in a static `list_id` is rejected.
+- **Handlebars rendering happens only when `is_list_id_dynamic: true`.** `list_id` is then rendered; `list_name` is rendered only if `create_list_if_missing` is also `true`. Otherwise both are used as literal strings.
+
 ## Add User to List
 
 **Schema `node_type`:** `subscriberlistoperation_adduser`
@@ -8,7 +14,7 @@
 
 # Add User to list
 
-> Dynamically add users to list within a workflow.
+> Use the add user to list workflow node to dynamically add a recipient or actor to a SuprSend subscriber list based on real time events and triggers.
 
 You can use this node to dynamically add recipient or actor in the list. This is one of the ways to create user segment based on an event or action. For example, when someone registers for an event, you can send them a confirmation email and at the same time, add them to a list to send them reminder messages or announcements related to the event.
 
@@ -33,6 +39,9 @@ One common use case of creating list dynamically is when you need to create diff
 
 ***
 
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
+
 ## Remove User from List
 
 **Schema `node_type`:** `subscriberlistoperation_removeuser`
@@ -41,7 +50,7 @@ One common use case of creating list dynamically is when you need to create diff
 
 # Remove User from list
 
-> Dynamically remove users from list within a workflow.
+> Use the remove user from list node to dynamically drop recipients or actors from a SuprSend list during workflow execution based on runtime conditions.
 
 You can use this node to dynamically remove recipient or actor from the list. You can use it for use cases like when someone unsubscribes from an event or completes an action, you can remove them from the notification list to stop sending them further alerts.
 
@@ -63,6 +72,9 @@ One common use-case of computing list ID dynamically is when you have different 
 * [Objects](/docs/objects) are better for reusable topic subscriptions when additional workflows need to be triggered for the same subscribers. Example: Notifying team members or running nested workflows for hierarchical subscribers.
 
 ***
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 
 ## Schema Properties (shared)
 
@@ -104,7 +116,7 @@ One common use-case of computing list ID dynamically is when you have different 
   "properties": {
     "op": "add_user",
     "is_list_id_dynamic": true,
-    "list_id": "_subscribers",
+    "list_id": "{{event_id}}_subscribers",
     "user_selection": ["recipient"],
     "create_list_if_missing": true
   }

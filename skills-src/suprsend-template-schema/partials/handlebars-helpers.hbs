@@ -4,10 +4,29 @@ Most text-bearing fields in a variant's `content` are rendered with Handlebars a
 
 This applies to every channel where `templating_language` is `handlebars` (the default for all channels). Slack and MS Teams additionally support `jsonnet` — for those, see the channel reference.
 
-> **Brand variables:** the tenant display name is `\{{$brand.brand_name}}`, not `\{{$brand.name}}`. Custom tenant properties always go under `\{{$brand.properties.<key>}}`. There is no `$brand.<custom_key>` shorthand — `\{{$brand.address}}`, `\{{$brand.support_url}}`, `\{{$brand.unsubscribe_url}}` will not resolve. See {{ref-link "multi-tenant-variants.md" "Multi-tenant Variants"}} for the full reserved-key list and the per-recipient `\{{$hosted_preference_url}}` / `\{{$embedded_preference_url}}` variables.
+> **Tenant variables:** use `\{{$tenant.*}}` — `$brand` is the legacy namespace for the same object; never emit it in new content. The tenant display name is `\{{$tenant.name}}` (not the legacy `brand_name`). Custom tenant properties always go under `\{{$tenant.properties.<key>}}`. There is no `$tenant.<custom_key>` shorthand — `\{{$tenant.address}}`, `\{{$tenant.support_url}}`, `\{{$tenant.unsubscribe_url}}` fail the render with a missing-variable error. A missing custom key fails too (`\{{$tenant.properties.<missing>}}`); use `\{{default $tenant.properties.<key> "…"}}`, which falls back when `properties` is `{}` but still fails if `properties` is `null`. See {{ref-link "multi-tenant-variants.md" "Multi-tenant Variants"}} for the full reserved-key list and the top-level `\{{$hosted_preference_url}}` / `\{{$embedded_preference_url}}` variables.
+
+## Verified behaviour (overrides the docs below)
+
+Templates render in **strict mode**:
+
+- **Missing variable = failed render, not empty output.** `\{{x}}` fails when `x` is absent (a `null` value renders empty). `\{{a.b}}` fails when `a` is absent or `null`, or when `b` is absent.
+- **Inside helper and block arguments** (`if`, `with`, `each`, `default`, `compare`, …) a missing top-level name or a missing *last* key is tolerated (`\{{#if x}}`, `\{{default a.b "-"}}` with `a: {}`), but a missing or `null` *parent* still fails. Guard each parent level: `\{{#if a}}\{{#if a.b}}…\{{/if}}\{{/if}}`.
+- **Escaping: default to `\{{ }}`; use `\{{{ }}}` only where HTML escaping isn't needed.** `\{{ }}` escapes `&`, `<`, `>`, `"`, `'`, `` ` ``, `=` in every channel and field, and nothing un-escapes it later.
+  - **Keep `\{{ }}`** where the output is rendered as HTML, so user-supplied values can't inject markup: the email HTML body, and the Inbox `body` (rendered as Markdown with raw HTML allowed, which also decodes the entities).
+  - **Use `\{{{ }}}`** where the output is plain text: SMS, push, WhatsApp, Slack text mode, Inbox `header` / `subtext` / URLs, and the email `subject`, `preheader` and plain-text part. There `\{{ }}` delivers `O&#x27;Brien &amp; Sons`, and a `preheader` is escaped a second time when it is injected into the HTML.
+- **`datetime-format`:** pass an ISO-8601 string with offset or epoch **milliseconds**, and always pass a timezone: `\{{datetime-format created_at "MMM D, YYYY h:mm a" "America/New_York"}}`. Epoch seconds and numeric strings misparse; without a timezone nothing is converted.
+- **Array helpers:** `unique`, `list-agg`, `itemAt`, and `join` return empty for a `null` value but fail the render when the variable is absent.
+- **Two-argument `compare` / `condition`** use `===`: `\{{#compare plan "pro"}}…\{{/compare}}`.
+
+**Supported, not covered below:**
+
+- Block params: `\{{#each items as |item i|}}\{{i}}: \{{item.name}}\{{/each}}`
+- `includeZero=true` on `if`: `\{{#if count includeZero=true}}`
+- Whitespace control: `\{{~ var ~}}` trims whitespace on that side.
+- Parent context inside `each`: `\{{../title}}`
+- **Not supported:** partials (`\{{> name}}`) — render error.
 
 ## Documentation
 
-```
 {{{docs_handlebars_helpers}}}
-```

@@ -35,6 +35,7 @@ Run `npm run build` to generate all skills, or `npm run build -- --skill=<name>`
 ## Environment Variables
 
 - `ANTHROPIC_API_KEY` — Required for `claude` type sources
+- `GITHUB_TOKEN` — Optional; authenticates the CLI-skill pull (avoids GitHub's 60 req/hour unauthenticated limit). Locally: `GITHUB_TOKEN=$(gh auth token) npm run build`
 
 ## agentskills.io Compliance
 
@@ -77,7 +78,7 @@ In Handlebars templates, each source's `key` becomes a template variable:
 - `{{trim text}}` — Strip whitespace
 - `{{#ifEqual a b}}...{{/ifEqual}}` — Conditional on equality
 - `{{#each-sorted obj}}...{{/each-sorted}}` — Iterate keys alphabetically
-- `{{ref-link "file.md" "Label"}}` — Link to references/ file
+- `{{ref-link "file.md" "Label"}}` — Link to a references/ file, relative to the page being rendered (works from SKILL.md and from inside references/)
 - `{{truncate text 500}}` — Truncate text to N characters
 - `{{get obj "path.to.key"}}` — Deep property access (dot notation or JSON Pointer `#/$defs/foo`)
 - `{{keys obj}}` — Get object keys as an array
@@ -94,7 +95,7 @@ When a `.hbs` template includes example output that uses Handlebars syntax (e.g.
 "body": "Hello \{{ first_name }}"   <!-- renders as: "body": "Hello {{ first_name }}" -->
 ```
 
-This applies to every `{{ ` (with a space) inside `.hbs` files that you want to appear verbatim in the generated markdown. Helpers like `{{schema-table foo}}`, `{{get obj "..."}}`, `{{ref-link ...}}`, and `{{{docs_*}}}` are not affected because they don't start with `{{ ` (space).
+This applies to every literal `{{...}}` inside `.hbs` files that you want to appear verbatim in the generated markdown — with or without a space (`{{ first_name }}`, `{{$recipient.name}}`, `{{event_id}}` are all evaluated and blanked). Only leave real generator calls unescaped: helpers like `{{schema-table foo}}`, `{{get obj "..."}}`, `{{ref-link ...}}`, and source keys like `{{{docs_*}}}`.
 
 ### Fetched docs are dumped raw, not re-evaluated
 

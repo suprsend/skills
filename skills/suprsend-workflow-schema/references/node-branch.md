@@ -6,7 +6,7 @@
 
 # Branch
 
-> Use branch to route notifications across different paths by applying condition on input data.
+> Use the branch node in SuprSend workflows to route notifications through different paths with if, else if, and else conditions evaluated on input data.
 
 Branch is an `if / else if / else` step that routes notifications through different workflow paths based on conditions. You can add up to 10 branches (9 condition branches + 1 default branch). The first branch that satisfies its condition will be executed.
 
@@ -35,25 +35,25 @@ Conditions evaluate data from trigger payloads, user properties, tenant properti
 
 ### Data Types
 
-| Data Type          | Description                                          | What to pass in key                                                                                                          | What to pass in dynamic value                                        |                                                                       |
-| ------------------ | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| **Input Payload**  | Data from trigger payload or nodes before the branch | Directly specify as `key` with no prefix                                                                                     | Use key directly (for example, `payment_due_date`)                   |                                                                       |
-| **Actor**          | Properties of the user who performed the action      | Add as `<property_key>`                                                                                                      | Add as `$actor.<property_key>`                                       |                                                                       |
-| **Recipient**      | Properties of the user receiving the notification    | Add as `<property_key>`                                                                                                      | Add as `$recipient.<property_key>`                                   |                                                                       |
-| **Tenant**         | Properties of the tenant/brand                       | Add as `<property_key>` for reserved properties,  `properties.<property_key>` for custom properties                          | Add as `$brand.<property_key>` or `$brand.properties.<property_key>` |                                                                       |
-| **Message Status** | Delivery status of previously sent notifications     | Pass the node slug whose message status you want to check, for example, `message_status from node "welcome-email" == "seen"` | Pass the status you want to check, for example, `"seen"`             | Value can be one of `delivered`, `seen`, `clicked`, `delivery_failed` |
+| Data Type | Description | What to pass in key | What to pass in dynamic value | |
+| - | - | - | - | - |
+| **Input Payload** | Data from trigger payload or nodes before the branch | Directly specify as `key` with no prefix | Use key directly (for example, `payment_due_date`) | |
+| **Actor** | Properties of the user who performed the action | Add as `<property_key>` | Add as `$actor.<property_key>` | |
+| **Recipient** | Properties of the user receiving the notification | Add as `<property_key>` | Add as `$recipient.<property_key>` | |
+| **Tenant** | Properties of the tenant/brand | Add as `<property_key>` for reserved properties,  `properties.<property_key>` for custom properties | Add as `$tenant.<property_key>` or `$tenant.properties.<property_key>` | |
+| **Message Status** | Delivery status of previously sent notifications | Pass the node slug whose message status you want to check, for example, `message_status from node "welcome_email" == "seen"` (the node slug is its `ref`: letters, digits and `_` only, no hyphens) | Pass the status you want to check, for example, `"seen"` | Value can be one of `delivered`, `seen`, `clicked`, `delivery_failed` |
 
 ### Operators
 
-| Operator                                                   | Usage                                                             | Supported Data Types |
-| ---------------------------------------------------------- | ----------------------------------------------------------------- | -------------------- |
-| `==` / `!=`                                                | Equal to / not equal to (case sensitive)                          | All                  |
-| `>`, `>=`                                                  | Greater than / greater than or equal                              | Numbers, timestamps  |
-| `<`, `<=`                                                  | Less than / less than or equal to                                 | Numbers, timestamps  |
-| `contains` / `not contains`                                | Substring or array item match / no substring or array item match  | Strings, arrays      |
-| `is empty` / `is not empty`                                | key is missing, empty or null / key is present, not empty or null | All                  |
-| `datetime is` / `datetime is before` / `datetime is after` | Datetime equal to / less than / greater than                      | Timestamps           |
-| `intersects` / `not intersects`                            | Any array value matches / No array values match                   | Arrays               |
+| Operator | Usage | Supported Data Types |
+| - | - | - |
+| `==` / `!=` | Equal to / not equal to (case sensitive) | All |
+| `>`, `>=` | Greater than / greater than or equal | Numbers, timestamps |
+| `<`, `<=` | Less than / less than or equal to | Numbers, timestamps |
+| `contains` / `not contains` | Substring or array item match / no substring or array item match | Strings, arrays |
+| `is empty` / `is not empty` | key is missing or is `null`, `""`, `false`, `0`, `[]` or `{}` / key has any other value | All |
+| `datetime is` / `datetime is before` / `datetime is after` | Datetime equal to / less than / greater than | Timestamps |
+| `intersects` / `not intersects` | Any array value matches / No array values match | Arrays |
 
 > **Note:**
   **Type constraints**: If a key's data type doesn't match the operator (for example, using `>` on a string), the condition will always evaluate to false.
@@ -65,24 +65,24 @@ You can either add a fixed value or a dynamic value to the condition.
 
 #### Fixed values
 
-| Type           | Syntax                                                                                                                                             |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| String         | Enclose within double inverted commas as `"string"`                                                                                                |
-| Number         | Add without double inverted commas as `100`, `99.99`                                                                                               |
-| Boolean        | Add without double inverted commas as `true`, `false`                                                                                              |
-| Datetime       | Enclose within double inverted commas as `"2024-01-01T00:00:00Z"` or `"now+1d"`                                                                    |
+| Type | Syntax |
+| - | - |
+| String | Enclose within double inverted commas as `"string"` |
+| Number | Add without double inverted commas as `100`, `99.99` |
+| Boolean | Add without double inverted commas as `true`, `false` |
+| Datetime | Enclose within double inverted commas as `"2024-01-01T00:00:00Z"` or `"now+1d"` |
 | Message Status | Select from dropdown on frontend or pass as `$message.seen` in workflow API. Value can be one of `delivered`, `seen`, `clicked`, `delivery_failed` |
 
 #### Dynamic values
 
 Dynamic values are evaluated based on the data available at the node input along with actor, recipient or tenant properties. Refer below table for types of dynamic values and their respective syntax.
 
-| Type          | Syntax                                                                                                                                                                   |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Input payload | Add key directly (for example, `payment_due_date`)                                                                                                                       |
-| Actor         | Add as `$actor.<property_key>` (for example, `$actor.role`)                                                                                                              |
-| Recipient     | Add as `$recipient.<property_key>` (for example, `$recipient.plan`)                                                                                                      |
-| Tenant        | Add as `$brand.<property_key>` for reserved properties, add as `properties.<property_key>` for custom properties (for example, `$brand.timezone`, `properties.timezone`) |
+| Type | Syntax |
+| - | - |
+| Input payload | Add key directly (for example, `payment_due_date`) |
+| Actor | Add as `$actor.<property_key>` (for example, `$actor.role`) |
+| Recipient | Add as `$recipient.<property_key>` (for example, `$recipient.plan`) |
+| Tenant | Add as `$tenant.<property_key>` for reserved properties, add as `$tenant.properties.<property_key>` for custom properties (for example, `$tenant.timezone`, `$tenant.properties.region`). A bare `properties.<property_key>` reads the trigger payload, not the tenant |
 
 ## Combining Conditions
 
@@ -105,7 +105,7 @@ When using message status checks, always add a delay before evaluating the statu
 
 
 **Condition Syntax:**
-Condition on message status looks like this `<node slug> IS/ IS_NOT <message status>`. Eg. `message_status from node "welcome-email" is "seen"`.
+Condition on message status looks like this `<node slug> IS/ IS_NOT <message status>`. Eg. `message_status from node "welcome_email" is "seen"`.
 
 You can find node slug below node name in the workflow editor.
 
@@ -125,12 +125,12 @@ On UI, it looks like this:
 **Message Status and their meaning:**
 Here's a list of all message statuses, supported operators and their meaning.
 
-| Status            | `IS` | `IS_NOT` | Description                                                                                                                                |
-| ----------------- | ---- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `delivered`       | ✅    | ✅        | Notification reached user (includes delivered, seen, clicked)                                                                              |
-| `seen`            | ✅    | ✅        | User viewed/opened or clicked notification. For Android Push channel, user clearing the notification from tray is also considered as seen. |
-| `clicked`         | ✅    | ✅        | User clicked notification                                                                                                                  |
-| `delivery_failed` | ✅    | ❌        | Vendor reported some error which prevented delivery                                                                                        |
+| Status | `IS` | `IS_NOT` | Description |
+| - | - | - | - |
+| `delivered` | ✅ | ✅ | Notification reached user (includes delivered, seen, clicked) |
+| `seen` | ✅ | ✅ | User viewed/opened or clicked notification. For Android Push channel, user clearing the notification from tray is also considered as seen. |
+| `clicked` | ✅ | ✅ | User clicked notification |
+| `delivery_failed` | ✅ | ❌ | Vendor reported some error which prevented delivery |
 
 > **Note:**
   For multi-channel and smart channel routing, `delivered`, `seen` and `clicked` status requires at least one successful channel, while `delivery_failed` requires all channels to fail.
@@ -139,11 +139,11 @@ Here's a list of all message statuses, supported operators and their meaning.
 **Per-Channel Message Status:**
 Following message statuses are currently tracked for each channel:
 
-| Channels                                       | Delivered | Seen | Clicked |
-| ---------------------------------------------- | --------- | ---- | ------- |
-| Email, Android Push, iOS Push, Web Push, Inbox | ✅         | ✅    | ✅       |
-| WhatsApp                                       | ✅         | ✅    | ❌       |
-| SMS, Slack, MS Teams                           | ✅         | ❌    | ❌       |
+| Channels | Delivered | Seen | Clicked |
+| - | - | - | - |
+| Email, Android Push, iOS Push, Web Push, Inbox | ✅ | ✅ | ✅ |
+| WhatsApp | ✅ | ✅ | ❌ |
+| SMS, Slack, MS Teams | ✅ | ❌ | ❌ |
 
 > **Note:**
   To track message status for external channels like WhatsApp, SMS, and Email, you'll need to add suprsend tracking URL as webhook in your vendor dashboard.
@@ -194,6 +194,9 @@ Following message statuses are currently tracked for each channel:
 
 ***
 
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
+
 ## Branch Structure
 
 A branch node uses the `branches` array at the node level (not inside `properties`).
@@ -204,8 +207,8 @@ Each branch has 2-10 items: up to 9 conditional branches and 1 default branch (m
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
 | name | string | Yes | The name of the Branch |
-| description | string | null | No | Branch Description |
-| ref | string | null | No | ref of the branch. Must be unique within a workflow across all nodes and branches |
+| description | string \| null | No | Branch Description |
+| ref | string \| null | No | ref of the branch. Must be unique within a workflow across all nodes and branches |
 | is_default | boolean | Yes | Whether this is the default branch. There can be only one default branch, and it must be the last branch in the list |
 | is_terminal | boolean | No | Whether workflow terminates at the end of this branch |
 | conditions | array | Yes |  |
@@ -237,9 +240,13 @@ Each branch has 2-10 items: up to 9 conditional branches and 1 default branch (m
 - `$actor`
 - `$recipient`
 - `$brand`
+- `$tenant`
 - `$organization`
+- `$category`
 - `$future_event`
 - `$ref`
+
+For `value` syntax, `EMPTY` semantics, `ARRAY_INTERSECTS` and tenant custom properties, see [Workflow Schema Guide → Condition Expressions](workflow-schema-guide.md#condition-expressions). A message-status condition's `ref` must be the earlier node's `ref` (`^[a-zA-Z_][a-zA-Z0-9_]*$`, e.g. `welcome_email` — no hyphens).
 
 ## Example
 
@@ -257,19 +264,19 @@ Each branch has 2-10 items: up to 9 conditional branches and 1 default branch (m
           "expression_v1": {
             "op": "AND",
             "args": [
-              { "variable_ns": "$recipient", "variable": "plan", "op": "==", "value": "premium" }
+              { "variable_ns": "$recipient", "variable": "plan", "op": "==", "value": "\"premium\"" }
             ]
           }
         }
       ],
       "nodes": [
-        { "node_type": "send_smart_channel_routing", "properties": { "template": "premium-alert" } }
+        { "node_type": "send_smart_channel_routing", "properties": { "template": "premium-alert", "success": "seen" } }
       ]
     },
     {
       "name": "Default",
       "is_default": true,
-      "conditions": [{ "type": "expression_v1", "expression_v1": { "op": "AND", "args": [] } }],
+      "conditions": [],
       "nodes": [
         { "node_type": "send_email", "properties": { "template": "free-tier-alert" } }
       ]
@@ -278,43 +285,40 @@ Each branch has 2-10 items: up to 9 conditional branches and 1 default branch (m
 }
 ```
 
-## Terminating the workflow on a branch
+## Ending the journey on one path
 
-Set `is_terminal: true` on a branch object to end the workflow run when that branch finishes. Nodes that appear *after* the parent `branch` (or `branch_waituntil`) node in the tree are skipped for runs that exited through a terminal branch.
+Only one branch runs: the first whose conditions match, in order, else the default. When that branch's `nodes` finish, execution **always continues** with the node that follows the `branch` node in the parent array — whichever branch ran. `is_terminal` (listed in the schema) has no effect at runtime: it is ignored when the workflow JSON is saved, and the engine doesn't read it. A path stops early only when a node fails or a batch/digest ends the run (its event was handed to another run, or the digest's `trigger_min_count` wasn't met). Either way the **whole run** ends: nodes after the `branch` node don't run either.
 
-Use it when the branch represents a clean exit from the journey:
+So when one outcome should end the journey (rejection, decline, failure, no response):
 
-- Rejection / decline paths in approval flows
-- Timeout / no-response paths in `branch_waituntil` — see [Wait Until → Terminating on timeout](node-wait-until.md)
-- Failure paths where no further notifications should fire
-- Any branch after which the rest of the parent tree would be incorrect to execute (e.g., a post-resolution sequence that should not run if the request was rejected)
+- Put the rest of the sequence for the *continuing* outcome **inside** that branch's `nodes`.
+- Put only the closing notice (or nothing) in the branch that should end.
+- Leave nothing after the `branch` node that should run for just one outcome.
 
-Default: `is_terminal: false` — i.e., after the branch's `nodes` finish, the workflow continues with whatever node follows the parent branch construct. Forgetting to set `is_terminal: true` on a rejection / timeout branch causes the post-success sequence to run for users who rejected or timed out.
+Forgetting this makes the post-approval sequence run for users who were rejected.
 
-### Example: terminate the workflow on rejection
-
-With `is_terminal: true` on the Rejected branch, the workflow stops after the rejection notice fires — any nodes that appear after this `branch` in the parent tree are skipped for rejected requests.
+### Example: stop on rejection
 
 ```json
 {
   "node_type": "branch",
   "name": "Approval Outcome",
   "ref": "approval_outcome",
+  "properties": {},
   "branches": [
     {
       "name": "Approved",
       "ref": "approved",
       "is_default": false,
       "conditions": [ /* approval condition */ ],
-      "nodes": [ /* post-approval sends */ ]
+      "nodes": [ /* post-approval sequence lives here, not after the branch node */ ]
     },
     {
       "name": "Rejected",
       "ref": "rejected",
       "is_default": true,
-      "is_terminal": true,
       "conditions": [],
-      "nodes": [ /* rejection notice send, then workflow ends */ ]
+      "nodes": [ /* rejection notice only */ ]
     }
   ]
 }

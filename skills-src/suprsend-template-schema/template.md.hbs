@@ -18,57 +18,67 @@ A variant's `channel` field selects which content schema applies. Pick the refer
 | iOS Push | `iospush` | {{ref-link "channel-iospush.md" "iOS push content schema"}} |
 | Web Push | `webpush` | {{ref-link "channel-webpush.md" "Web push content schema"}} |
 
-## Brand variables
+## Tenant variables
 
-Templates can reference tenant/brand properties. There are three shapes — use the right one for each case:
+Templates reference tenant properties through **`$tenant`**. Always emit `$tenant.*` in new or edited content. `$brand.*` is the legacy name for the same object — existing templates that use it still render, but never author new `$brand.*` references. When editing a template that uses `$brand.*`, migrate it to `$tenant.*` (and `brand_id` / `brand_name` to `id` / `name`).
 
-### 1. Reserved `$brand.*` keys
+There are three shapes — use the right one for each case:
 
-These are the only keys valid directly under `$brand.`. Any other key under `$brand.` will not resolve and will break preview rendering — put it under `$brand.properties.` instead (see below).
+### 1. Reserved `$tenant.*` keys
+
+These are the only keys valid directly under `$tenant.`. Any other key belongs under `$tenant.properties.` (see below). Handlebars renders in strict mode, so a key that doesn't exist — `\{{$tenant.<key>}}` or `\{{$tenant.properties.<key>}}` — fails the render, in preview and at send time.
 
 | Variable | Renders |
 | --- | --- |
-| `\{{$brand.brand_id}}` | Tenant slug / id |
-| `\{{$brand.brand_name}}` | Tenant display name. **The key is `brand_name`, not `name`.** |
-| `\{{$brand.logo}}` | Tenant logo URL |
-| `\{{$brand.primary_color}}` | Primary brand color |
-| `\{{$brand.secondary_color}}` | Secondary brand color |
-| `\{{$brand.tertiary_color}}` | Tertiary brand color |
-| `\{{$brand.timezone}}` | Tenant timezone |
-| `\{{$brand.embedded_preference_url}}` | Brand-level embedded preference URL |
-| `\{{$brand.hosted_preference_domain}}` | Brand-level hosted preference domain |
-| `\{{$brand.blocked_channels}}` | List of channels blocked at the brand level |
-| `\{{$brand.social_links.<network>}}` | Brand social link. Built-in `<network>` keys: `x`, `twitter`, `facebook`, `instagram`, `linkedin`, `youtube`, `tiktok`, `discord`, `telegram`, `medium`, `website` |
+| `\{{$tenant.id}}` | Tenant id (slug) |
+| `\{{$tenant.name}}` | Tenant display name |
+| `\{{$tenant.logo}}` | Tenant logo URL |
+| `\{{$tenant.primary_color}}` | Primary brand color |
+| `\{{$tenant.secondary_color}}` | Secondary brand color |
+| `\{{$tenant.tertiary_color}}` | Tertiary brand color |
+| `\{{$tenant.timezone}}` | Tenant timezone |
+| `\{{$tenant.embedded_preference_url}}` | Tenant-level embedded preference URL |
+| `\{{$tenant.hosted_preference_domain}}` | Tenant-level hosted preference domain |
+| `\{{$tenant.blocked_channels}}` | List of channels blocked for the tenant |
+| `\{{$tenant.parent_id}}` | Parent tenant id ([sub-tenants](https://docs.suprsend.com/docs/sub-tenants)); empty for a root tenant |
+| `\{{$tenant.level}}` | Depth in the sub-tenant tree (`0` = root) |
+| `\{{$tenant.ancestors}}` | Ancestor tenant ids, root first (excludes the tenant itself) |
+| `\{{$tenant.social_links.<network>}}` | Tenant social link. Built-in `<network>` keys: `x`, `twitter`, `facebook`, `instagram`, `linkedin`, `youtube`, `tiktok`, `discord`, `telegram`, `medium`, `website` |
 
-### 2. Custom tenant properties — `$brand.properties.<key>`
+`brand_id` / `brand_name` and `tenant_id` / `tenant_name` still resolve as legacy aliases of `id` / `name` — never emit them in new content. For sub-tenants, branding and `properties` are inherited per key from the closest ancestor that sets them; `blocked_channels` accumulate across ancestors; `id` and `name` are never inherited. Template **variants are not inherited** — a variant's `tenant_id` matches only that exact tenant.
 
-Any property the customer adds on the tenant object that is **not** in the reserved list above is a custom property, and the correct shape is `\{{$brand.properties.<key>}}`. Common examples:
+### 2. Custom tenant properties — `$tenant.properties.<key>`
 
-- `\{{$brand.properties.address}}`
-- `\{{$brand.properties.unsubscribe_url}}`
-- `\{{$brand.properties.support_url}}`
-- `\{{$brand.properties.support_email}}`
+Any property the customer adds on the tenant object that is **not** in the reserved list above is a custom property, and the correct shape is `\{{$tenant.properties.<key>}}`. Common examples:
 
-If you don't recognise the key from the reserved list, default to `$brand.properties.<key>`.
+- `\{{$tenant.properties.address}}`
+- `\{{$tenant.properties.unsubscribe_url}}`
+- `\{{$tenant.properties.support_url}}`
+- `\{{$tenant.properties.support_email}}`
 
-### 3. Per-recipient preference URLs (top-level `$`, not under `$brand`)
+If you don't recognise the key from the reserved list, default to `$tenant.properties.<key>`. For an optional key use `\{{default $tenant.properties.<key> "fallback"}}` — this only works when the tenant's `properties` is an object; if `properties` is null the render still fails.
 
-These are generated per recipient at run-time. They are top-level, not nested under `$brand`:
+### 3. Preference-page URLs (top-level `$`, not under `$tenant`)
 
-- `\{{$embedded_preference_url}}`
-- `\{{$hosted_preference_url}}`
+These are injected at send time as top-level variables, not nested under `$tenant`:
 
-Do not write `\{{$brand.$hosted_preference_url}}` or `\{{$brand.embedded_preference_url}}` when you mean the per-recipient URL — those are different variables (the `$brand.embedded_preference_url` form refers to the brand-level config, not the recipient-specific URL).
+- `\{{$hosted_preference_url}}` — signed link to the SuprSend-hosted preference / unsubscribe page for this notification's recipient. Substituted in **email and SMS** content only.
+- `\{{$embedded_preference_url}}` — your embedded preference page URL: the tenant's `embedded_preference_url`, falling back to the organization-level setting.
+- `\{{$hosted_preference_domain}}` — the hosted preference page domain: the tenant's `hosted_preference_domain`, falling back to the organization-level setting. Resolved at send time; the dashboard preview data doesn't include it.
+
+`\{{$tenant.$hosted_preference_url}}` does not resolve. `$tenant.embedded_preference_url` and `$tenant.hosted_preference_domain` are the tenant's own values (inherited from ancestors for sub-tenants; no live organization fallback — a root tenant created without them gets a copy of the organization values at creation, and later organization changes don't propagate) — prefer the top-level variables when linking recipients to their preferences.
 
 ### Common anti-patterns — never emit these
 
 | Wrong | Correct |
 | --- | --- |
-| `\{{$brand.name}}` | `\{{$brand.brand_name}}` |
-| `\{{$brand.support_url}}` | `\{{$brand.properties.support_url}}` |
-| `\{{$brand.unsubscribe_url}}` | `\{{$brand.properties.unsubscribe_url}}` |
-| `\{{$brand.address}}` | `\{{$brand.properties.address}}` |
-| `\{{$brand.$hosted_preference_url}}` | `\{{$hosted_preference_url}}` (per-recipient) *or* `\{{$brand.hosted_preference_domain}}` (brand config) — pick based on intent |
+| `\{{$brand.<key>}}` (any key) | `\{{$tenant.<key>}}` — `$brand` is the legacy namespace |
+| `\{{$tenant.brand_name}}`, `\{{$brand.brand_name}}` | `\{{$tenant.name}}` |
+| `\{{$tenant.brand_id}}`, `\{{$brand.brand_id}}` | `\{{$tenant.id}}` |
+| `\{{$tenant.support_url}}` | `\{{$tenant.properties.support_url}}` |
+| `\{{$tenant.unsubscribe_url}}` | `\{{$tenant.properties.unsubscribe_url}}` |
+| `\{{$tenant.address}}` | `\{{$tenant.properties.address}}` |
+| `\{{$tenant.$hosted_preference_url}}` | `\{{$hosted_preference_url}}` (per-recipient link) *or* `\{{$hosted_preference_domain}}` (tenant domain, org fallback) — pick based on intent |
 
 For the full multi-tenant variant model and per-tenant overrides, see {{ref-link "multi-tenant-variants.md" "Multi-tenant Variants"}}.
 
@@ -76,13 +86,15 @@ For the full multi-tenant variant model and per-tenant overrides, see {{ref-link
 
 Every variant must specify `channel`, `id`, `tenant_id`, `locale`, and `conditions` — even when not using multi-tenant or conditional features (use `null` where applicable). The `content` object is validated against the channel-specific schema.
 
+**Base content goes in the reserved `default` variant.** Enabling a channel auto-creates it with `locale: "en"`, `tenant_id: null`, no conditions; only its `content` (and `needs_vendor_approval`) can be changed. Never create a second variant with that same `locale` + `tenant_id` + `conditions` combination — it is rejected as a duplicate of `default`.
+
 Minimum shape:
 
 ```json
 {
   "$schema": "https://schema.suprsend.com/template/v2/variant_schema.json",
   "channel": "email",
-  "id": "default-en",
+  "id": "default",
   "tenant_id": null,
   "locale": "en",
   "conditions": null,
@@ -90,17 +102,23 @@ Minimum shape:
 }
 ```
 
+**Target a tenant with the variant's `tenant_id` field and a language with its `locale` field — never with `conditions`.** A condition on `tenant_id` reads the trigger payload, there is no `in` operator, and one variant targets exactly one tenant. Channels are enabled per template, not per variant: each channel picks its own variant, so a channel with no variant for the tenant still sends its tenant-less content.
+
+Only `id`, `locale`, `tenant_id`, `conditions`, `needs_vendor_approval`, and `content` are written when a variant is saved. `seq_no` (priority) is set by the template's variant order and `vendor_approvals` are managed per vendor — don't put either in variant JSON you author.
+
 See the {{ref-link "template-schema-guide.md" "Template Schema Guide"}} for the variant envelope, selection rules, and complete examples.
 
 For multi-variant patterns, see:
 
-- {{ref-link "multi-tenant-variants.md" "Multi-tenant Variants"}} — different content per tenant/brand
-- {{ref-link "multi-lingual-variants.md" "Multi-lingual Variants"}} — translation keys vs. per-locale variants
+- {{ref-link "multi-tenant-variants.md" "Multi-tenant Variants"}} — different content per tenant
+- {{ref-link "multi-lingual-variants.md" "Multi-lingual Variants"}} — translation keys vs. per-locale variants (translation keys only render when translations are enabled for the account and published)
 
 For the template syntax used inside content fields, see:
 
 - {{ref-link "handlebars-helpers.md" "Handlebars Helpers"}} — variables, conditionals, comparisons, date/array helpers. Default for every channel.
-- {{ref-link "jsonnet-syntax.md" "JSONNET Syntax"}} — alternative for Slack `body_block` and MS Teams `body_card` when `templating_language: "jsonnet"`.
+- {{ref-link "jsonnet-syntax.md" "JSONNET Syntax"}} — always used for Slack `body_block` and MS Teams `body_card` (`body_type: "block"` / `"card"` forces `templating_language: "jsonnet"`).
+
+**Escaping:** default to `\{{ }}`. It HTML-escapes its output (`&` → `&amp;`, `'` → `&#x27;`, `=` → `&#x3D;`), which keeps HTML outputs (email HTML body, Inbox body) safe from injected markup. Use triple braces `\{{{ }}}` only where HTML escaping isn't needed — SMS, push, WhatsApp, Slack text mode, Inbox header / subtext / URLs, and the email subject, preheader and plain-text part. SuprSend never unescapes, so `\{{ }}` there delivers `O&#x27;Brien`.
 
 ## Related skills
 

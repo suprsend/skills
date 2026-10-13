@@ -62,8 +62,12 @@ export function cleanMintlifyMarkdown(content: string): string {
   result = result.replace(/<\/Step>/g, "");
   // <CodeGroup> → just remove wrapper
   result = result.replace(/<\/?CodeGroup>/g, "");
-  // <br /> tags
-  result = result.replace(/<br\s*\/?>/g, "");
+  // <br /> tags — kept inside inline code; a space is left where removal would join two tokens
+  result = result.replace(/(`[^`\n]*`)|<br\s*\/?>/g, (match, code: string | undefined, offset: number, str: string) => {
+    if (code) return code;
+    const joinsTokens = /\S/.test(str[offset - 1] ?? "") && /\S/.test(str[offset + match.length] ?? "");
+    return joinsTokens ? " " : "";
+  });
 
   // Fix escaped character artifacts from Mintlify rendering
   // Over-escaped backslash sequences: \\\* → *

@@ -6,9 +6,9 @@
 
 # Batch
 
-> Learn about batch node in workflow and how to use it to group similar notifications into a single notification.
+> Use the batch node in SuprSend workflows to aggregate multiple triggers and send one consolidated notification instead of spamming users with repeated alerts.
 
-Batch node aggregates multiple triggers into a single batch output to send one consolidated notification rather than sending notification for every user activity. Batching events are useful when a user needs to be notified about a lot of events happening at once but doesn't need a notification for every single event within the batch. for example, if you have a product where users can interact with each other's content and post 5 comments in 10 minutes. In this case, rather than sending 5 notifications, you can batch the events for 10 minutes and send one notification about the 5 comments that the user received.
+Batch node aggregates multiple triggers into a single batch output to send one consolidated notification rather than sending notification for every user activity. Batching events are useful when a user needs to be notified about a lot of events happening at once but doesn't need a notification for every single event within the batch. For example, if you have a product where users can interact with each other's content and post 5 comments in 10 minutes. In this case, rather than sending 5 notifications, you can batch the events for 10 minutes and send one notification about the 5 comments that the user received.
 
 ## How Batching works
 
@@ -18,7 +18,7 @@ Batch node aggregates multiple triggers into a single batch output to send one c
   
 
   **Aggregates incoming triggers**
-    When the batch window is open, all the workflows initiated for the recipient with the same workflow slug and batch key are aggregated in the batch. Batches are created unique for each recipient and batch key combination for that workflow.
+    When the batch window is open, all the workflows initiated for the recipient with the same workflow slug and batch key are aggregated in the batch. Batches are created unique for each recipient, tenant and batch key combination for that workflow.
   
 
   **Move to next workflow step once batch window is closed**
@@ -34,7 +34,7 @@ There are 3 types of window type: **Fixed** (fixed for all users), **Dynamic** (
 
 
   ### Fixed
-    Fixed batch window is defined in your workflow form as `**d **h **m **s` and it keeps the batch open for a fixed duration for all users. An example of using fixed batch window can be social media updates where you want to send alert to users about new comments or post likes after an hour from the first comment.
+    Fixed batch window (`fixed_window`) is a duration like `30m`, `1h30m` or `2d12h` with no spaces (see [Duration format](workflow-schema-guide.md#duration-format)) and it keeps the batch open for a fixed duration for all users. An example of using fixed batch window can be social media updates where you want to send alert to users about new comments or post likes after an hour from the first comment.
 
     
 
@@ -51,12 +51,12 @@ There are 3 types of window type: **Fixed** (fixed for all users), **Dynamic** (
     You can add duration key as a [JQ-expression](https://jqlang.github.io/jq/manual/). Below are some examples of how to add duration key in JQ format:
 
     1. General format for duration key at parent level is`.duration_key`
-    2. If the duration key is a nested event property key like shown below, enter it in the format`.preferencs.alert_frequency`.
+    2. If the duration key is a nested event property key like shown below, enter it in the format`.preferences.alert_frequency`.
 
     
       ```json json theme={"system"}
       properties = {
-        "preferencs": {
+        "preferences": {
           "alert_frequency": "1h",
           "channels": ["email","inbox"]
         }
@@ -72,7 +72,7 @@ There are 3 types of window type: **Fixed** (fixed for all users), **Dynamic** (
     * An ISO-8601 timestamp (for example 2024-03-02T20:34:07Z) which must be a datetime in the future, or
     * A relative duration unit, which can be
       * an integer like`50`, which will be considered as duration in seconds
-      * an interval string defined as`**d **h **m **s`, where d = day, h = hour, m = minutes and s = seconds
+      * an interval string like `2d5h30m` (no spaces), where d = day, h = hour, m = minutes and s = seconds
 
     > **Note:**
       **Batch window is not modified by subsequent workflows once the window is open**
@@ -82,7 +82,7 @@ There are 3 types of window type: **Fixed** (fixed for all users), **Dynamic** (
   
 
   ### Relative
-    Relative batch window is calculated based on a future timestamp. for example, sending a batched list of all pending tasks 1 hour before workday end time, where workday_end_time is a key in the trigger payload. It consists of three key components:
+    Relative batch window is calculated based on a future timestamp. For example, sending a batched list of all pending tasks 1 hour before workday end time, where workday_end_time is a key in the trigger payload. It consists of three key components:
 
     1. **Interval**: The delay from the future timestamp, formatted as xxdxxhxxmxxs (for example 30m for 30 minutes). This can be: Fixed (for example always 1 hour minutes before). Dynamic, where the value is retrieved from the payload (for example in Google Calendar, users can set reminders for 10 or 20 minutes before an event).
     2. **Before/After**: Determines whether the interval is subtracted (before) or added (after) to the timestamp.
@@ -92,12 +92,12 @@ There are 3 types of window type: **Fixed** (fixed for all users), **Dynamic** (
 
 ## Batch Key
 
-This is the property in your `track event` call used for defining unique batches of the events. By default, event will be batched per user. You can use batch key to create multiple batches per user. Batches are created for each unique `distinct_id` and `batch_key` combination. For instance, you can add `post_id` as your batch key if you want to send separate notifications for comments on different LinkedIn posts.
+This is the property in your `track event` call used for defining unique batches of the events. By default, event will be batched per user. You can use batch key to create multiple batches per user. Batches are created for each unique recipient + tenant + `batch_key` combination within the workflow. For instance, you can add `post_id` as your batch key if you want to send separate notifications for comments on different LinkedIn posts.
 
 
 ## Retain Batch events
 
-It will define the number of event data that will be included in your batch variable. You have the option to display either the first n events or the last n events in your batch output. By default, the first 10 events are included in your batch output variable once the batch window closes. You can customize the number of events to any value between 2 and 100.
+It will define the number of event data that will be included in your batch variable. You have the option to display either the first n events or the last n events in your batch output. By default, the first 10 events are included in your batch output variable once the batch window closes. You can customize the number of events (`retain_count`) to any value between 1 and 100.
 
 
 ## Flush first item immediately
@@ -111,18 +111,18 @@ The output structure of the first notification matches the batch structure, with
 **Example Use Case:**
 Send anomaly alert with first notification sent at the occurrence of first error and next alert sent after 30 minutes if there are further errors. These could be the template content for single vs batched trigger:
 
-* First notification (sent immediately):`A new error encountered in your account - {{$batched_events.[0].error_message}}`
-* Batched notification (sent after grouping all errors from second error onwards):`{{$batched_events_count}} errors occurred in your account in the last 30 mins - {{#each $batched_events}}{{error_message}}{{/each}}`
+* First notification (sent immediately): `A new error encountered in your account - {{$batched_events.[0].error_message}}`
+* Batched notification (sent after grouping all errors from second error onwards): `{{$batched_events_count}} errors occurred in your account in the last 30 mins - {{#each $batched_events}}{{error_message}}{{/each}}`
 
 ## Using Batch variables in templates
 
 Batch output variable has 2 type of variables:
 
-1. `$batched_events`array : All the event properties corresponding to a batched event is appended to this array and can be used in the template in the array format. The number of event properties returned here is limited by retaining batch events.
-2. `$batched_event_count`: This count represents the number of events in a batch and is utilized to render the batch count in a template. For instance, you might send a message like,`Joe left 5 comments in the last 1 hour`where 5 corresponds to \$batched_event_count.
+1. `$batched_events` array: All the event properties corresponding to a batched event is appended to this array and can be used in the template in the array format. The number of event properties returned here is limited by retaining batch events.
+2. `$batched_events_count` (plural "events"): This count represents the number of events in a batch and is utilized to render the batch count in a template. For instance, you might send a message like, `Joe left 5 comments in the last 1 hour` where 5 corresponds to `$batched_events_count`.
 
 > **Note:**
-  📘 Please note that **Retain batch events** setting doesn't impact the count, it just limits the number of event properties returned in `$batched_events` array.
+  📘 **Retain batch events** setting doesn't impact the count, it just limits the number of event properties returned in `$batched_events` array.
 
 
 Let's understand the batch variable structure with an example of task comments with below notification content.
@@ -229,12 +229,12 @@ This is how you'll add the variable in your template to render the desired notif
   ```
 
 
-You can also test this behaviour via `Enable batching` option in [Mock data](/docs/templates#the-variables-panel) button on template details page. Once enabled, you'll start getting `$batched_events*` variable in auto suggestion on typing `{{` in template editor. The variables in mock data will be treated as event properties and `Event Count` will imitate the number of times this event will be triggered in the batch.
+You can also test this behaviour via `Enable batching` option in [Mock data](/docs/templates#the-variables-panel) button on template details page. Once enabled, you'll start getting `$batched_events` variable in auto suggestion on typing `{{` in template editor. The variables in mock data will be treated as event properties and `Event Count` will imitate the number of times this event will be triggered in the batch.
 
 
 ## Transforming Batch variable output
 
-There can be cases where you need to split the batch output variables into multiple arrays based on keys in your input data. for example, to send a message like `You have got 5 comments and 3 likes on your post in the past 1 hour` where post and likes are interaction_type in your input payload. You can use [data transform node](/docs/data-transform) and generate relevant variables using **JSONNET editor** to handle this use case.
+There can be cases where you need to split the batch output variables into multiple arrays based on keys in your input data. For example, to send a message like `You have got 5 comments and 3 likes on your post in the past 1 hour` where post and likes are interaction_type in your input payload. You can use [data transform node](/docs/data-transform) and generate relevant variables using **JSONNET editor** to handle this use case.
 
 
 Let's take below example. There are 3 post interactions, 2 comments and 1 like and this is your workflow trigger.
@@ -364,7 +364,7 @@ After data transform node, output variables will contain 3 additional keys gener
 
 ***
 
-## Frequently Asked Questions:
+## Frequently asked questions
 
 
   ### What does this error in logs mean batch: this event was added to the running batch of a pre-existing workflow?
@@ -382,6 +382,9 @@ After data transform node, output variables will contain 3 additional keys gener
 
 ***
 
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
+
 ## Schema Properties
 
 | Property | Type | Required | Description |
@@ -394,6 +397,26 @@ After data transform node, output variables will contain 3 additional keys gener
 | retain_count | integer | No | max number of items to retain after batch closes |
 | retain_order | string | No | retain items in this order. first -> first n items. last -> last n items |
 | batch_key | string | No | jq-expression for deriving batch-key from payload |
+
+**Field rules** (the table's "Required" column misses the conditional ones):
+
+- `window_type` decides which window field is **required**: `fixed` → `fixed_window`, `dynamic` → `dynamic_window_expr`, `relative_to` → `relative_to`. Fields for the other window types are dropped on save.
+- `fixed_window` (and `relative_to.offset_value` when `offset_value_type` is `fixed`): a duration like `30m`, `1h30m`, `2d12h`. No spaces, hours ≤ 23, minutes and seconds ≤ 59, greater than 0, at most 90 days. See [Duration format](workflow-schema-guide.md#duration-format).
+- `dynamic_window_expr`: a jq expression that must resolve at runtime to an RFC 3339 timestamp **with** a timezone offset (e.g. `2026-01-02T09:00:00Z`; a past timestamp closes the batch immediately), an integer (seconds), or a duration string without spaces (e.g. `"2h30m"`). If the value is missing or invalid, the run stops with an error.
+- `retain_count`: 1–100, default 10. `retain_order`: `first` (default) keeps the oldest N in arrival order; `last` keeps the newest N, **newest first**. Neither changes `$batched_events_count`.
+- Grouping: one open batch per recipient + tenant + workflow + `batch_key` value.
+- Output variables for later nodes and templates: `$batched_events` (array of event properties), `$batched_events_count` (plural — the singular `$batched_event_count` does not exist and fails the render), and `$batch_key`.
+
+### Relative-to properties
+
+All four are required when `window_type` is `relative_to`. This is the same shape as the [delay node](node-delay.md). `offset_type` is `before` or `after`. With `offset_value_type: "fixed"`, `offset_value` is a duration. With `"dynamic"`, it is a jq expression.
+
+| Property | Type | Required | Description |
+| --- | --- | --- | --- |
+| pivot_expr | string | Yes | jq-expression to calculate the pivot timestamp which when used with offset will give final timestamp |
+| offset_type | string | Yes | represents whether offset is to be added/subtracted from pivot timestamp |
+| offset_value_type | string | Yes | how to derive the offset value. Will it be fixed value OR derived at runtime using jq-expression |
+| offset_value | string | Yes |  |
 
 ### Mode values
 
@@ -423,6 +446,24 @@ After data transform node, output variables will contain 3 additional keys gener
     "batch_key": ".post_id",
     "retain_count": 10,
     "retain_order": "last"
+  }
+}
+```
+
+### Example — relative window (close 30 minutes before a payload timestamp)
+
+```json
+{
+  "node_type": "batch",
+  "properties": {
+    "mode": "accumulate_all",
+    "window_type": "relative_to",
+    "relative_to": {
+      "pivot_expr": ".due_at",
+      "offset_type": "before",
+      "offset_value_type": "fixed",
+      "offset_value": "30m"
+    }
   }
 }
 ```

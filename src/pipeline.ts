@@ -127,7 +127,7 @@ async function writeOutputFiles(
 
     if (decl.template) {
       // Templated: render .hbs file with context
-      const content = await renderOutputFile(skillName, decl.template, context);
+      const content = await renderOutputFile(skillName, decl.template, context, subdir);
       await writeFile(targetPath, content);
     } else {
       // Static copy: read from skills-src/<skill>/<subdir>/<filename>

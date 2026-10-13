@@ -85,14 +85,28 @@ describe("Handlebars helpers", () => {
       expect(result).toContain("| data | any | No | Some data |");
     });
 
-    it("formats array type as pipe-separated", () => {
+    it("formats array type with escaped pipes so the row keeps 4 columns", () => {
       const schema = {
         properties: {
           value: { type: ["string", "null"], description: "Nullable string" },
         },
       };
       const result = render("{{schema-table schema}}", { schema });
-      expect(result).toContain("| value | string | null | No | Nullable string |");
+      expect(result).toContain("| value | string \\| null | No | Nullable string |");
+    });
+
+    it("every row has the same number of cells as the header", () => {
+      const schema = {
+        properties: {
+          a: { type: ["array", "null"], description: "x | y" },
+          b: { type: ["string", "integer", "null"] },
+          c: { type: "object", description: "multi\nline" },
+        },
+      };
+      const result = render("{{schema-table schema}}", { schema });
+      const cellCount = (line: string) => line.slice(1, -1).split(/(?<!\\)\|/).length;
+      const [header, , ...rows] = result.split("\n");
+      for (const row of rows) expect(cellCount(row)).toBe(cellCount(header));
     });
 
     it("handles missing description", () => {
@@ -403,6 +417,16 @@ describe("Handlebars helpers", () => {
       // When only filename is provided (label gets the options hash)
       const result = render('{{ref-link "guide.md"}}', {});
       expect(result).toBe("[guide.md](references/guide.md)");
+    });
+
+    it("links to a sibling file when rendered into references/", () => {
+      const tpl = Handlebars.compile('{{ref-link "guide.md" "The Guide"}}', { noEscape: true });
+      expect(tpl({}, { data: { outputSubdir: "references" } })).toBe("[The Guide](guide.md)");
+    });
+
+    it("links up and across when rendered into scripts/ or assets/", () => {
+      const tpl = Handlebars.compile('{{ref-link "guide.md"}}', { noEscape: true });
+      expect(tpl({}, { data: { outputSubdir: "assets" } })).toBe("[guide.md](../references/guide.md)");
     });
   });
 

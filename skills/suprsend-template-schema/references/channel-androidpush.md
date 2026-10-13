@@ -32,7 +32,25 @@ For variants with `channel: "androidpush"`.
 | local_only | boolean | No | Local notification only |
 | extra_payload | object | No | extra payload. dict of key-value pairs |
 
-`header` and `body` are required.
+`header` and `body` are required. Length limits: `header` 500, `body` 4000 and `subtext` 50 characters. Longer values fail validation on save.
+
+### Fields SuprSend controls (don't set them)
+
+These are overwritten on save, whatever you put in the variant:
+
+- `channel_show_badge` → `true`, `auto_cancel` → `true`, `local_only` → `true`
+- `color` → your organization's brand colour
+- `templating_language` → `handlebars`
+- Button `id` — always replaced with an id built from the workflow slug and the button `text`. Omit it; buttons are identified by their text.
+
+### `extra_payload`
+
+- It must be an object of **string → string**. Numbers, booleans and nested objects fail validation, so quote them (`"count": "{{ count }}"`).
+- Keys are copied flat into the FCM `data` payload your app receives. SuprSend sets the keys `supr_send_n_pl`, `via_suprsend`, `nid` and `ngid` itself and overwrites any of yours with the same name, so don't use them. FCM also rejects `from`, `message_type` and keys starting with `google` or `gcm`.
+
+### URLs and special characters
+
+Push content is not HTML, but `{{ }}` still HTML-escapes its output (`&` → `&amp;`, `=` → `&#x3D;`, `'` → `&#x27;`) and nothing reverses it. A whole URL in `{{ }}` (for example an image URL with a query string) arrives broken. Use triple braces `{{{ }}}` for any variable that holds a URL or may contain those characters.
 
 ### `channel_lock_screen_visibility` values
 
@@ -63,6 +81,8 @@ Up to 3 entries in `buttons[]`:
 | text | string | Yes |  |
 | url | string | Yes |  |
 
+Set only `text` and `url`. Any `id` you set is replaced on save (see above).
+
 ## Examples
 
 ### Simple notification
@@ -70,7 +90,7 @@ Up to 3 entries in `buttons[]`:
 ```json
 {
   "header": "New message",
-  "body": "{{ sender.name }} sent you a message"
+  "body": "{{{ sender.name }}} sent you a message"
 }
 ```
 
@@ -79,14 +99,14 @@ Up to 3 entries in `buttons[]`:
 ```json
 {
   "header": "Friend request",
-  "body": "{{ actor.name }} wants to connect",
-  "image_url": "{{ actor.avatar_url }}",
+  "body": "{{{ actor.name }}} wants to connect",
+  "image_url": "{{{ actor.avatar_url }}}",
   "action_url": "acme://users/{{ actor.id }}",
   "channel_importance": "HIGH",
   "priority": "HIGH",
   "buttons": [
-    { "id": "accept", "text": "Accept", "url": "acme://friends/accept?id={{ request.id }}" },
-    { "id": "decline", "text": "Decline", "url": "acme://friends/decline?id={{ request.id }}" }
+    { "text": "Accept", "url": "acme://friends/accept?id={{ request.id }}" },
+    { "text": "Decline", "url": "acme://friends/decline?id={{ request.id }}" }
   ],
   "extra_payload": { "request_id": "{{ request.id }}" }
 }
@@ -94,10 +114,11 @@ Up to 3 entries in `buttons[]`:
 
 ## Documentation
 
-```
+**Verified behaviour (overrides the docs below):** the scenario tables show URL variables like `{{product_image_url}}`. Use `{{{product_image_url}}}` in `image_url`, `action_url` and button `url` so query strings aren't HTML-escaped.
+
 # Android Push
 
-> How to design Android Push templates with customisation options for images, buttons, sound, silent, and sticky notifications.
+> Design Android push templates in SuprSend with title, image, buttons, action URLs, sound, silent and sticky notification options, plus live device preview.
 
 The Android Push editor is a form with title, message, image, action URL, and buttons - with a live device preview on the right. Content is personalised with [Handlebars](/docs/handlebars-helpers) variables (`{{variable_name}}`).
 
@@ -202,15 +223,15 @@ There will always be the case where you would be required to add dynamic content
 
 ## Advanced configurations
 
-| Field                  | Type      | Description                                                                                                                                                       |
-| ---------------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Silent                 | Boolean   | Users won't see this message. Triggers background activities using the notification payload. Useful for data sync, content pre-fetching, or breaking news alerts. |
-| Timeout                | Numeric   | Auto-dismiss after N seconds if the user hasn't interacted. Combine with Sticky for urgent time-limited alerts (for example, 2FA prompts).                        |
-| Sticky Notifications   | Boolean   | Prevents swipe-dismiss. Removed only when the user taps the notification.                                                                                         |
-| Notification Group     | Text      | Group name to stack related notifications (for example, chat messages from the same conversation) to avoid flooding the tray.                                     |
-| App Icon (Small Icon)  | Text      | Icon name without extension. See custom icon setup in the [FAQ below](#frequently-asked-questions).                                                               |
-| Sound                  | Text      | Sound file name. See custom sound setup in the [FAQ below](#frequently-asked-questions).                                                                          |
-| Custom Key-Value Pairs | Key-value | Send custom data to the app. Both key and value are strings. Combine with silent notifications for background data updates.                                       |
+| Field | Type | Description |
+| - | - | - |
+| Silent | Boolean | Users won't see this message. Triggers background activities using the notification payload. Useful for data sync, content pre-fetching, or breaking news alerts. |
+| Timeout | Numeric | Auto-dismiss after N seconds if the user hasn't interacted. Combine with Sticky for urgent time-limited alerts (for example, 2FA prompts). |
+| Sticky Notifications | Boolean | Prevents swipe-dismiss. Removed only when the user taps the notification. |
+| Notification Group | Text | Group name to stack related notifications (for example, chat messages from the same conversation) to avoid flooding the tray. |
+| App Icon (Small Icon) | Text | Icon name without extension. See custom icon setup in the [FAQ below](#frequently-asked-questions). |
+| Sound | Text | Sound file name. See custom sound setup in the [FAQ below](#frequently-asked-questions). |
+| Custom Key-Value Pairs | Key-value | Send custom data to the app. Both key and value are strings. Combine with silent notifications for background data updates. |
 
 > **Note:**
   **SDK version requirements:**
@@ -239,28 +260,28 @@ Click **Commit** in the top bar to publish the current draft as a new live versi
 
 
   ### Order update with tracking
-    | Field        | Value                                                              |
-    | ------------ | ------------------------------------------------------------------ |
-    | Title        | `Order #{{order_id}} shipped`                                      |
-    | Message      | `Your package is on the way! Expected delivery: {{delivery_date}}` |
-    | Banner Image | `{{product_image_url}}`                                            |
-    | Action URL   | `https://yourapp.com/track/{{order_id}}`                           |
+    | Field | Value |
+    | - | - |
+    | Title | `Order #{{order_id}} shipped` |
+    | Message | `Your package is on the way! Expected delivery: {{delivery_date}}` |
+    | Banner Image | `{{product_image_url}}` |
+    | Action URL | `https://yourapp.com/track/{{order_id}}` |
   
 
   ### Promotional with action buttons
-    | Field        | Value                                               |
-    | ------------ | --------------------------------------------------- |
-    | Title        | `Flash sale ends tonight`                           |
-    | Message      | `Up to 50% off on your favourites. Don't miss out!` |
-    | Banner Image | (static promotional banner)                         |
-    | Button 1     | `Shop Now` → `https://yourapp.com/sale`             |
-    | Button 2     | `View Wishlist` → `yourapp://wishlist`              |
+    | Field | Value |
+    | - | - |
+    | Title | `Flash sale ends tonight` |
+    | Message | `Up to 50% off on your favourites. Don't miss out!` |
+    | Banner Image | (static promotional banner) |
+    | Button 1 | `Shop Now` → `https://yourapp.com/sale` |
+    | Button 2 | `View Wishlist` → `yourapp://wishlist` |
   
 
   ### Silent data sync
-    | Field                  | Value                                                             |
-    | ---------------------- | ----------------------------------------------------------------- |
-    | Silent                 | `ON`                                                              |
+    | Field | Value |
+    | - | - |
+    | Silent | `ON` |
     | Custom Key-Value Pairs | `sync_type` = `catalog_update`, `version` = `{{catalog_version}}` |
 
     Use silent notifications to trigger background data fetches — for example, pre-loading content so it's ready when the user opens the app.
@@ -273,11 +294,11 @@ Click **Commit** in the top bar to publish the current draft as a new live versi
   ### How do deep links work in push notifications?
     The **Action URL** and **Action Button URLs** support three URL types:
 
-    | URL type      | Format                                      | Behaviour                                                                                                          |
-    | ------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-    | Web URL       | `https://yourapp.com/orders/123`            | Opens in the browser (or your app if [App Links](https://developer.android.com/training/app-links) are configured) |
-    | Custom scheme | `yourapp://orders/123`                      | Opens the matching activity in your app directly                                                                   |
-    | App Link      | `https://yourapp.com/orders/123` (verified) | Opens your app directly without a browser redirect                                                                 |
+    | URL type | Format | Behaviour |
+    | - | - | - |
+    | Web URL | `https://yourapp.com/orders/123` | Opens in the browser (or your app if [App Links](https://developer.android.com/training/app-links) are configured) |
+    | Custom scheme | `yourapp://orders/123` | Opens the matching activity in your app directly |
+    | App Link | `https://yourapp.com/orders/123` (verified) | Opens your app directly without a browser redirect |
 
     If your app supports App Links, prefer `https://` URLs - they work as both web fallback and deep links.
   
@@ -285,12 +306,12 @@ Click **Commit** in the top bar to publish the current draft as a new live versi
   ### How do I add a custom app icon?
     Add a small icon named `ic_suprsend_app_icon` in the drawable folders of your app. Android only uses the alpha channel - the icon displays as monochrome in the status bar. You can use a vector drawable (`androidApp/src/main/res/drawable/`) or PNG icons at each density:
 
-    | Density | Size  |
-    | ------- | ----- |
-    | MDPI    | 24x24 |
-    | HDPI    | 36x36 |
-    | XHDPI   | 48x48 |
-    | XXHDPI  | 72x72 |
+    | Density | Size |
+    | - | - |
+    | MDPI | 24x24 |
+    | HDPI | 36x36 |
+    | XHDPI | 48x48 |
+    | XXHDPI | 72x72 |
     | XXXHDPI | 96x96 |
 
     Use [Android Asset Studio](https://romannurik.github.io/AndroidAssetStudio/icons-notification.html) for quick icon generation. If you see the default bell icon, ensure all density sizes are present. If you see a solid square, the image lacks alpha transparency.
@@ -304,7 +325,7 @@ Click **Commit** in the top bar to publish the current draft as a new live versi
 
     **Important:** On Android 8.0+ (\~95% of users), sound is set at the [notification channel](https://developer.android.com/develop/ui/views/notifications/channels) level when the [category](/docs/notification-category) is first created. Changing the sound in the template only takes effect for:
 
-    * a new notification category
+    * a new preference category
     * a user installing the app for the first time
     * a user who uninstalled and reinstalled the app
 
@@ -324,4 +345,7 @@ Click **Commit** in the top bar to publish the current draft as a new live versi
 
   ### What happens if a variable is missing at send time?
     SuprSend discards the Android Push notification for that user. Other channels in the same template group (email, SMS, etc.) are still sent if they render successfully.
-```
+  
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.

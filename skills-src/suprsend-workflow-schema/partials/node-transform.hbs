@@ -2,6 +2,11 @@
 
 **Schema `node_type`:** `transform`
 
+## Verified behaviour (overrides the docs below)
+
+- **Reserved keys are rejected on save:** `workflow`, `$workflow`, `$brand`, `$tenant`, `$organization`, `$category`, `$user`, `$recipient`, `$actor`, `$distinct_id`, `$hosted_preference_url`, `$hosted_preference_domain`, `$embedded_preference_url`, `$batch_key`, `$batched_events`, `$batched_events_count`, `$attachments`, `$idempotency_key`. To reshape one of these (e.g. batched events), write the result to a new key such as `top_events`.
+- If the same `key` appears more than once, the last entry wins.
+
 ## Documentation
 
 {{{docs_transform}}}
@@ -30,7 +35,7 @@ Each item in the `variables` array:
       {
         "key": "greeting",
         "value_lang": "handlebars",
-        "value": "Hello {{$recipient.name}}, welcome!"
+        "value": "Hello \{{$recipient.name}}, welcome!"
       },
       {
         "key": "discount_rate",

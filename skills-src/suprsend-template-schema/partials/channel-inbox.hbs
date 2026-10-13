@@ -10,19 +10,23 @@ For variants with `channel: "inbox"`.
 
 Only `body` is required. All other fields are optional and have sensible defaults.
 
+- **`image_url`** (top level) is *not* an action URL, despite the table's description: it's an image URL passed through with the message. Use `action_url` for the card's click target and `avatar.image_url` for the avatar image.
+- **`extra_data`** must be a JSON-encoded **string**, not an object — e.g. `"extra_data": "{\"order_id\": \"42\", \"deep_link\": \"/orders/42\"}"`. Passing an object is rejected on save.
+- **Updates merge top-level keys:** keys you omit keep their stored values; a key you send replaces the stored value entirely (e.g. sending `avatar` replaces the whole avatar object). To clear a field, send it explicitly as `""`, `[]` or `null`.
+
 ### `importance` values
 
 {{schema-enum (get inbox_schema "properties.importance.enum")}}
 
 ## Subtext
 
-Optional secondary line (e.g., username + profile link).
+Optional secondary line (e.g., username + profile link). Dropped at send time unless `text` renders to a non-empty value.
 
 {{schema-table (get inbox_schema "$defs.inbox_subtext_def")}}
 
 ## Avatar
 
-Optional avatar image with click-through URL.
+Optional avatar image with click-through URL. Dropped at send time unless `image_url` renders to a non-empty value.
 
 {{schema-table (get inbox_schema "$defs.inbox_avatar_def")}}
 
@@ -31,6 +35,8 @@ Optional avatar image with click-through URL.
 `buttons[]`:
 
 {{schema-table (get inbox_schema "$defs.inbox_button_def")}}
+
+A button is dropped at send time unless **both** `text` and `url` render to non-empty values. The API doesn't cap the number of buttons, but the docs below describe the inbox card as supporting up to 2 — keep it to 2.
 
 ## Expiry
 
@@ -46,9 +52,17 @@ Auto-expire/dismiss the inbox message after a duration or at an absolute time.
 
 {{schema-enum (get inbox_schema "$defs.inbox_expiry_def.properties.expiry_type.enum")}}
 
-`value` examples — relative: `7d`, `24h30m`. Absolute: ISO datetime, e.g. `2026-12-31T23:59:59Z`.
+`expiry` only takes effect when `is_expiry_enabled` is `true`; otherwise it is cleared on save.
+
+`value` formats:
+
+- **Relative** (`format: "relative"`, `expiry_type: "fixed"`): duration `XdYhZmWs` with **no spaces**, e.g. `7d`, `1d30m`, `2d6h`. Validated on save: hours 0–23, minutes and seconds 0–59 (write `1d6h`, not `30h`), and a zero duration is saved as a variant error that blocks commit.
+- **Absolute** (`format: "absolute"`, `expiry_type: "fixed"`): ISO-8601 datetime **with timezone**, e.g. `2026-12-31T23:59:59Z` or `2026-12-31T23:59:59+05:30`. A past datetime is not rejected — check it yourself.
+- **Dynamic** (`expiry_type: "dynamic"`): a variable such as `\{{ expiry_time }}` that must render to either an ISO-8601 datetime with timezone, a duration without spaces (`2d6h30m`), or an integer number of seconds. Anything else — including a duration with spaces like `2d 6h` — fails at send time.
 
 ## Examples
+
+**Escaping:** the Inbox `body` is rendered as Markdown with raw HTML allowed, so keep `\{{ }}` there — the renderer decodes the entities and user text can't inject markup. `header`, `subtext.text` and URLs are shown as plain text, so use `\{{{ }}}` for names, free text and URLs in them.
 
 ### Simple text message
 
@@ -67,10 +81,10 @@ Auto-expire/dismiss the inbox message after a duration or at an absolute time.
   "header": "Friend request",
   "body": "\{{ actor.name }} wants to connect",
   "avatar": {
-    "image_url": "\{{ actor.avatar_url }}",
+    "image_url": "\{{{ actor.avatar_url }}}",
     "url": "https://acme.com/users/\{{ actor.id }}"
   },
-  "subtext": { "text": "@\{{ actor.handle }}", "url": "https://acme.com/users/\{{ actor.id }}" },
+  "subtext": { "text": "@\{{{ actor.handle }}}", "url": "https://acme.com/users/\{{ actor.id }}" },
   "buttons": [
     { "text": "Accept", "url": "https://acme.com/friends/accept?id=\{{ request.id }}" },
     { "text": "Decline", "url": "https://acme.com/friends/decline?id=\{{ request.id }}" }
@@ -84,6 +98,4 @@ Auto-expire/dismiss the inbox message after a duration or at an absolute time.
 
 ## Documentation
 
-```
 {{{docs_inbox}}}
-```

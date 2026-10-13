@@ -8,11 +8,21 @@ For variants with `channel: "iospush"`.
 
 {{schema-table iospush_schema}}
 
-`header` and `body` are required. All other fields are optional.
+`header` (max 500 characters) and `body` (max 4000 characters) are required — longer values fail validation on save. Author only `header`, `body`, `image_url`, `action_url` and `sound`.
 
-- `content_available: 1` enables background app refresh (silent push).
-- `mutable_content: 1` allows a Notification Service Extension to modify the payload before display (used for media attachments).
-- `via_suprsend: true` routes delivery telemetry back through SuprSend.
+### Fields SuprSend controls (don't set them)
+
+These are overwritten on save or at send time, whatever you put in the variant:
+
+- `badge` — **never sent.** It is reset to 0 before rendering and left out of the APNs payload, so SuprSend never sets or increments the app badge. Manage the badge count in your app.
+- `content_available` — always `1`. An alert (title + body) is always shown; an iOS push template can't be a silent push.
+- `mutable_content` — always `1`, so a Notification Service Extension can attach the `image_url` media.
+- `thread_identifier` — always overwritten with the workflow's notification category slug (sent as `aps.thread_identifier`); a custom value is discarded, so don't set it.
+- `notification_type`, `via_suprsend`, `templating_language` — fixed values.
+
+### URLs and special characters
+
+Push content is not HTML, but `\{{ }}` still HTML-escapes its output (`&` → `&amp;`, `=` → `&#x3D;`, `'` → `&#x27;`) and nothing reverses it. A whole URL in `\{{ }}` (for example a signed image URL with a query string) arrives broken. Use triple braces `\{{{ }}}` for any variable that holds a URL or may contain those characters.
 
 ## Examples
 
@@ -21,8 +31,7 @@ For variants with `channel: "iospush"`.
 ```json
 {
   "header": "New message",
-  "body": "\{{ sender.name }}: \{{ message.preview }}",
-  "badge": 1,
+  "body": "\{{{ sender.name }}}: \{{{ message.preview }}}",
   "sound": "default"
 }
 ```
@@ -33,16 +42,13 @@ For variants with `channel: "iospush"`.
 {
   "header": "Order shipped",
   "body": "Your order #\{{ order.id }} is on its way",
-  "image_url": "\{{ order.cover_image }}",
-  "action_url": "acme://orders/\{{ order.id }}",
-  "badge": 1,
-  "mutable_content": 1,
-  "thread_identifier": "orders"
+  "image_url": "\{{{ order.cover_image }}}",
+  "action_url": "acme://orders/\{{ order.id }}"
 }
 ```
 
 ## Documentation
 
-```
+**Verified behaviour (overrides the docs below):** the scenario tables show URL variables like `\{{product_image_url}}`. Use `\{{{product_image_url}}}` in `image_url` and `action_url` so query strings aren't HTML-escaped.
+
 {{{docs_iospush}}}
-```

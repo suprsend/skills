@@ -8,7 +8,25 @@ For variants with `channel: "androidpush"`.
 
 {{schema-table androidpush_schema}}
 
-`header` and `body` are required.
+`header` and `body` are required. Length limits: `header` 500, `body` 4000 and `subtext` 50 characters. Longer values fail validation on save.
+
+### Fields SuprSend controls (don't set them)
+
+These are overwritten on save, whatever you put in the variant:
+
+- `channel_show_badge` → `true`, `auto_cancel` → `true`, `local_only` → `true`
+- `color` → your organization's brand colour
+- `templating_language` → `handlebars`
+- Button `id` — always replaced with an id built from the workflow slug and the button `text`. Omit it; buttons are identified by their text.
+
+### `extra_payload`
+
+- It must be an object of **string → string**. Numbers, booleans and nested objects fail validation, so quote them (`"count": "\{{ count }}"`).
+- Keys are copied flat into the FCM `data` payload your app receives. SuprSend sets the keys `supr_send_n_pl`, `via_suprsend`, `nid` and `ngid` itself and overwrites any of yours with the same name, so don't use them. FCM also rejects `from`, `message_type` and keys starting with `google` or `gcm`.
+
+### URLs and special characters
+
+Push content is not HTML, but `\{{ }}` still HTML-escapes its output (`&` → `&amp;`, `=` → `&#x3D;`, `'` → `&#x27;`) and nothing reverses it. A whole URL in `\{{ }}` (for example an image URL with a query string) arrives broken. Use triple braces `\{{{ }}}` for any variable that holds a URL or may contain those characters.
 
 ### `channel_lock_screen_visibility` values
 
@@ -28,6 +46,8 @@ Up to 3 entries in `buttons[]`:
 
 {{schema-table (get androidpush_schema "$defs.androidpush_button_def")}}
 
+Set only `text` and `url`. Any `id` you set is replaced on save (see above).
+
 ## Examples
 
 ### Simple notification
@@ -35,7 +55,7 @@ Up to 3 entries in `buttons[]`:
 ```json
 {
   "header": "New message",
-  "body": "\{{ sender.name }} sent you a message"
+  "body": "\{{{ sender.name }}} sent you a message"
 }
 ```
 
@@ -44,14 +64,14 @@ Up to 3 entries in `buttons[]`:
 ```json
 {
   "header": "Friend request",
-  "body": "\{{ actor.name }} wants to connect",
-  "image_url": "\{{ actor.avatar_url }}",
+  "body": "\{{{ actor.name }}} wants to connect",
+  "image_url": "\{{{ actor.avatar_url }}}",
   "action_url": "acme://users/\{{ actor.id }}",
   "channel_importance": "HIGH",
   "priority": "HIGH",
   "buttons": [
-    { "id": "accept", "text": "Accept", "url": "acme://friends/accept?id=\{{ request.id }}" },
-    { "id": "decline", "text": "Decline", "url": "acme://friends/decline?id=\{{ request.id }}" }
+    { "text": "Accept", "url": "acme://friends/accept?id=\{{ request.id }}" },
+    { "text": "Decline", "url": "acme://friends/decline?id=\{{ request.id }}" }
   ],
   "extra_payload": { "request_id": "\{{ request.id }}" }
 }
@@ -59,6 +79,6 @@ Up to 3 entries in `buttons[]`:
 
 ## Documentation
 
-```
+**Verified behaviour (overrides the docs below):** the scenario tables show URL variables like `\{{product_image_url}}`. Use `\{{{product_image_url}}}` in `image_url`, `action_url` and button `url` so query strings aren't HTML-escaped.
+
 {{{docs_androidpush}}}
-```

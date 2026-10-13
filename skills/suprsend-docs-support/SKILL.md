@@ -1,6 +1,6 @@
 ---
 name: suprsend-docs-support
-description: "Default skill for any SuprSend question that isn't strictly authoring JSON or running a CLI command. Fetch, search, read, and explain SuprSend documentation; answer \"how does X work\", \"what is X\", \"show me the docs for X\". Provides docs-over-SSH (ssh suprsend.sh), the .md-suffix raw markdown URL convention, LLM-friendly bulk endpoints, in-app chat, AI copilot, Slack community, and email support. Examples that should load this skill: \"fetch batching documentation\", \"explain digest nodes\", \"show me the inbox channel docs\", \"what fields does an email variant have\", \"how do conditions work in templates\"."
+description: "Default skill for any SuprSend question that isn't strictly authoring JSON or running a CLI command. Fetch, search, read, and explain SuprSend documentation; answer \"how does X work\", \"what is X\", \"show me the docs for X\". Provides the llms.txt indexes + .md-suffix raw markdown workflow, the SuprSend MCP docs tools, the in-dashboard AI agent, in-app chat, Slack community, and email support. Examples that should load this skill: \"fetch batching documentation\", \"explain digest nodes\", \"show me the inbox channel docs\", \"what fields does an email variant have\", \"how do conditions work in templates\"."
 metadata:
   author: "suprsend"
   category: "support"
@@ -10,56 +10,46 @@ metadata:
 
 ## Documentation
 
-SuprSend docs are available at [docs.suprsend.com](https://docs.suprsend.com). For agent access, pick the method that matches the tools available in the environment:
+SuprSend docs are available at [docs.suprsend.com](https://docs.suprsend.com). Every page is also served as raw Markdown — always fetch the `.md` form.
 
-### Preferred: docs over SSH (when `ssh` is available)
+### Find, then fetch
 
-If the agent can run shell commands, use the docs-over-SSH service. It exposes the full docs tree as a virtual filesystem under `/suprsend/`, browsable with standard Unix tools:
+1. **Find the page** — use the `llms.txt` indexes. `https://docs.suprsend.com/llms.txt` is the top-level index: it lists mostly API reference pages and links to sub-indexes, and many guide pages (e.g. batch, digest) appear **only** in a sub-index:
+   - Product guides → `https://docs.suprsend.com/_llms/documentation.txt`
+   - SDKs and developer guides → `https://docs.suprsend.com/_llms/developer-resources.txt`
 
-```bash
-# Search for a topic across all docs
-ssh suprsend.sh grep -rl 'inbox' /suprsend/
+   For a conceptual or how-to question, start with the guides index. Follow any other `/_llms/` link the same way, then pick the page(s) that match the question.
+2. **Fetch only that page as Markdown** — append `.md` to its URL:
+   - HTML page → `https://docs.suprsend.com/docs/quick-start-guide`
+   - Markdown for the same page → `https://docs.suprsend.com/docs/quick-start-guide.md`
 
-# Read a specific guide
-ssh suprsend.sh cat /suprsend/docs/quick-start-guide.md
+   This works for both `/docs/` (guides) and `/reference/` (API reference) paths.
 
-# Find SDK reference pages
-ssh suprsend.sh find /suprsend/reference -name '*sdk*.md'
+`https://docs.suprsend.com/llms-full.txt` holds every page in one file (several MB). Use it only for broad sweeps, never for a single lookup.
 
-# Search the API reference with context
-ssh suprsend.sh grep -r 'workflow' /suprsend/reference/ --include='*.md' -l
-```
+### SuprSend MCP server
 
-The VFS mirrors the live URL structure: `/suprsend/reference/agent-sdk.md` ↔ `https://docs.suprsend.com/reference/agent-sdk`. Any standard Unix tool (`grep`, `find`, `cat`, `head`, `tail`) works.
+If the agent is connected to the hosted [SuprSend MCP server](https://docs.suprsend.com/reference/mcp-overview) (`https://mcp.suprsend.com/mcp`):
 
-Run `ssh suprsend.sh agents` to print these instructions in a form you can append to an `AGENTS.md` or similar agent-instruction file.
+- **Docs lookups** — use its `docs_search` tool.
+- **Skills** (workflow, template, semantic layer, docs support) — load them the first way the client supports:
+  1. the **MCP Skills extension** (skills load directly);
+  2. the server's `skill://` **resources**;
+  3. the `docs_get_skill` **tool**.
 
-### Fallback: append `.md` to any docs URL (when `ssh` is not available)
-
-Every page at `https://docs.suprsend.com/<path>` is also served as raw markdown at `https://docs.suprsend.com/<path>.md`. Use this when the agent can fetch URLs but cannot run shell commands:
-
-- HTML page → `https://docs.suprsend.com/docs/quick-start-guide`
-- Markdown for the same page → `https://docs.suprsend.com/docs/quick-start-guide.md`
-
-This works for both `/docs/` (guides) and `/reference/` (API reference) paths.
-
-### Bulk LLM endpoints
-
-For wholesale ingestion rather than targeted lookups:
-
-- **Index**: `https://docs.suprsend.com/llms.txt` — lightweight page listing with descriptions
-- **Full content**: `https://docs.suprsend.com/llms-full.txt` — complete documentation in a single file
+  All three return the same files.
 
 ## Getting Help
 
-### 1. Kai — AI Copilot (instant, in-dashboard)
+### 1. In-Product Agent (instant, in-dashboard)
 
-Kai is SuprSend's built-in AI copilot, available inside the dashboard at [app.suprsend.com](https://app.suprsend.com). Access it via the orb in the bottom-right corner, or use the keyboard shortcut:
+The SuprSend dashboard at [app.suprsend.com](https://app.suprsend.com) has a built-in AI agent, scoped to your workspace and the SuprSend docs. Open it with:
 
-- **macOS**: `Cmd + /`
-- **Windows / Linux**: `Ctrl + /`
+- **macOS**: `Cmd + /` (side panel)
+- **Windows / Linux**: `Ctrl + /` (side panel)
+- the **Agent** tab in the left navbar (full page)
 
-Kai can answer questions about SuprSend features, help debug workflow configurations, and guide you through setup steps.
+It can query the workspace, draft workflows, and debug delivery. Usage is credit-based and tied to the SuprSend plan. Docs: [In-Product Agent](https://docs.suprsend.com/reference/agent).
 
 ### 2. In-App Chat (fast, human support)
 

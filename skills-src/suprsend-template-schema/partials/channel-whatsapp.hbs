@@ -4,7 +4,12 @@ For variants with `channel: "whatsapp"`.
 
 **Schema URL:** `https://schema.suprsend.com/template/v2/channel/whatsapp_basic_interactive_schema.json`
 
-> **Note.** WhatsApp templates require Meta approval before they can be sent. Like SMS DLT, configure the variant-level `vendor_approvals` array with the vendor and the approved `vendor_template_name` / `vendor_template_id`.
+> **Note.** WhatsApp templates must be approved before they can be sent. `needs_vendor_approval` is always `true` for WhatsApp. Approval starts when the template is **committed** (not when the variant is saved):
+> - If the workspace's primary WhatsApp vendor (the level-0 vendor in the default tenant's WhatsApp routing) is **Meta Cloud API** (`cloud_api`) or **Twilio**, SuprSend uploads the template for approval automatically.
+> - For any other WhatsApp vendor, nothing is uploaded: create/approve the template in the vendor's portal, then record the approval for the variant in SuprSend (including the vendor's template ID).
+> - If an approval already exists for identical approval content, its status is reused instead of resubmitting. With Meta Cloud API or Twilio, only an approval from the same vendor account (vendor slug + unique identifier) is reused; otherwise the template is resubmitted.
+>
+> `vendor_approvals` is read-only and not part of the variant JSON you author.
 
 ## Fields
 
@@ -12,15 +17,40 @@ For variants with `channel: "whatsapp"`.
 
 `category`, `subcategory`, and `body` are required. `subcategory` is fixed to `basic_interactive`.
 
+**Updates replace the whole content.** Unlike other channels, a WhatsApp content update is not merged with the stored content — always send the complete object (header, footer, buttons included), or omitted parts are lost.
+
 ### `category` values
 
 {{schema-enum (get whatsapp_schema "properties.category.enum")}}
+
+Only these two are accepted — there is no `AUTHENTICATION` category, so OTP-style authentication templates can't be created here.
 
 ### `button_type` values
 
 {{schema-enum (get whatsapp_schema "properties.button_type.enum")}}
 
-When `button_type` is `CALL_TO_ACTION` or `QUICK_REPLY`, at least one entry in `buttons` is required.
+When `button_type` is `CALL_TO_ACTION` or `QUICK_REPLY`, at least one entry in `buttons` is required. When `button_type` is missing or `NONE`, `buttons` is **cleared on save** — always set `button_type` when you send buttons.
+
+## Validation rules (checked on save; a variant with errors can't be committed)
+
+**Restricted Handlebars.** In `header.text`, `body.text`, `footer.text`, button `text`, `url_static_part` and `url_dynamic_part`, only plain variables (`\{{ order.id }}`) and inline helpers are allowed. Block helpers (`\{{#if}}`, `\{{#each}}`, …), partials (`\{{> …}}`) and comments (`\{{! …}}`) are rejected. Each variable becomes a positional parameter (`\{{1}}`, `\{{2}}`, …) in the approval submission. The translation helper `\{{t "key"}}` always fails at send in WhatsApp; localize with one variant per `locale`.
+
+**Mock data must cover every variable.** The template's mock data (the sample data in the Variables panel) is rendered to produce the example values sent for approval. Every variable in the header, body, `media_url` and `url_dynamic_part` must render to a **non-empty** value, otherwise the variant gets a `mock_data issue` error and the template can't be committed. Set mock data before committing.
+
+| Part | Limits |
+| --- | --- |
+| `header.text` (`TEXT`) | ≤ 60 characters; at most 1 variable |
+| `header.media_url` | ≤ 2000 characters; may contain variables (rendered with mock data for the example) |
+| `body.text` | ≤ 1024 characters; must not **start or end** with a variable — put text before the first and after the last variable |
+| `footer.text` | ≤ 60 characters; no variables |
+| Button `text` (all types) | ≤ 25 characters; no variables |
+| `CALL_TO_ACTION` buttons | only `URL` and `PHONE_NUMBER` types; at most 2 `URL` + 1 `PHONE_NUMBER` (can't mix with quick replies) |
+| `QUICK_REPLY` buttons | only `QUICK_REPLY` type; at most 10; every button `text` must be unique |
+| `phone_number` | literal number matching `^\+?[0-9]{10,20}$` — digits only, optional leading `+`, no spaces or variables |
+| `url_static_part` | ≤ 2000 characters; no variables |
+| `url_dynamic_part` | exactly one variable and nothing else, e.g. `\{{ order.id }}` |
+
+Character counts treat each variable as one character.
 
 ## Header
 
@@ -53,7 +83,7 @@ Optional.
 
 {{schema-table (get whatsapp_schema "$defs.UrlButton")}}
 
-`url_type: "dynamic"` requires `url_dynamic_part` (appended to `url_static_part` at send time).
+`url_type: "dynamic"` requires `url_dynamic_part` (appended to `url_static_part` at send time). With `url_type: "static"`, `url_dynamic_part` is cleared.
 
 ### `PHONE_NUMBER` button
 
@@ -71,9 +101,33 @@ Optional.
 {
   "category": "UTILITY",
   "subcategory": "basic_interactive",
-  "body": { "text": "Your order \{{ order.id }} has shipped. Tracking: \{{ order.tracking_url }}" }
+  "body": { "text": "Hi \{{{ first_name }}}, your order \{{ order.id }} has shipped and should arrive by \{{ order.eta }}. Reply HELP if you need anything." }
 }
 ```
+
+The body starts and ends with plain text (a variable at either end is rejected). Mock data must give `first_name`, `order.id` and `order.eta` non-empty values.
+
+### Dynamic tracking-link button
+
+```json
+{
+  "category": "UTILITY",
+  "subcategory": "basic_interactive",
+  "body": { "text": "Your order \{{ order.id }} is on its way. Tap below to track it." },
+  "button_type": "CALL_TO_ACTION",
+  "buttons": [
+    {
+      "type": "URL",
+      "text": "Track order",
+      "url_type": "dynamic",
+      "url_static_part": "https://acme.com/track/",
+      "url_dynamic_part": "\{{ order.id }}"
+    }
+  ]
+}
+```
+
+Put links in a URL button rather than in the body: the static part is fixed at approval, and the single variable in `url_dynamic_part` is appended at send time.
 
 ### Header image + call-to-action button
 
@@ -93,6 +147,4 @@ Optional.
 
 ## Documentation
 
-```
 {{{docs_whatsapp}}}
-```

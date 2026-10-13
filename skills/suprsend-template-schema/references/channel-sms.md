@@ -4,7 +4,7 @@ For variants with `channel: "sms"`.
 
 **Schema URL:** `https://schema.suprsend.com/template/v2/channel/sms_schema.json`
 
-> **Note on DLT compliance.** SMS variants must set the variant-level `needs_vendor_approval` field (true for DLT-regulated traffic, e.g. India; false otherwise). See the variant envelope guide for `vendor_approvals` shape.
+> **Note on DLT compliance.** The variant-level `needs_vendor_approval` field is **optional** for SMS. If you omit it when creating a variant, it's derived from the workspace's SMS settings (`true` when SMS template approval / DLT is enabled); if you omit it on an update, the stored value is kept. When it's `true`, the content `type` is forced to `"dlt"`. See the variant envelope guide for the read-only `vendor_approvals` shape.
 
 ## Fields
 
@@ -17,7 +17,9 @@ For variants with `channel: "sms"`.
 | header | string | No | message header (if type='dlt') |
 | body | string | Yes | message body |
 
-`type` and `body` are required. When `type` is `dlt`, `category` and `header` are also required.
+`type` and `body` are required. When `type` is `dlt`, `category` and `header` are also required (for `basic`, both are cleared). The `category` description in the table omits `service_explicit` — it is valid (see below).
+
+**Updates merge top-level keys:** keys you omit keep their stored values. To clear a field, send it explicitly as `""`.
 
 ### `type` values
 
@@ -35,6 +37,22 @@ For variants with `channel: "sms"`.
 - `service_explicit`
 - ``
 
+How the dashboard's DLT **Message Type** maps to `category`:
+
+| Dashboard Message Type | `category` value |
+| --- | --- |
+| Transactional | `service_implicit` |
+| Engagement | `service_explicit` |
+| Promotional | `promotional` |
+
+`transactional` is also accepted but isn't produced by the dashboard — prefer the three values above. The empty value means "not set" (for `basic`).
+
+## DLT approval rules (when `needs_vendor_approval` is `true`)
+
+- **Restricted Handlebars in `body`:** plain variables (`{{ otp }}`) and inline helpers are fine; block helpers (`{{#if}}`, `{{#each}}`, …), partials (`{{> …}}`) and comments (`{{! …}}`) are rejected.
+- **Mock data must cover every variable:** each variable in `body` must render to a **non-empty** value using the template's mock data (the sample data in the Variables panel), otherwise the variant gets a `mock_data issue` error and the template can't be committed.
+- **Approval starts at commit, and isn't uploaded for you.** SuprSend doesn't submit DLT templates to your SMS vendor: register the template on the DLT/vendor portal, then record the approval for the variant in SuprSend (including the vendor's template ID). If an approval already exists in the workspace for identical approval content (`type`, `category`, `header`, `body`), its status is reused.
+
 ## Examples
 
 ### Basic SMS
@@ -51,18 +69,19 @@ For variants with `channel: "sms"`.
 ```json
 {
   "type": "dlt",
-  "category": "transactional",
+  "category": "service_implicit",
   "header": "ACMECO",
   "body": "Your verification code is {{ otp }}. Valid for 5 minutes. -Acme"
 }
 ```
 
+With `needs_vendor_approval: true`, the template's mock data must include a non-empty `otp` before it can be committed.
+
 ## Documentation
 
-```
 # SMS
 
-> Design SMS notification content - a single body field with Handlebars variables and a live phone preview.
+> Design SMS notification content in SuprSend using a single body field with Handlebars variables, live phone preview, and unicode and length indicators.
 
 The SMS editor is a text editor with a live phone preview on the right. Content is personalised with [Handlebars](/docs/handlebars-helpers) variables (`{{variable_name}}`).
 
@@ -162,7 +181,7 @@ India requires all SMS templates to be registered and approved through a DLT (Di
 
 With DLT enabled, the SMS editor shows:
 
-**Message Type** - select the type: **Transactional** (triggered by a user action - delivery updates, OTPs), **Promotional** (marketing messages without explicit consent), or **Engagement** (re-engagement messages to existing users - feature promotions, discount offers).
+**Message Type** - select the type: **Transactional** (triggered by a user action - delivery updates, OTPs), **Promotional** (marketing messages without explicit consent), or **Engagement** (re-engagement messages to existing users - feature promotions, discount offers). In template JSON this is `category`: Transactional → `service_implicit`, Engagement → `service_explicit`, Promotional → `promotional`.
 
 **Header** - the sender ID (6 alphanumeric characters) registered with DLT. Separate headers exist for each message type.
 
@@ -176,7 +195,7 @@ With DLT enabled, the SMS editor shows:
   
 
   **Approval at vendor portal**
-    SuprSend submits the template to your SMS vendor for DLT approval. You'll be notified when approved or rejected.
+    SuprSend doesn't upload DLT templates for you: register the template on your DLT / vendor portal, then record the approval (with the vendor's template ID) for the variant in SuprSend. If identical content was already approved in the workspace, that approval is reused.
   
 
   **Live or revise**
@@ -200,33 +219,33 @@ Templates pending approval are visible in the **Approvals** tab on the [template
 
 
   ### OTP / verification code
-    | Field | Value                                                                                                                   |
-    | ----- | ----------------------------------------------------------------------------------------------------------------------- |
-    | Body  | `Your verification code is {{otp_code}}. It expires in {{expiry_minutes}} minutes. Do not share this code with anyone.` |
+    | Field | Value |
+    | - | - |
+    | Body | `Your verification code is {{otp_code}}. It expires in {{expiry_minutes}} minutes. Do not share this code with anyone.` |
 
     Keep OTP messages under one segment (160 characters). No URLs needed - just the code and expiry.
   
 
   ### Order / delivery update
-    | Field | Value                                                                                                  |
-    | ----- | ------------------------------------------------------------------------------------------------------ |
-    | Body  | `Hi {{$recipient.name}}, your order #{{order_id}} has been shipped! Track it here: {{{tracking_url}}}` |
+    | Field | Value |
+    | - | - |
+    | Body | `Hi {{$recipient.name}}, your order #{{order_id}} has been shipped! Track it here: {{{tracking_url}}}` |
 
     Use triple curly braces `{{{tracking_url}}}` for URLs to avoid HTML-escaping special characters like `&` and `?`.
   
 
   ### Appointment reminder
-    | Field | Value                                                                                                                                                 |
-    | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-    | Body  | `Reminder: Your appointment with {{provider_name}} is on {{appointment_date}} at {{appointment_time}}. Reply CONFIRM to confirm or CANCEL to cancel.` |
+    | Field | Value |
+    | - | - |
+    | Body | `Reminder: Your appointment with {{provider_name}} is on {{appointment_date}} at {{appointment_time}}. Reply CONFIRM to confirm or CANCEL to cancel.` |
 
     Pair with a [delay node](/docs/delay) or [time window](/docs/time-window) in your workflow to send at the right time.
   
 
   ### Promotional offer
-    | Field | Value                                                                                                                          |
-    | ----- | ------------------------------------------------------------------------------------------------------------------------------ |
-    | Body  | `Flash sale! Get {{discount}}% off on all items. Shop now: {{{shop_url}}}. Valid till {{expiry_date}}. Reply STOP to opt out.` |
+    | Field | Value |
+    | - | - |
+    | Body | `Flash sale! Get {{discount}}% off on all items. Shop now: {{{shop_url}}}. Valid till {{expiry_date}}. Reply STOP to opt out.` |
 
     Always include opt-out language for promotional messages.
   
@@ -252,10 +271,10 @@ Templates pending approval are visible in the **Approvals** tab on the [template
   ### Why is my SMS being sent as multiple segments?
     SMS has a per-segment character limit. Each extra segment is billed separately by your vendor.
 
-    | Encoding | Chars per segment              | When it applies                                          |
-    | -------- | ------------------------------ | -------------------------------------------------------- |
-    | GSM-7    | 160 (single), 153 (multi-part) | Standard Latin characters, digits, basic punctuation     |
-    | UCS-2    | 70 (single), 67 (multi-part)   | Emojis, non-Latin scripts (Hindi, Arabic, Chinese, etc.) |
+    | Encoding | Chars per segment | When it applies |
+    | - | - | - |
+    | GSM-7 | 160 (single), 153 (multi-part) | Standard Latin characters, digits, basic punctuation |
+    | UCS-2 | 70 (single), 67 (multi-part) | Emojis, non-Latin scripts (Hindi, Arabic, Chinese, etc.) |
 
     A single emoji or non-Latin character forces the **entire** message into UCS-2, cutting capacity from 160 to 70. Avoid emojis in transactional SMS to keep costs down.
   
@@ -274,4 +293,7 @@ Templates pending approval are visible in the **Approvals** tab on the [template
 
   ### What happens if a variable is missing at send time?
     SuprSend discards the SMS notification for that user. Other channels in the same template group (email, push, etc.) are still sent if they render successfully.
-```
+  
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
