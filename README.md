@@ -12,7 +12,7 @@ npx skills add suprsend/skills
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `suprsend-workflow-schema` | Workflow schema reference — all workflow nodes with documentation, JSON schema details, and usage examples                                                                                        |
 | `suprsend-template-schema` | Template (variant) schema reference — variant envelope, multi-tenant & multi-lingual variants, Handlebars + JSONNET syntax, and per-channel content schemas for all 9 channels                    |
-| `suprsend-docs-support`    | How to access SuprSend documentation and get support — docs-over-SSH (`ssh suprsend.sh`), `.md`-suffix raw markdown fallback, LLM-friendly endpoints, in-app chat, AI copilot, Slack, and email   |
+| `suprsend-docs-support`    | How to access SuprSend documentation and get support — `.md`-suffix raw markdown URLs, LLM-friendly endpoints, in-app chat, AI copilot, Slack, and email                                         |
 | `suprsend-cli`             | SuprSend CLI reference — command-line tool for managing workspaces, templates, workflows, schemas, and more, with agent-targeted per-command Tips _(pulled from [suprsend/cli](https://github.com/suprsend/cli))_ |
 
 ## For Users

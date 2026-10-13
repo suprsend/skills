@@ -56,7 +56,7 @@ Up to 2 entries in `buttons[]`:
 {
   "header": "Build complete",
   "body": "{{ repo }} – {{ branch }} built in {{ duration }}",
-  "icon_url": "{{ $brand.logo }}",
+  "icon_url": "{{ $tenant.logo }}",
   "action_url": "https://acme.com/builds/{{ build.id }}"
 }
 ```
@@ -84,7 +84,7 @@ Up to 2 entries in `buttons[]`:
 ```
 # Web Push
 
-> Design Web Push notification templates with title, body, image, action URL, and buttons - with a live Windows/macOS preview.
+> Design web push notification templates in SuprSend with title, body, image, action URL, and buttons, plus a live Windows and macOS preview of your content.
 
 The Web Push editor is a form with title, body, image, action URL, and buttons - with a live preview on the right (toggle between Windows and macOS). Content is personalised with [Handlebars](/docs/handlebars-helpers) variables (`{{variable_name}}`).
 
@@ -158,32 +158,32 @@ Click **Commit** in the top bar to publish the current draft as a new live versi
 
 
   ### Back-in-stock alert
-    | Field            | Value                                                     |
-    | ---------------- | --------------------------------------------------------- |
-    | Title            | `Back in stock: {{product_name}}`                         |
-    | Body             | `The item you were watching is available again.`          |
-    | Banner Image URL | `{{product_image_url}}`                                   |
-    | Action URL       | `https://yourapp.com/product/{{product_id}}`              |
-    | Button 1         | `Buy Now` → `https://yourapp.com/cart/add/{{product_id}}` |
+    | Field | Value |
+    | - | - |
+    | Title | `Back in stock: {{product_name}}` |
+    | Body | `The item you were watching is available again.` |
+    | Banner Image URL | `{{product_image_url}}` |
+    | Action URL | `https://yourapp.com/product/{{product_id}}` |
+    | Button 1 | `Buy Now` → `https://yourapp.com/cart/add/{{product_id}}` |
   
 
   ### New content published
-    | Field            | Value                                   |
-    | ---------------- | --------------------------------------- |
-    | Title            | `New article: {{article_title}}`        |
-    | Body             | `{{article_excerpt}}`                   |
-    | Banner Image URL | `{{cover_image_url}}`                   |
-    | Action URL       | `https://yourblog.com/{{article_slug}}` |
+    | Field | Value |
+    | - | - |
+    | Title | `New article: {{article_title}}` |
+    | Body | `{{article_excerpt}}` |
+    | Banner Image URL | `{{cover_image_url}}` |
+    | Action URL | `https://yourblog.com/{{article_slug}}` |
   
 
   ### Price drop
-    | Field      | Value                                                         |
-    | ---------- | ------------------------------------------------------------- |
-    | Title      | `Price dropped on {{product_name}}`                           |
-    | Body       | `Now {{new_price}} (was {{old_price}})`                       |
-    | Action URL | `https://yourapp.com/product/{{product_id}}`                  |
-    | Button 1   | `View Deal` → `https://yourapp.com/product/{{product_id}}`    |
-    | Button 2   | `Add to Cart` → `https://yourapp.com/cart/add/{{product_id}}` |
+    | Field | Value |
+    | - | - |
+    | Title | `Price dropped on {{product_name}}` |
+    | Body | `Now {{new_price}} (was {{old_price}})` |
+    | Action URL | `https://yourapp.com/product/{{product_id}}` |
+    | Button 1 | `View Deal` → `https://yourapp.com/product/{{product_id}}` |
+    | Button 2 | `Add to Cart` → `https://yourapp.com/cart/add/{{product_id}}` |
   
 
 
@@ -191,12 +191,12 @@ Click **Commit** in the top bar to publish the current draft as a new live versi
 
 
   ### Which browsers support which features?
-    | Feature        | Chrome        | Firefox | Safari (macOS) | Edge          |
-    | -------------- | ------------- | ------- | -------------- | ------------- |
-    | Title + Body   | Yes           | Yes     | Yes            | Yes           |
-    | Banner Image   | Yes           | Yes     | No             | Yes           |
-    | Action Buttons | Yes (up to 2) | No      | No             | Yes (up to 2) |
-    | Large Icon     | Yes           | Yes     | No             | Yes           |
+    | Feature | Chrome | Firefox | Safari (macOS) | Edge |
+    | - | - | - | - | - |
+    | Title + Body | Yes | Yes | Yes | Yes |
+    | Banner Image | Yes | Yes | No | Yes |
+    | Action Buttons | Yes (up to 2) | No | No | Yes (up to 2) |
+    | Large Icon | Yes | Yes | No | Yes |
 
     Action buttons are labelled "Chrome Action Buttons" in the editor because they only render on Chromium browsers. Design your notification so the core message is in the title + body, with buttons as an enhancement.
   
@@ -211,4 +211,8 @@ Click **Commit** in the top bar to publish the current draft as a new live versi
 
   ### What happens if a variable is missing at send time?
     SuprSend discards the Web Push notification for that user. Other channels in the same template group are still sent if they render successfully.
+  
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 ```

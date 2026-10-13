@@ -5,7 +5,7 @@ SuprSend offers two ways to localize a template:
 1. **Translation keys** (recommended) — keep **one variant** and reference text via `\{{t "key"}}`. SuprSend resolves the key from your uploaded translation files against the recipient's `$locale`. Use this when only the text changes across languages.
 2. **Language variants** — create one variant per language with its own `locale`. Use this when the entire content differs per language (different layouts, images, buttons, structure).
 
-Selection: when a recipient has `$locale: "fr"`, SuprSend prefers a variant with `locale: "fr"` (for the matched channel + tenant + conditions). If none exists, it falls back to the template's default locale variant.
+Selection: SuprSend tries locales in order — the recipient's locale, then its base language, then `en` (e.g. `fr-CA` → `fr` → `en`). The first variant (in that order, for the matched channel + tenant) whose conditions match is used; the `en` `default` variant is the final fallback. Locale codes are case-sensitive (`fr-CA`, not `fr-ca`).
 
 ## Documentation
 

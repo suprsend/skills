@@ -4,7 +4,7 @@ For variants with `channel: "whatsapp"`.
 
 **Schema URL:** `https://schema.suprsend.com/template/v2/channel/whatsapp_basic_interactive_schema.json`
 
-> **Note.** WhatsApp templates require Meta approval before they can be sent. Like SMS DLT, configure the variant-level `vendor_approvals` array with the vendor and the approved `vendor_template_name` / `vendor_template_id`.
+> **Note.** WhatsApp templates require Meta approval before they can be sent. `needs_vendor_approval` is always `true` for WhatsApp. Approval is submitted per vendor from the dashboard after the variant is saved — `vendor_approvals` is read-only and not part of the variant JSON you author.
 
 ## Fields
 

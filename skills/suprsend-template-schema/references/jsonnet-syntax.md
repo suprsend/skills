@@ -2,12 +2,14 @@
 
 JSONNET is an alternative templating language for variants whose `content` schema permits it. In the template-content schemas, this applies to:
 
-- **Slack** — when `templating_language: "jsonnet"`, `body_block` is evaluated as a Jsonnet expression that produces the Slack `blocks` JSON.
-- **MS Teams** — when `templating_language: "jsonnet"`, `body_card` is evaluated as a Jsonnet expression that produces the Adaptive Card JSON.
+- **Slack** — `body_type: "block"`: `body_block` is always evaluated as a Jsonnet expression that produces the Slack `blocks` JSON.
+- **MS Teams** — `body_type: "card"`: `body_card` is always evaluated as a Jsonnet expression that produces the Adaptive Card JSON.
+
+`templating_language` is forced to `"jsonnet"` for these body types; Handlebars `{{ }}` inside them is not rendered.
 
 Other channels (email, sms, whatsapp, inbox, push) use Handlebars only — see [Handlebars Helpers](references/handlebars-helpers.md).
 
-Inside Jsonnet, the trigger payload is available as `data`. Access tenant properties via `data["$brand"].<key>`, recipient via `data["$recipient"]`, and so on — using the same namespaces documented for conditions and Handlebars variables.
+Inside Jsonnet, the trigger payload is available as `data`, and the translation function as `t` (e.g. `t("key")`). Access tenant properties via `data["$tenant"].<key>` (`data["$brand"]` is the legacy alias — don't emit it), recipient via `data["$recipient"]`, and so on — using the same namespaces documented for conditions and Handlebars variables.
 
 ## Documentation
 
@@ -22,17 +24,17 @@ All trigger payload data, recipient properties, tenant properties, and batched e
 
 ## Variable syntax
 
-| Variable type                       | Syntax                           | Example                                               |
-| ----------------------------------- | -------------------------------- | ----------------------------------------------------- |
-| Top-level key                       | `data.key`                       | `data.order_id`                                       |
-| Nested object                       | `data.parent.child`              | `data.order.address.city`                             |
-| Special characters or spaces in key | `data['key']`                    | `data['$recipient'].name`, `data.event['first name']` |
-| Array element at index              | `data.array[index]`              | `data.items[0].product_name`                          |
-| Recipient property                  | `data['$recipient'].key`         | `data['$recipient'].name`                             |
-| Actor property                      | `data['$actor'].key`             | `data['$actor'].name`                                 |
-| Tenant property                     | `data['$brand'].key`             | `data['$brand'].brand_name`                           |
-| Batched event count                 | `data['$batched_events_count']`  |                                                       |
-| Batched event item                  | `data['$batched_events'][0].key` | `data['$batched_events'][0].title`                    |
+| Variable type | Syntax | Example |
+| - | - | - |
+| Top-level key | `data.key` | `data.order_id` |
+| Nested object | `data.parent.child` | `data.order.address.city` |
+| Special characters or spaces in key | `data['key']` | `data['$recipient'].name`, `data.event['first name']` |
+| Array element at index | `data.array[index]` | `data.items[0].product_name` |
+| Recipient property | `data['$recipient'].key` | `data['$recipient'].name` |
+| Actor property | `data['$actor'].key` | `data['$actor'].name` |
+| Tenant property | `data['$tenant'].key` | `data['$tenant'].name` |
+| Batched event count | `data['$batched_events_count']` | |
+| Batched event item | `data['$batched_events'][0].key` | `data['$batched_events'][0].title` |
 
 > **Warning:**
   The `{{variable}}` Handlebars syntax does **not** work in JSONNET editors. Use `data.key` syntax only. Similarly, the Adaptive Card `${variable}` syntax is not supported - use `data.key` instead.
@@ -436,4 +438,7 @@ Design visually in the [Adaptive Cards Designer](https://adaptivecards.io/design
 <Tip>
   **AI prompt - debug JSONNET:** *"Fix this JSONNET error from the SuprSend editor. Error: \[paste error]. Code: \[paste JSONNET]. Variables are accessed as data.key or data\['\$special_key']."*
 </Tip>
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 ```

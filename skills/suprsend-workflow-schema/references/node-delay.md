@@ -8,7 +8,7 @@
 
 # Delay
 
-> Learn about delay node in workflow and how to use it to add wait between workflow steps.
+> Use the delay node in SuprSend workflows to pause execution for a fixed, dynamic, or specific time before moving to the next step for reminders and follow ups.
 
 Delay node halts the workflow for a given time period before moving to the next step. It is best used in case of reminders and re-engagement notifications where you want to bring back user to the product after a period of their last action.
 
@@ -16,7 +16,7 @@ There are 3 types of delay types available: **Fixed** (fixed for all users), **D
 
 
   ### Fixed
-    Fixed delay is defined in your workflow form as `**d **h **m **s` and it delays the workflow for a fixed duration for all users.
+    Fixed delay is defined in your workflow form as `xxd xxh xxm xxs` and it delays the workflow for a fixed duration for all users.
 
     
 
@@ -73,7 +73,7 @@ There are 3 types of delay types available: **Fixed** (fixed for all users), **D
     * **Before/After**: Determines whether the interval is subtracted (before) or added (after) to the timestamp.
     * **Timestamp**: An ISO-8601 format datetime (for example 2024-03-02T20:34:07Z), which must be in the future.
 
-    Dynamic Interval & Timestamp must be passed as a . Examples:
+    Dynamic Interval & Timestamp must be passed as a JQ expression. Examples:
 
     * Timestamp at the parent level: `.timestamp`
     * If the dynamic interval is set as recipient property: `."$recipient".interval`
@@ -81,6 +81,9 @@ There are 3 types of delay types available: **Fixed** (fixed for all users), **D
 
 
 ***
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 
 ## Schema Properties
 

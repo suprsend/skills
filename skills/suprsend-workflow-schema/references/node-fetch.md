@@ -6,7 +6,7 @@
 
 # Fetch
 
-> Use Fetch node to dynamically fetch data from an API endpoint in workflow.
+> Use the Fetch node to call an external API mid-workflow, pull dynamic data into the run context and personalize SuprSend notification content.
 
 Fetch is an HTTP API request call to an endpoint which you can use to fetch data from an endpoint and use it as template or workflow variables. One of the use case of using fetch node could be to send digest notifications where you can add fetch node before a batch or delay function to fetch digest data and then use it inside template to trigger the notification.
 
@@ -16,25 +16,25 @@ Any data returned in the API request response is appended to the response_key in
 
 In a Fetch node, you have to define the endpoint, query params and headers. You can add both static and dynamic values in all request fields except response key. All Static values are added within `"static value"` and dynamic data is referred as `data.key`.
 
-| Field        | Description                                                                                                                                                                                                                                                                   |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Method*     | Only `GET` method is supported in Fetch.                                                                                                                                                                                                                                      |
-| Endpoint*   | A valid URL endpoint for the `GET` method. Add static URL as `"https://static_url"` and dynamic URL as `{{data.url_endpoint}}`. Data for dynamic URL will be picked from trigger payload. You can also combine static and dynamic part as `"https://domain" + {{data.path}}`. |
-| Params       | Query Params to pass in the request, for example (limit 10) to fetch top 10 stories to show in digest notification. Similar to endpoint, you can pass both static and dynamic value in query params.                                                                          |
-| Header       | Any header to be passed in the request can be added as key-value pair with key being the header type and value as header value.                                                                                                                                               |
-| Response key | Response of your `GET` request is appended against response key and merged in the workflow payload. Data is merged at parent level if response key is not set.                                                                                                                |
+| Field | Description |
+| - | - |
+| Method* | Only `GET` method is supported in Fetch. |
+| Endpoint* | A valid URL endpoint for the `GET` method. Add static URL as `"https://static_url"` and dynamic URL as `{{data.url_endpoint}}`. Data for dynamic URL will be picked from trigger payload. You can also combine static and dynamic part as `"https://domain" + {{data.path}}`. |
+| Params | Query Params to pass in the request, for example (limit 10) to fetch top 10 stories to show in digest notification. Similar to endpoint, you can pass both static and dynamic value in query params. |
+| Header | Any header to be passed in the request can be added as key-value pair with key being the header type and value as header value. |
+| Response key | Response of your `GET` request is appended against response key and merged in the workflow payload. Data is merged at parent level if response key is not set. |
 
 
 ### Adding variables in Fetch node
 
-Fetch node supports JSONNET rendering language. You can add workflow trigger payload variables as `data.<key>` and internal suprsend data as `data["$brand"].<key>`. Here's a list of variables supported in workflow engine:
+Fetch node supports JSONNET rendering language. You can add workflow trigger payload variables as `data.<key>` and internal suprsend data as `data["$tenant"].<key>`. Here's a list of variables supported in workflow engine:
 
-| Variable      | Description                                                                                                                                                                                                                                                     | JSONNET format           |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| Input Payload | data passed in your event or workflow trigger.                                                                                                                                                                                                                  | `data.key`               |
-| Actor         | properties of actor in your workflow trigger. In case of event, distinct_id works both as actor and recipient.                                                                                                                                                 | `data["$actor"].key`     |
-| Recipient     | properties of recipient in your workflow trigger. In case of event, distinct_id works both as actor and recipient, unless override recipient is set in workflow trigger settings. In case of override recipient, properties of overridden recipient is picked. | `data["$recipient"].key` |
-| Tenant        | properties of the tenant passed in workflow trigger.                                                                                                                                                                                                            | `data["$brand"].key`     |
+| Variable | Description | JSONNET format |
+| - | - | - |
+| Input Payload | data passed in your event or workflow trigger. | `data.key` |
+| Actor | properties of actor in your workflow trigger. In case of event, distinct_id works both as actor and recipient. | `data["$actor"].key` |
+| Recipient | properties of recipient in your workflow trigger. In case of event, distinct_id works both as actor and recipient, unless override recipient is set in workflow trigger settings. In case of override recipient, properties of overridden recipient is picked. | `data["$recipient"].key` |
+| Tenant | properties of the tenant passed in workflow trigger. | `data["$tenant"].key` |
 
 ### Request execution
 
@@ -99,6 +99,9 @@ Here's how Fetch function data output would look like with response key and with
 
 
 ***
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 
 ## Schema Properties
 

@@ -14,8 +14,10 @@ For variants with `channel: "slack"`.
 
 {{schema-enum (get slack_schema "properties.templating_language.enum")}}
 
-- `handlebars` — string interpolation in `body_text` / `body_block` content.
-- `jsonnet` — evaluate `body_block` as a Jsonnet expression that produces the Slack `blocks` JSON.
+- `handlebars` — used with `body_type: "text"`: Handlebars interpolation in `body_text`.
+- `jsonnet` — used with `body_type: "block"`: `body_block` is evaluated as a Jsonnet expression that produces the Slack `blocks` JSON.
+
+The pairing is enforced: `body_type: "block"` forces `templating_language: "jsonnet"` and `"text"` forces `"handlebars"`. Handlebars `\{{ }}` inside `body_block` is **not** rendered — it is sent as literal text.
 
 ### `body_type` values
 
@@ -44,7 +46,7 @@ Use JSONNET if ANY of these are present:
 
 ### Critical format rule
 
-JSONNET output MUST be wrapped in `{ "blocks": [...] }`. The bare-array format `[{...}, {...}]` will fail — Slack's API rejects unwrapped arrays.
+JSONNET output MUST be wrapped in `{ "blocks": [...] }`. The bare-array format `[{...}, {...}]` will fail — SuprSend's renderer requires the JSONNET output to be a JSON object.
 
 ✅ Correct:
 
@@ -87,16 +89,7 @@ NEVER mix Handlebars `\{{ }}` and JSONNET in the same template.
 }
 ```
 
-### Block Kit message
-
-```json
-{
-  "body_type": "block",
-  "body_block": "{\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Build failed* in \{{ repo }}\"}},{\"type\":\"actions\",\"elements\":[{\"type\":\"button\",\"text\":{\"type\":\"plain_text\",\"text\":\"View logs\"},\"url\":\"\{{ build.log_url }}\"}]}]}"
-}
-```
-
-### Jsonnet-templated blocks
+### Block Kit message (JSONNET)
 
 ```json
 {

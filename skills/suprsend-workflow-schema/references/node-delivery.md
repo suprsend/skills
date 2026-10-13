@@ -1,6 +1,6 @@
 # Delivery Nodes
 
-Delivery nodes send notifications to users. Every workflow must end with at least one delivery node.
+Delivery nodes send notifications to users.
 
 ## Single Channel Nodes
 
@@ -21,9 +21,9 @@ Send via one specific channel. Each uses a different `node_type` but shares the 
 
 # Delivery- Single Channel
 
-> Learn how to use delivery nodes like email, sms, whatsapp, mobile push, web push, slack, ms teams, inbox in workflows.
+> Configure single channel delivery nodes for email, SMS, WhatsApp, mobile push, web push, Slack, MS Teams and inbox messages in SuprSend workflows.
 
-You can use single-channel delivery nodes - Email, SMS, Whatsapp, Inbox, Slack, MS Teams, MobilePush and Webpush to send notification on a particular user channel. The content of the notification is designed with [templates](/docs/templates).
+You can use single-channel delivery nodes - Email, SMS, WhatsApp, Inbox, Slack, MS Teams, MobilePush and Webpush to send notification on a particular user channel. The content of the notification is designed with [templates](/docs/templates).
 
 
 ## How the delivery node is executed?
@@ -32,8 +32,12 @@ Delivery node is successfully executed if all of the below checks hold true:
 
 1. The channel must be published and live within the template. For WhatsApp and SMS (Indian vendors), templates become live upon approval by the respective provider.
 2. Vendor Configuration is available for the channel. For all out-of-app channels, you need to create an account with the respective [channel provider](/docs/vendors) and add the configuration in the vendor form on SuprSend dashboard. Inbox is an internal offering by SuprSend and doesn't need any third party integration. [Refer Integration guide](/docs/inbox-overview) to setup Inbox Channel.
-3. Channel information should be available in user profile and channel status should be active. A set channel becomes inactive in case the channel is `removed`or `unset`using [SDK or API](/docs/users#via-sdk) or it is marked inactive by SuprSend.
-4. User preference is`opt-in `for the given channel and notification category (defined in workflow settings). You can check user preference status using [get user preference API](/reference/get-user-category-preferences).
+3. Channel information should be available in user profile and channel status should be active. A set channel becomes inactive in case the channel is `removed` or `unset` using [SDK or API](/docs/users#via-sdk) or it is marked inactive by SuprSend.
+4. User preference is `opt-in` for the given channel within the preference category (defined in workflow settings). You can check user preference status using [get user preference API](/reference/get-user-category-preferences).
+
+> **Note:**
+  **Category-level opt-out is checked at trigger time.** If a user has opted out of the entire preference category, the workflow is skipped before execution begins — the workflow run does not start. The delivery node only evaluates **channel-level** preferences (whether the user has opted into the specific channel within the category). See [Preference Evaluation](/docs/preference-evaluation) for details.
+
 
 > **Note:**
   ### Inactive channel marking by SuprSend
@@ -54,6 +58,9 @@ In the context of single-channel delivery, the success metric is utilized solely
 
 ***
 
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
+
 ## Multi-Channel Node
 
 **Schema `node_type`:** `send_multi_channel`
@@ -64,7 +71,7 @@ Sends across multiple channels simultaneously.
 
 # Delivery- Multi-Channel
 
-> How to send notification across multiple channels in a single workflow step.
+> Use the multi-channel delivery node to notify users across email, SMS, push, WhatsApp and chat channels in a single SuprSend workflow step.
 
 You can use multi-channel delivery node to notify users on multiple channels at once. If you want to send multi-channel notifications, we recommend using [smart channel routing](/docs/smart-delivery) to ensure that notifications are delivered sequentially on multiple channels rather than bombarding users on all channels at once.
 
@@ -77,8 +84,12 @@ Delivery node is successfully executed if all of the below checks hold true:
 
 1. The channel should be published and live in the template. For WhatsApp and SMS (Indian vendors), templates become live upon approval by the respective provider.
 2. Vendor Configuration is available for the channel. For all out-of-app channels, you need to create an account with the respective [channel provider](/docs/vendors) and add the configuration in the vendor form on SuprSend dashboard. Inbox is an internal offering by SuprSend and doesn't need any third party integration. [Refer Integration guide](/docs/inbox-overview) to setup Inbox Channel.
-3. Channel information should be available in user profile and channel status should be active. Template channels not available in user profile are skipped for delivery. A set channel becomes inactive in case the channel is`removed `or `unset`using [SDK or API](/docs/users#via-sdk) or it is marked inactive by SuprSend.
-4. User preference is`opt-in `for the given channel and notification category (defined in workflow settings). You can check user preference status using [get user preference API](/reference/get-user-category-preferences).
+3. Channel information should be available in user profile and channel status should be active. Template channels not available in user profile are skipped for delivery. A set channel becomes inactive in case the channel is `removed` or `unset` using [SDK or API](/docs/users#via-sdk) or it is marked inactive by SuprSend.
+4. User preference is `opt-in` for the given channel within the preference category (defined in workflow settings). You can check user preference status using [get user preference API](/reference/get-user-category-preferences).
+
+> **Note:**
+  **Category-level opt-out is checked at trigger time.** If a user has opted out of the entire preference category, the workflow is skipped before execution begins — the workflow run does not start. The delivery node only evaluates **channel-level** preferences (whether the user has opted into the specific channel within the category). See [Preference Evaluation](/docs/preference-evaluation) for details.
+
 
 > **Note:**
   ### Inactive channel marking by SuprSend
@@ -115,7 +126,7 @@ You can add channel array as a [JQ-expression](https://jqlang.github.io/jq/manua
   properties = {
     "user": {
       "name": "Steve",
-      "channels": ["email","inbox]
+      "channels": ["email","inbox"]
     }
   ```
 
@@ -133,6 +144,9 @@ Success Metric can be any event which defines the target user activity you aim t
 In the context of multi-channel delivery, the success metric is utilized solely to track conversion numbers for display in workflow analytics. However, in the case of [smart channel routing](/docs/smart-delivery), the same success metric serves to halt delivery on further channels once the success metric is achieved.
 
 ***
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 
 ## Smart Channel Routing Node
 
@@ -160,7 +174,7 @@ SuprSend checks which channels qualify for delivery by intersecting:
 
 * **Channels active on the template** - published and live. For WhatsApp and SMS (Indian vendors), this means provider approval is complete.
 * **Channels active in the user profile** - not removed, unset, or marked inactive. See [managing user channels](/docs/users#via-sdk).
-* **User opt-in preference** - if you use SuprSend's preference centre, the user must be `opt-in` for the channel and notification category. Verify with the [get user preference API](/reference/get-user-category-preferences).
+* **User opt-in preference** - if you use SuprSend's preference centre, the user must be `opt-in` for the channel within the preference category. Category-level opt-out is checked at trigger time (the workflow won't run for opted-out users), while channel-level preferences are evaluated here at the delivery node. Verify with the [get user preference API](/reference/get-user-category-preferences).
 
 ### 2. Order outside-app channels
 
@@ -174,12 +188,12 @@ Routing logic **only applies to outside-app channels** - Email, SMS, WhatsApp, S
 
 Notifications go out in this sequence:
 
-| Time         | What's sent                                 |
-| ------------ | ------------------------------------------- |
-| T+0          | Inbox (if active) + 1st outside-app channel |
-| T+interval   | 2nd outside-app channel                     |
-| T+interval×2 | 3rd outside-app channel                     |
-| ...          | continues until success metric is achieved  |
+| Time | What's sent |
+| - | - |
+| T+0 | Inbox (if active) + 1st outside-app channel |
+| T+interval | 2nd outside-app channel |
+| T+interval×2 | 3rd outside-app channel |
+| ... | continues until success metric is achieved |
 
 The interval between each outside-app channel is:
 
@@ -223,10 +237,10 @@ Defines what counts as "user engaged." Once this is met, SuprSend stops deliveri
 
 **Notification Status** - a status reached on any sent channel:
 
-| Status              | When it triggers                                     |
-| ------------------- | ---------------------------------------------------- |
-| Delivered           | Notification is delivered to the device or inbox     |
-| Seen                | User opens or views the notification                 |
+| Status | When it triggers |
+| - | - |
+| Delivered | Notification is delivered to the device or inbox |
+| Seen | User opens or views the notification |
 | Interaction / Click | User clicks a CTA or interacts with the notification |
 
 **Custom Event** - any event your platform fires in response to the notification. For example, `invoice_paid` for a payment reminder, or `appointment_confirmed` for a booking flow.
@@ -286,6 +300,10 @@ You can use a [JQ expression](https://jqlang.github.io/jq/manual/) to map your e
 
   ### Do I need a 'Wait Until' node before this node?
     No. The delay between channels is managed by the **Time to Live** setting inside the Smart Channel Routing node. A Wait Until node is not required.
+  
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 
 ## Schema Properties (shared by all delivery nodes)
 

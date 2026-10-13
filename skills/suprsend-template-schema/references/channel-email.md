@@ -256,11 +256,11 @@ Saved blocks are a copy-on-insert - editing the saved block later doesn't update
 
 The **Tenant** block auto-renders a branded header, footer, or button using the tenant's profile (logo, colours, address). Select a tenant in the Variables panel to preview.
 
-For custom control beyond the Tenant block, use `$brand` variables directly:
+For custom control beyond the Tenant block, use `$tenant` variables directly:
 
-* `{{$brand.logo}}`, `{{$brand.primary_color}}`, `{{$brand.secondary_color}}`
-* `{{$brand.brand_name}}`, `{{$brand.properties.address}}`
-* `{{$hosted_preference_url}}` — per-recipient unsubscribe / preference URL (top-level, not under `$brand`)
+* `{{$tenant.logo}}`, `{{$tenant.primary_color}}`, `{{$tenant.secondary_color}}`
+* `{{$tenant.name}}`, `{{$tenant.properties.address}}`
+* `{{$hosted_preference_url}}` — per-recipient unsubscribe / preference URL (top-level, not under `$tenant`)
 
 ***
 
@@ -309,7 +309,7 @@ Email Markup adds rich interactive features directly in the Gmail inbox - no nee
 {
   "@context": "http://schema.org",
   "@type": "Order",
-  "merchant": { "@type": "Organization", "name": "{{$brand.brand_name}}" },
+  "merchant": { "@type": "Organization", "name": "{{$tenant.name}}" },
   "orderNumber": "{{order_id}}",
   "potentialAction": {
     "@type": "TrackAction",
@@ -395,4 +395,8 @@ Click **Commit** to publish. The commit snapshots: editor content, Plain Text, a
 
   ### How do Saved Blocks work?
     Save any row as a reusable block from the row header. Saved blocks are available in the **Blocks** panel across all templates. They're a copy-on-insert - editing the original doesn't update existing templates. Saved blocks work at the row level only, not individual columns or content blocks.
+  
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 ```

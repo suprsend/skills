@@ -4,7 +4,7 @@ For variants with `channel: "whatsapp"`.
 
 **Schema URL:** `https://schema.suprsend.com/template/v2/channel/whatsapp_basic_interactive_schema.json`
 
-> **Note.** WhatsApp templates require Meta approval before they can be sent. Like SMS DLT, configure the variant-level `vendor_approvals` array with the vendor and the approved `vendor_template_name` / `vendor_template_id`.
+> **Note.** WhatsApp templates require Meta approval before they can be sent. `needs_vendor_approval` is always `true` for WhatsApp. Approval is submitted per vendor from the dashboard after the variant is saved — `vendor_approvals` is read-only and not part of the variant JSON you author.
 
 ## Fields
 
@@ -257,11 +257,11 @@ Templates pending approval are visible in the **Approvals** tab on the [template
 
 WhatsApp enforces different rules and pricing for each category. Choosing the wrong category is the most common reason for rejection.
 
-| Category           | Use when                                                                    | Examples                                                                   |
-| ------------------ | --------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| **Utility**        | Responding to a user action. Transactional or service updates.              | Order confirmation, shipping update, payment receipt, appointment reminder |
-| **Marketing**      | Proactively reaching out with promotions or re-engagement. Requires opt-in. | Flash sale, product recommendation, abandoned cart nudge                   |
-| **Authentication** | Sending OTPs or verification codes. Specialised template structure.         | Login OTP, two-factor auth, phone verification                             |
+| Category | Use when | Examples |
+| - | - | - |
+| **Utility** | Responding to a user action. Transactional or service updates. | Order confirmation, shipping update, payment receipt, appointment reminder |
+| **Marketing** | Proactively reaching out with promotions or re-engagement. Requires opt-in. | Flash sale, product recommendation, abandoned cart nudge |
+| **Authentication** | Sending OTPs or verification codes. Specialised template structure. | Login OTP, two-factor auth, phone verification |
 
 > **Warning:**
   WhatsApp may **reclassify** your template if the content doesn't match the selected category. A "Utility" template with promotional language may be reclassified as "Marketing" - with different pricing and opt-in requirements.
@@ -271,12 +271,12 @@ WhatsApp enforces different rules and pricing for each category. Choosing the wr
 
 WhatsApp has its own text formatting syntax. **HTML and Markdown do not work.**
 
-| Format            | Syntax         |
-| ----------------- | -------------- |
-| **Bold**          | `*text*`       |
-| *Italic*          | `_text_`       |
-| ~~Strikethrough~~ | `~text~`       |
-| `Monospace`       | ` ```text``` ` |
+| Format | Syntax |
+| - | - |
+| **Bold** | `*text*` |
+| *Italic* | `_text_` |
+| ~~Strikethrough~~ | `~text~` |
+| `Monospace` | ` ```text``` ` |
 
 ***
 
@@ -284,39 +284,39 @@ WhatsApp has its own text formatting syntax. **HTML and Markdown do not work.**
 
 
   ### Utility - order shipped
-    | Field    | Value                                                                                                    |
-    | -------- | -------------------------------------------------------------------------------------------------------- |
-    | Category | Utility                                                                                                  |
-    | Header   | `Order Shipped`                                                                                          |
-    | Body     | `Hi {{customer_name}}, your order #{{order_id}} has been shipped! Expected delivery: {{delivery_date}}.` |
-    | Footer   | `SuprSend Logistics`                                                                                     |
-    | Button   | Track Order → `https://yourapp.com/track/{{order_id}}`                                                   |
+    | Field | Value |
+    | - | - |
+    | Category | Utility |
+    | Header | `Order Shipped` |
+    | Body | `Hi {{customer_name}}, your order #{{order_id}} has been shipped! Expected delivery: {{delivery_date}}.` |
+    | Footer | `SuprSend Logistics` |
+    | Button | Track Order → `https://yourapp.com/track/{{order_id}}` |
   
 
   ### Marketing - flash sale
-    | Field    | Value                                                                                 |
-    | -------- | ------------------------------------------------------------------------------------- |
-    | Category | Marketing                                                                             |
-    | Header   | `Flash Sale`                                                                          |
-    | Body     | `Hi {{$recipient.name}}, our biggest sale starts now! Up to 50% off on all products.` |
-    | Footer   | `Reply STOP to opt out`                                                               |
-    | Button   | Shop Now → `https://yourapp.com/sale`                                                 |
+    | Field | Value |
+    | - | - |
+    | Category | Marketing |
+    | Header | `Flash Sale` |
+    | Body | `Hi {{$recipient.name}}, our biggest sale starts now! Up to 50% off on all products.` |
+    | Footer | `Reply STOP to opt out` |
+    | Button | Shop Now → `https://yourapp.com/sale` |
   
 
   ### Authentication - OTP
-    | Field    | Value                                                               |
-    | -------- | ------------------------------------------------------------------- |
-    | Category | Authentication                                                      |
-    | Body     | `Your verification code is {{otp_code}}. It expires in 10 minutes.` |
+    | Field | Value |
+    | - | - |
+    | Category | Authentication |
+    | Body | `Your verification code is {{otp_code}}. It expires in 10 minutes.` |
   
 
   ### Utility - appointment reminder with buttons
-    | Field                  | Value                                                                                                   |
-    | ---------------------- | ------------------------------------------------------------------------------------------------------- |
-    | Category               | Utility                                                                                                 |
-    | Body                   | `Reminder: Your appointment with {{provider_name}} is on {{appointment_date}} at {{appointment_time}}.` |
-    | Button 1 (Quick Reply) | `Confirm`                                                                                               |
-    | Button 2 (Quick Reply) | `Reschedule`                                                                                            |
+    | Field | Value |
+    | - | - |
+    | Category | Utility |
+    | Body | `Reminder: Your appointment with {{provider_name}} is on {{appointment_date}} at {{appointment_time}}.` |
+    | Button 1 (Quick Reply) | `Confirm` |
+    | Button 2 (Quick Reply) | `Reschedule` |
   
 
 
@@ -359,4 +359,8 @@ WhatsApp has its own text formatting syntax. **HTML and Markdown do not work.**
 
   ### What happens if a variable is missing at send time?
     SuprSend discards the WhatsApp notification for that user. Other channels in the same template group are still sent.
+  
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 ```

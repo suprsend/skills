@@ -6,7 +6,7 @@
 
 # Data Transform
 
-> Guide to help you transform input data and generate new variables in workflow.
+> Use the data transform node in SuprSend workflows to generate or modify variables on the fly based on input data, conditions, and prior workflow step outputs.
 
 The Data Transform node is used to dynamically generate or modify variables within your workflow based on specific conditions or the execution of other steps. This allows you to create variables at one place that can be utilized across multiple templates and in workflow settings, without having to write the same transformation in each template or workflow settings.
 
@@ -81,6 +81,9 @@ You can generate up to 25 variables in this step. Each key-value pair represents
 
 ***
 
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
+
 ## Schema Properties
 
 | Property | Type | Required | Description |
@@ -112,7 +115,7 @@ Each item in the `variables` array:
       {
         "key": "greeting",
         "value_lang": "handlebars",
-        "value": "Hello , welcome!"
+        "value": "Hello {{$recipient.name}}, welcome!"
       },
       {
         "key": "discount_rate",

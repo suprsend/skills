@@ -5,21 +5,21 @@ SuprSend offers two ways to localize a template:
 1. **Translation keys** (recommended) — keep **one variant** and reference text via `{{t "key"}}`. SuprSend resolves the key from your uploaded translation files against the recipient's `$locale`. Use this when only the text changes across languages.
 2. **Language variants** — create one variant per language with its own `locale`. Use this when the entire content differs per language (different layouts, images, buttons, structure).
 
-Selection: when a recipient has `$locale: "fr"`, SuprSend prefers a variant with `locale: "fr"` (for the matched channel + tenant + conditions). If none exists, it falls back to the template's default locale variant.
+Selection: SuprSend tries locales in order — the recipient's locale, then its base language, then `en` (e.g. `fr-CA` → `fr` → `en`). The first variant (in that order, for the matched channel + tenant) whose conditions match is used; the `en` `default` variant is the final fallback. Locale codes are case-sensitive (`fr-CA`, not `fr-ca`).
 
 ## Documentation
 
 ```
 # Multi-lingual Templates
 
-> Deliver notifications in each recipient's preferred language using translation keys or language variants.
+> Localize SuprSend templates with translation keys or language variants so you can deliver notifications in each recipient preferred language.
 
 SuprSend supports two ways to localise notification templates. The right approach depends on what changes between languages.
 
-| Approach                                                    | Use when                                                                                                   | How it works                                                                                                                                               |
-| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **[Translations](#translations-recommended)** (recommended) | The text changes per language, but the template structure (layout, images, buttons) stays the same.        | Use translation keys (`{{t "key"}}`) in your template. SuprSend resolves the key to the user's language at send time from your uploaded translation files. |
-| **[Language variants](#language-variants)**                 | The entire content differs per language - different images, layouts, buttons, or structure. Not just text. | Create a separate variant per language with a `locale` condition. Each variant has its own full content.                                                   |
+| Approach | Use when | How it works |
+| - | - | - |
+| **[Translations](#translations-recommended)** (recommended) | The text changes per language, but the template structure (layout, images, buttons) stays the same. | Use translation keys (`{{t "key"}}`) in your template. SuprSend resolves the key to the user's language at send time from your uploaded translation files. |
+| **[Language variants](#language-variants)** | The entire content differs per language - different images, layouts, buttons, or structure. Not just text. | Create a separate variant per language with a `locale` condition. Each variant has its own full content. |
 
 For most use cases, **Translations** is the right choice. It's simpler, easier to maintain, and scales better. Use variants only when you genuinely need different content structure per language.
 
@@ -157,4 +157,8 @@ Name these descriptively: `acme-es`, `uber-fr`, `default-hi`.
 
   ### I'm scaling to 10+ languages. Which is easier to maintain?
     Translations, by far. With variants, you'd need to maintain 10+ content versions per channel per template. With translations, you maintain one template and 10 JSON files that can be managed via CLI or API.
+  
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 ```

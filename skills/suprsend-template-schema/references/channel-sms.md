@@ -62,7 +62,7 @@ For variants with `channel: "sms"`.
 ```
 # SMS
 
-> Design SMS notification content - a single body field with Handlebars variables and a live phone preview.
+> Design SMS notification content in SuprSend using a single body field with Handlebars variables, live phone preview, and unicode and length indicators.
 
 The SMS editor is a text editor with a live phone preview on the right. Content is personalised with [Handlebars](/docs/handlebars-helpers) variables (`{{variable_name}}`).
 
@@ -200,33 +200,33 @@ Templates pending approval are visible in the **Approvals** tab on the [template
 
 
   ### OTP / verification code
-    | Field | Value                                                                                                                   |
-    | ----- | ----------------------------------------------------------------------------------------------------------------------- |
-    | Body  | `Your verification code is {{otp_code}}. It expires in {{expiry_minutes}} minutes. Do not share this code with anyone.` |
+    | Field | Value |
+    | - | - |
+    | Body | `Your verification code is {{otp_code}}. It expires in {{expiry_minutes}} minutes. Do not share this code with anyone.` |
 
     Keep OTP messages under one segment (160 characters). No URLs needed - just the code and expiry.
   
 
   ### Order / delivery update
-    | Field | Value                                                                                                  |
-    | ----- | ------------------------------------------------------------------------------------------------------ |
-    | Body  | `Hi {{$recipient.name}}, your order #{{order_id}} has been shipped! Track it here: {{{tracking_url}}}` |
+    | Field | Value |
+    | - | - |
+    | Body | `Hi {{$recipient.name}}, your order #{{order_id}} has been shipped! Track it here: {{{tracking_url}}}` |
 
     Use triple curly braces `{{{tracking_url}}}` for URLs to avoid HTML-escaping special characters like `&` and `?`.
   
 
   ### Appointment reminder
-    | Field | Value                                                                                                                                                 |
-    | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-    | Body  | `Reminder: Your appointment with {{provider_name}} is on {{appointment_date}} at {{appointment_time}}. Reply CONFIRM to confirm or CANCEL to cancel.` |
+    | Field | Value |
+    | - | - |
+    | Body | `Reminder: Your appointment with {{provider_name}} is on {{appointment_date}} at {{appointment_time}}. Reply CONFIRM to confirm or CANCEL to cancel.` |
 
     Pair with a [delay node](/docs/delay) or [time window](/docs/time-window) in your workflow to send at the right time.
   
 
   ### Promotional offer
-    | Field | Value                                                                                                                          |
-    | ----- | ------------------------------------------------------------------------------------------------------------------------------ |
-    | Body  | `Flash sale! Get {{discount}}% off on all items. Shop now: {{{shop_url}}}. Valid till {{expiry_date}}. Reply STOP to opt out.` |
+    | Field | Value |
+    | - | - |
+    | Body | `Flash sale! Get {{discount}}% off on all items. Shop now: {{{shop_url}}}. Valid till {{expiry_date}}. Reply STOP to opt out.` |
 
     Always include opt-out language for promotional messages.
   
@@ -252,10 +252,10 @@ Templates pending approval are visible in the **Approvals** tab on the [template
   ### Why is my SMS being sent as multiple segments?
     SMS has a per-segment character limit. Each extra segment is billed separately by your vendor.
 
-    | Encoding | Chars per segment              | When it applies                                          |
-    | -------- | ------------------------------ | -------------------------------------------------------- |
-    | GSM-7    | 160 (single), 153 (multi-part) | Standard Latin characters, digits, basic punctuation     |
-    | UCS-2    | 70 (single), 67 (multi-part)   | Emojis, non-Latin scripts (Hindi, Arabic, Chinese, etc.) |
+    | Encoding | Chars per segment | When it applies |
+    | - | - | - |
+    | GSM-7 | 160 (single), 153 (multi-part) | Standard Latin characters, digits, basic punctuation |
+    | UCS-2 | 70 (single), 67 (multi-part) | Emojis, non-Latin scripts (Hindi, Arabic, Chinese, etc.) |
 
     A single emoji or non-Latin character forces the **entire** message into UCS-2, cutting capacity from 160 to 70. Avoid emojis in transactional SMS to keep costs down.
   
@@ -274,4 +274,8 @@ Templates pending approval are visible in the **Approvals** tab on the [template
 
   ### What happens if a variable is missing at send time?
     SuprSend discards the SMS notification for that user. Other channels in the same template group (email, push, etc.) are still sent if they render successfully.
+  
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 ```

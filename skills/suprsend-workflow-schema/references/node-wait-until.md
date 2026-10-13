@@ -8,7 +8,7 @@
 
 # Wait Until
 
-> Learn to use Wait Until node in workflow to halt until a condition or max time is met.
+> Use the wait until node to pause a workflow until a condition is met or a maximum duration elapses, ideal for delayed reminders and sequential flows.
 
 Wait Until is a conditional branch which halts the workflow until either the branch condition is met or the maximum wait duration is reached. It is most used for cases where sequential notifications need to be sent to users based on certain conditions, such as payment or task reminders.
 
@@ -44,19 +44,19 @@ Property condition is constructed as key, operator and value. You can add multip
 1. **Key:** It is the variable key in your wait until event properties.
 2. **Operator:** you can use any of the below operators to compare key and value:
 
-| Operator         | Description                                                                                                                                                                  |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `==`             | Key **is equal to** value. This is a case-sensitive check.                                                                                                                   |
-| `!=`             | Key **is not equal to** value. This is a case-sensitive check.                                                                                                               |
-| `>`              | Key **is greater than** value. Can be applied to integers, float values, or epoch timestamps.                                                                                |
-| `>=`             | Key **is greater than or equal to** value. Can be applied to integers, float values, or epoch timestamps.                                                                    |
-| `<`              | Key **is less than** value. Can be applied to integers and float values.                                                                                                     |
-| `<=`             | Key **is less than or equal to** value. Can be applied to integers and float values.                                                                                         |
-| `contains`       | Key should be a substring or a list item in an array.                                                                                                                        |
-| `not contains`   | Key should not be a substring or match any list item in an array.                                                                                                            |
-| `is empty`       | Evaluates to `true` if the key is missing, an empty string, or has a `null` value.                                                                                           |
-| `is not empty`   | Key should be present and should not be an empty string or `null` value.                                                                                                     |
-| `intersects`     | Evaluates to true if **any value** in the left array matches **any value** in the right array. Useful for checking overlaps between arrays.                                  |
+| Operator | Description |
+| - | - |
+| `==` | Key **is equal to** value. This is a case-sensitive check. |
+| `!=` | Key **is not equal to** value. This is a case-sensitive check. |
+| `>` | Key **is greater than** value. Can be applied to integers, float values, or epoch timestamps. |
+| `>=` | Key **is greater than or equal to** value. Can be applied to integers, float values, or epoch timestamps. |
+| `<` | Key **is less than** value. Can be applied to integers and float values. |
+| `<=` | Key **is less than or equal to** value. Can be applied to integers and float values. |
+| `contains` | Key should be a substring or a list item in an array. |
+| `not contains` | Key should not be a substring or match any list item in an array. |
+| `is empty` | Evaluates to `true` if the key is missing, an empty string, or has a `null` value. |
+| `is not empty` | Key should be present and should not be an empty string or `null` value. |
+| `intersects` | Evaluates to true if **any value** in the left array matches **any value** in the right array. Useful for checking overlaps between arrays. |
 | `not intersects` | Evaluates to true if **no values** in the left array match any values in the right array. It could be used in case of checking or filtering out any overlaps between arrays. |
 
 3. **Value:** Value can be fixed (static value) or dynamic (evaluated dynamically from workflow data).
@@ -75,12 +75,12 @@ Fixed values can be added as:
 
 Dynamic values are evaluated based on the data available at the node input along with actor, recipient or tenant properties. Refer below table for types of dynamic values and their respective syntax.
 
-| Data Type         | Description                                                                                                                                                                                                                                                          | Referring this property in condition     |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| **Input Payload** | Includes data from your trigger payload and any data modified or added by nodes such as data transform, batch/digest, or webhook/fetch nodes before the branch node.                                                                                                 | Directly specify as `key` with no prefix |
-| **Actor**         | Actor properties. In the case of an event trigger, `distinct_id` works as both actor and recipient. For an inline workflow trigger, it is the `distinct_id` in the actor object.                                                                                     | Add as `$actor.<property_key>`           |
-| **Recipient**     | Recipient properties. It is the `distinct_id` in your event trigger or the key value defined in [override recipient](https://docs.suprsend.com/docs/override-recipient-list) field. For an inline workflow trigger, it is the `distinct_id` in the recipient object. | Add as `$recipient.<property_key>`       |
-| **Tenant**        | Tenant properties. These include all properties of the `tenant_id` in your workflow trigger.                                                                                                                                                                         | Add as `$brand.<property_key>`           |
+| Data Type | Description | Referring this property in condition |
+| - | - | - |
+| **Input Payload** | Includes data from your trigger payload and any data modified or added by nodes such as data transform, batch/digest, or webhook/fetch nodes before the branch node. | Directly specify as `key` with no prefix |
+| **Actor** | Actor properties. In the case of an event trigger, `distinct_id` works as both actor and recipient. For an inline workflow trigger, it is the `distinct_id` in the actor object. | Add as `$actor.<property_key>` |
+| **Recipient** | Recipient properties. It is the `distinct_id` in your event trigger or the key value defined in [override recipient](https://docs.suprsend.com/docs/override-recipient-list) field. For an inline workflow trigger, it is the `distinct_id` in the recipient object. | Add as `$recipient.<property_key>` |
+| **Tenant** | Tenant properties. These include all properties of the `tenant_id` in your workflow trigger. | Add as `$tenant.<property_key>` |
 
 ### Adding conditions on multiple events
 
@@ -134,6 +134,9 @@ Your duration key variable can be computed to either:
 > **Warning:**
   When the duration key specified is missing, or resolves to an invalid value, workflow execution will stop and corresponding error will be logged.
 
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
+
 ## Branch Structure
 
 Wait Until uses the same `branches` array as the branch node but always has exactly 2 branches:
@@ -153,11 +156,10 @@ one condition branch (`is_default: false`) and one timeout branch (`is_default: 
 
 ### Condition types
 
-The condition branch supports these condition types:
+- **Condition branch** — every entry in `conditions` must be `type: "future_event"` (max 5, each with a unique `event_name`); the branch is taken when any of those events arrives. Filter which event counts with `expression_v1` clauses inside its `event_conditions` (use `variable_ns: "$future_event"` for the incoming event's properties).
+- **Default (timeout) branch** — a single `type: "delay"` condition.
 
-- `future_event` — waits for a specific event to arrive
-- `expression_v1` — evaluates conditions on existing data
-- `delay` — timeout (used in the default branch)
+Top-level `expression_v1` conditions are not supported in `branch_waituntil`.
 
 ### Future event condition properties
 
@@ -212,7 +214,7 @@ The default branch uses a delay condition with the same schema as the delay node
 
 ## Example: send a follow-up only after the action completes
 
-The post-delivery sends fire only after `order_delivered` arrives, never before. The terminal timeout branch ends the workflow cleanly if delivery never confirms.
+The post-delivery sends live **inside** the Delivered branch, so they fire only after a matching `order_delivered` arrives. Nothing follows the wait-until node, so a timeout ends the journey. In `event_conditions`, `"value": "order_id"` (no inner quotes) is a variable path into the trigger payload — the event matches when its `order_id` equals the trigger's.
 
 ```json
 {
@@ -247,7 +249,6 @@ The post-delivery sends fire only after `order_delivered` arrives, never before.
       "name": "Timeout",
       "ref": "delivery_timeout",
       "is_default": true,
-      "is_terminal": true,
       "conditions": [ { "type": "delay", "delay_properties": { "delay_type": "fixed", "value": "7d" } } ],
       "nodes": []
     }
@@ -255,19 +256,6 @@ The post-delivery sends fire only after `order_delivered` arrives, never before.
 }
 ```
 
-## Terminating on timeout
+## Ending the journey on timeout
 
-The default branch in `branch_waituntil` represents the "event never arrived" path. In most flows, this is also where the workflow should end — there is no point continuing the post-event sequence for a user who never completed the action. Set `is_terminal: true` on the timeout branch to make this explicit.
-
-```json
-{
-  "name": "Timeout",
-  "ref": "no_response_timeout",
-  "is_default": true,
-  "is_terminal": true,
-  "conditions": [ { "type": "delay", "delay_properties": { "delay_type": "fixed", "value": "24h" } } ],
-  "nodes": [ /* optional last-ditch notification, then exit */ ]
-}
-```
-
-Without `is_terminal: true`, the workflow falls through to whatever follows the `branch_waituntil` node — usually the post-completion sequence — which fires for users who timed out, contrary to intent.
+The default branch is the "event never arrived" path. After either branch finishes, execution continues with whatever follows the `branch_waituntil` node — `is_terminal` has no runtime effect. To stop the journey for users who time out, put the post-event sequence **inside** the event branch and leave nothing after the wait-until node that only completed users should get. Put any last-ditch reminder in the timeout branch's `nodes`.

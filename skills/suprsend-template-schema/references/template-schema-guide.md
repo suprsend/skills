@@ -6,13 +6,13 @@ A SuprSend template is a collection of **variants**. Each variant is a self-cont
 
 ## When is one variant enough?
 
-If the template only needs to send to one channel, in one language, with no per-tenant or per-segment customization, you have **one variant**. Set `tenant_id: null`, pick a `locale` (typically `"en"`), and set `conditions: null`. The variant is still required — there is no schema for a "single content blob" outside the variant envelope.
+If the template only needs to send to one channel, in one language, with no per-tenant or per-segment customization, you have **one variant** — the reserved `default` variant (`id: "default"`, `locale: "en"`, `tenant_id: null`, `conditions: null`) that SuprSend auto-creates when the channel is enabled. Put the content there. The variant envelope is still required — there is no schema for a "single content blob" outside it.
 
 You add more variants when:
 
 - **Multiple channels** — one variant per channel (email + sms + inbox for the same template each gets its own variant).
 - **Multiple locales** — one variant per `locale` per channel for translations.
-- **Multi-tenant** — set `tenant_id` to a tenant slug to customize content per tenant/brand.
+- **Multi-tenant** — set `tenant_id` to a tenant slug to customize content per tenant.
 - **Conditional content** — use `conditions` to choose a variant based on recipient or payload attributes.
 
 ## Variant Envelope
@@ -46,19 +46,21 @@ The `channel` selects which schema validates the `content` object. See the per-c
 
 ### `id`
 
-A unique identifier for the variant within the template — `^[a-zA-Z0-9_\-.]+$`, max 128 chars. Each variant must have a distinct `id`.
+A unique identifier for the variant within the template — `^[a-zA-Z0-9_\-.]+$`, max 128 chars. Each variant must have a distinct `id`. `default` is reserved for the auto-created base variant: its `locale` / `tenant_id` / `conditions` are fixed, only its `content` can change, and it can't be deleted.
 
 ### `tenant_id`
 
-`null` for non-tenant variants, or a tenant slug (`^[a-zA-Z0-9_\-]+$`, max 64 chars). When the template is rendered for a specific tenant, SuprSend prefers a matching `tenant_id` variant over the `null` (default) variant for the same channel/locale.
+`null` for non-tenant variants, or a tenant slug (`^[a-zA-Z0-9_\-.]+$`, max 64 chars). When the template is rendered for a specific tenant, SuprSend prefers a matching `tenant_id` variant over `tenant_id: null` variants — see [Variant Selection](#variant-selection).
 
 ### `locale`
 
-A 2–6 character locale code (e.g., `en`, `en-us`, `fr`, `hi-in`). At least one variant per channel should target the default locale you ship.
+A supported locale code — case-sensitive, e.g. `en`, `en-US`, `fr`, `hi-IN`, `es-MX`. Anything else is rejected with "Unsupported locale code". The `default` variant is always `en`.
 
 ### `conditions`
 
-`null` or an array of `expression_v1` clauses. When non-null, the variant is only used if all conditions evaluate to true for the current send. Useful for segmentation (e.g., a different subject line for enterprise users).
+`null` or an array of `expression_v1` clauses. Entries in the array are **OR'd**; the `args` inside one entry are **AND'd**. When non-null, the variant is only eligible if at least one entry matches for the current send. Useful for segmentation (e.g., a different subject line for enterprise users).
+
+`value` is parsed as an expression: wrap string literals in escaped quotes (`"\"enterprise\""`). Numbers, `true` / `false`, and `null` can be bare; a bare word such as `"enterprise"` is read as a variable path, not a string.
 
 Each condition follows:
 
@@ -68,7 +70,7 @@ Each condition follows:
   "expression_v1": {
     "op": "AND",
     "args": [
-      { "variable_ns": "$recipient", "variable": "plan", "op": "==", "value": "enterprise" }
+      { "variable_ns": "$recipient", "variable": "plan", "op": "==", "value": "\"enterprise\"" }
     ]
   }
 }
@@ -81,7 +83,7 @@ Each condition follows:
 | *(empty / omitted)* | Trigger event payload |
 | `$actor` | Properties of the user who performed the action |
 | `$recipient` | Properties of the user receiving the notification |
-| `$brand` | Properties of the tenant/brand |
+| `$tenant` | Properties of the tenant (`$brand` is the legacy alias — don't emit it) |
 | `$organization` | Organization-level properties |
 
 #### Comparison operators
@@ -104,9 +106,9 @@ Each condition follows:
 
 ### `needs_vendor_approval` / `vendor_approvals`
 
-Used for channels where the underlying vendor reviews content before send (notably SMS DLT and WhatsApp). When `needs_vendor_approval: true`, the template cannot be delivered until at least one `vendor_approvals` entry has `approval_status: "approved"`.
+Used for channels where the underlying vendor reviews content before send (notably SMS DLT and WhatsApp). `needs_vendor_approval` is the only part you author; it is forced to `true` for WhatsApp. `vendor_approvals` is **read-only** in variant JSON — approvals are submitted and tracked per vendor from the dashboard, and appear here when you read a variant back.
 
-The `vendor_approvals` array entries follow:
+The `vendor_approvals` array entries (as returned) follow:
 
 | Property | Type | Required | Description |
 | --- | --- | --- | --- |
@@ -124,21 +126,20 @@ For SMS variants, `needs_vendor_approval` is **required** (see the channel refer
 
 ### `seq_no`
 
-Optional positive integer. When multiple variants match the same recipient (e.g., overlapping conditions), `seq_no` is used to order priority — lower numbers win.
+Read-only priority, assigned `1..n` from the template's **variant order** (dashboard drag-and-drop, or the `variant_order` map in the CLI's `template.json`). Lower numbers are evaluated first. Don't set it in variant JSON — it is ignored.
 
 ## Variant Selection
 
 When a workflow sends a template, SuprSend picks one variant per channel using:
 
-1. **Channel match** — must equal the channel being sent.
-2. **Tenant match** — prefer the variant whose `tenant_id` equals the send's tenant; otherwise fall back to `tenant_id: null`.
-3. **Locale match** — prefer the recipient's locale; otherwise fall back to the template's default locale.
-4. **Condition match** — only variants whose `conditions` evaluate to true are eligible.
-5. **`seq_no` tiebreaker** — among remaining eligible variants, the lowest `seq_no` wins.
+1. **Candidates** — enabled variants for the channel whose `tenant_id` is `null` or the send's tenant, and whose `locale` is in the fallback list: recipient locale → its base language → `en` (e.g. `hi-IN` → `hi` → `en`).
+2. **Tenant preference** — if any tenant-specific variant exists for a base language, the `tenant_id: null` variants for that language are dropped (except `default`).
+3. **Order** — by locale fallback position first, then non-`default` variants before `default`, then `seq_no` ascending.
+4. **First match wins** — variants are evaluated in that order and the first whose `conditions` match (or are `null`) is used.
 
 ## When to add more variants
 
-- **Per-tenant content** — see [Multi-tenant Variants](references/multi-tenant-variants.md) for how `tenant_id` lets you customize a template per tenant/brand.
+- **Per-tenant content** — see [Multi-tenant Variants](references/multi-tenant-variants.md) for how `tenant_id` lets you customize a template per tenant.
 - **Per-language content** — see [Multi-lingual Variants](references/multi-lingual-variants.md) for the trade-off between translation keys (one variant, many languages) vs. one variant per `locale`.
 
 ## Variants Concept
@@ -146,7 +147,7 @@ When a workflow sends a template, SuprSend picks one variant per channel using:
 ```
 # Template Variants
 
-> Serve different content to different audiences - by tenant, language, or any condition - from a single template.
+> Use SuprSend template variants to serve different content by tenant, language, or condition from a single template, with default fallback and live preview.
 
 Variants let you send different content to different recipients from the same template. Instead of creating separate templates for each tenant, language, or audience segment, you create variants with conditions - SuprSend picks the right one at send time.
 
@@ -205,14 +206,14 @@ Fill in:
 
 **Conditions** - rules that determine when this variant is sent. Each condition has a **Data Type** (Recipient, Actor, Tenant, or Input Payload), **Property**, **Operator**, and **Value**. Add multiple conditions with **+ OR**.
 
-| Common operators                                         |                      |
-| -------------------------------------------------------- | -------------------- |
-| `==`, `!=`                                               | Equals / not equals  |
-| `>`, `>=`, `<`, `<=`                                     | Comparisons          |
-| `contains`, `not contains`                               | Substring match      |
-| `is empty`, `is not empty`                               | Null checks          |
-| `datetime is`, `datetime is before`, `datetime is after` | Date comparisons     |
-| `intersects (array)`, `not intersects (array)`           | Array overlap checks |
+| Common operators | |
+| - | - |
+| `==`, `!=` | Equals / not equals |
+| `>`, `>=`, `<`, `<=` | Comparisons |
+| `contains`, `not contains` | Substring match |
+| `is empty`, `is not empty` | Null checks |
+| `datetime is`, `datetime is before`, `datetime is after` | Date comparisons |
+| `intersects (array)`, `not intersects (array)` | Array overlap checks |
 
 <Tip>
   **AI prompt - design variant conditions:** *"Design SuprSend template variants for \[describe scenario]. Data available: \[payload keys, tenant props, recipient props]. For each variant suggest: ID, conditions, ordering (first match wins), and which should be the default fallback."*
@@ -325,17 +326,21 @@ After setting up any pattern, [test with a specific tenant and recipient](/docs/
 
   ### Can I reorder variants?
     Yes. Drag them up or down in the panel. The default always stays at the top and cannot be moved.
+  
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 ```
 
 ## Examples
 
-### Minimal email variant (no tenant, no conditions)
+### Base email content (the `default` variant)
 
 ```json
 {
   "$schema": "https://schema.suprsend.com/template/v2/variant_schema.json",
   "channel": "email",
-  "id": "welcome-default-en",
+  "id": "default",
   "tenant_id": null,
   "locale": "en",
   "conditions": null,
@@ -395,12 +400,11 @@ After setting up any pattern, [test with a specific tenant and recipient](/docs/
       "expression_v1": {
         "op": "AND",
         "args": [
-          { "variable_ns": "$recipient", "variable": "plan", "op": "==", "value": "enterprise" }
+          { "variable_ns": "$recipient", "variable": "plan", "op": "==", "value": "\"enterprise\"" }
         ]
       }
     }
   ],
-  "seq_no": 1,
   "content": {
     "subject": "Welcome to Acme Enterprise",
     "body": { "type": "plain_text", "plain_text": { "text": "Your dedicated CSM will reach out shortly." } }
@@ -423,17 +427,7 @@ After setting up any pattern, [test with a specific tenant and recipient](/docs/
     "category": "transactional",
     "header": "ACMECO",
     "body": "Your verification code is {{ otp }}. Valid for 5 minutes."
-  },
-  "vendor_approvals": [
-    {
-      "vendor_slug": "msg91-sms",
-      "vendor_uid": "msg91-prod",
-      "vendor_template_name": "otp_v1",
-      "approval_status": "approved",
-      "vendor_template_id": "1707169876543210",
-      "provider_template_id": "210987654321"
-    }
-  ]
+  }
 }
 ```
 

@@ -210,6 +210,8 @@ references:
     template: partials/node-transform.hbs
   - filename: node-invoke-workflow.md
     template: partials/node-invoke-workflow.hbs
+  - filename: node-cancel-workflow.md
+    template: partials/node-cancel-workflow.hbs
   - filename: node-user-update.md
     template: partials/node-user-update.hbs
   - filename: node-list-operations.md

@@ -60,7 +60,7 @@ For variants with `channel: "iospush"`.
 ```
 # iOS Push
 
-> Design iOS Push notification templates with title, body, image, and action URL - with a live lock screen preview.
+> Design iOS push notification templates in SuprSend with title, body, image, deep link, and action buttons, previewed live on a lock screen mockup.
 
 The iOS Push editor is a form with title, body, image, and action URL - with a live lock screen preview on the right. Content is personalised with [Handlebars](/docs/handlebars-helpers) variables (`{{variable_name}}`).
 
@@ -139,29 +139,29 @@ Click **Commit** in the top bar to publish the current draft as a new live versi
 
 
   ### Delivery update
-    | Field      | Value                                                       |
-    | ---------- | ----------------------------------------------------------- |
-    | Title      | `Your order is out for delivery`                            |
-    | Body       | `Order #{{order_id}} will arrive by {{eta}}. Tap to track.` |
-    | Image URL  | `{{product_image_url}}`                                     |
-    | Action URL | `https://yourapp.com/track/{{order_id}}`                    |
+    | Field | Value |
+    | - | - |
+    | Title | `Your order is out for delivery` |
+    | Body | `Order #{{order_id}} will arrive by {{eta}}. Tap to track.` |
+    | Image URL | `{{product_image_url}}` |
+    | Action URL | `https://yourapp.com/track/{{order_id}}` |
   
 
   ### Social engagement
-    | Field      | Value                            |
-    | ---------- | -------------------------------- |
-    | Title      | `{{actor_name}} liked your post` |
-    | Body       | `"{{post_excerpt}}"`             |
-    | Action URL | `yourapp://posts/{{post_id}}`    |
+    | Field | Value |
+    | - | - |
+    | Title | `{{actor_name}} liked your post` |
+    | Body | `"{{post_excerpt}}"` |
+    | Action URL | `yourapp://posts/{{post_id}}` |
   
 
   ### Restock reminder
-    | Field      | Value                                           |
-    | ---------- | ----------------------------------------------- |
-    | Title      | `Running low?`                                  |
-    | Body       | `It might be time to restock {{product_name}}.` |
-    | Image URL  | `{{product_image_url}}`                         |
-    | Action URL | `https://yourapp.com/product/{{product_id}}`    |
+    | Field | Value |
+    | - | - |
+    | Title | `Running low?` |
+    | Body | `It might be time to restock {{product_name}}.` |
+    | Image URL | `{{product_image_url}}` |
+    | Action URL | `https://yourapp.com/product/{{product_id}}` |
   
 
 
@@ -176,11 +176,11 @@ Click **Commit** in the top bar to publish the current draft as a new live versi
   ### How do deep links work in iOS push?
     The **Action URL** supports three URL types:
 
-    | URL type       | Format                                                | Behaviour                                                                                                           |
-    | -------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-    | Web URL        | `https://yourapp.com/orders/123`                      | Opens in Safari (or your app if [Universal Links](https://developer.apple.com/ios/universal-links/) are configured) |
-    | Custom scheme  | `yourapp://orders/123`                                | Opens the matching view controller in your app                                                                      |
-    | Universal Link | `https://yourapp.com/orders/123` (Associated Domains) | Opens your app directly                                                                                             |
+    | URL type | Format | Behaviour |
+    | - | - | - |
+    | Web URL | `https://yourapp.com/orders/123` | Opens in Safari (or your app if [Universal Links](https://developer.apple.com/ios/universal-links/) are configured) |
+    | Custom scheme | `yourapp://orders/123` | Opens the matching view controller in your app |
+    | Universal Link | `https://yourapp.com/orders/123` (Associated Domains) | Opens your app directly |
 
     Prefer Universal Links - they work as both web fallback and in-app deep links.
   
@@ -191,4 +191,8 @@ Click **Commit** in the top bar to publish the current draft as a new live versi
 
   ### What happens if a variable is missing at send time?
     SuprSend discards the iOS Push notification for that user. Other channels in the same template group are still sent if they render successfully.
+  
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 ```

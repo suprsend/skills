@@ -6,7 +6,7 @@
 
 # Time Window
 
-> Use time window in workflow to send notification in a given datetime range and user's timezone.
+> Use the time window node to send notifications only within a date range or hours in the user's local timezone, ideal for working hours or weekend-only sends.
 
 Time window is used to schedule messages in a fixed time range and user's timezone. for example, if you want to send messages to users only in their office working hours or only on weekends in their timezone. You can also define different schedule for different channels; for example send Inbox messages to users during their working hours and send Email out of their office hours.
 
@@ -90,6 +90,9 @@ for example,
 
 
 ***
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 
 ## Schema Properties
 

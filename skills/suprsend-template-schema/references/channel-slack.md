@@ -21,8 +21,10 @@ For variants with `channel: "slack"`.
 - `handlebars`
 - `jsonnet`
 
-- `handlebars` — string interpolation in `body_text` / `body_block` content.
-- `jsonnet` — evaluate `body_block` as a Jsonnet expression that produces the Slack `blocks` JSON.
+- `handlebars` — used with `body_type: "text"`: Handlebars interpolation in `body_text`.
+- `jsonnet` — used with `body_type: "block"`: `body_block` is evaluated as a Jsonnet expression that produces the Slack `blocks` JSON.
+
+The pairing is enforced: `body_type: "block"` forces `templating_language: "jsonnet"` and `"text"` forces `"handlebars"`. Handlebars `{{ }}` inside `body_block` is **not** rendered — it is sent as literal text.
 
 ### `body_type` values
 
@@ -52,7 +54,7 @@ Use JSONNET if ANY of these are present:
 
 ### Critical format rule
 
-JSONNET output MUST be wrapped in `{ "blocks": [...] }`. The bare-array format `[{...}, {...}]` will fail — Slack's API rejects unwrapped arrays.
+JSONNET output MUST be wrapped in `{ "blocks": [...] }`. The bare-array format `[{...}, {...}]` will fail — SuprSend's renderer requires the JSONNET output to be a JSON object.
 
 ✅ Correct:
 
@@ -95,16 +97,7 @@ NEVER mix Handlebars `{{ }}` and JSONNET in the same template.
 }
 ```
 
-### Block Kit message
-
-```json
-{
-  "body_type": "block",
-  "body_block": "{\"blocks\":[{\"type\":\"section\",\"text\":{\"type\":\"mrkdwn\",\"text\":\"*Build failed* in {{ repo }}\"}},{\"type\":\"actions\",\"elements\":[{\"type\":\"button\",\"text\":{\"type\":\"plain_text\",\"text\":\"View logs\"},\"url\":\"{{ build.log_url }}\"}]}]}"
-}
-```
-
-### Jsonnet-templated blocks
+### Block Kit message (JSONNET)
 
 ```json
 {
@@ -119,7 +112,7 @@ NEVER mix Handlebars `{{ }}` and JSONNET in the same template.
 ```
 # Slack
 
-> Design Slack notification templates using the Text editor for simple messages or the JSONNET editor for rich Block Kit layouts.
+> Design Slack notification templates in SuprSend using the Text editor for plain messages or the JSONNET editor for rich Block Kit layouts with live preview.
 
 The Slack editor supports two modes: a **Text** editor for simple messages, and a **JSONNET** editor for rich [Block Kit](https://api.slack.com/block-kit) layouts with buttons, images, and structured sections.
 
@@ -158,7 +151,7 @@ The Slack editor supports two modes: a **Text** editor for simple messages, and 
 * `{{order.address.city}}` - nested variable
 * `{{{tracking_url}}}` - URL (avoid escaping)
 * `{{$recipient.name}}` - recipient property
-* `{{$brand.brand_name}}` - tenant property
+* `{{$tenant.name}}` - tenant property
 
 **In JSONNET mode** - variables use `data.key` syntax. See [JSONNET variable reference](/docs/jsonnet-templates#variable-syntax) for the full table.
 
@@ -230,4 +223,8 @@ Click **Commit** in the top bar to publish the current draft as a new live versi
 
   ### What happens if a variable is missing at send time?
     SuprSend discards the Slack notification for that user. Other channels in the same template group are still sent.
+  
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 ```

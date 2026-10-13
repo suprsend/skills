@@ -6,7 +6,7 @@
 
 # Webhook
 
-> Use webhook node to notify an external API endpoint such as a CRM or chat platform.
+> Use the webhook node in a workflow to call an external API endpoint such as a CRM, chat platform, or custom vendor, with headers, payload, and retry support.
 
 Webhook is an HTTP API request call to notify an endpoint such as your CRMs, send chat notifications via platforms like Facebook Messenger, or call custom vendors. You can club it with branches to route notifications via different services based on user properties like region, city etc.
 
@@ -16,25 +16,25 @@ Any data returned in the API request response is appended to the response_key in
 
 In a Webhook node, you have to define the endpoint, query params and headers. You can add both static and dynamic values in all request fields except response key. All Static values are added within `"static value"` and dynamic data is referred as `data.key`.
 
-| Field        | Description                                                                                                                                                                                                                                              |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Method*     | Supported methods- `GET`, `POST`, `PUT`, `PATCH`, `DELETE`                                                                                                                                                                                               |
-| Endpoint*   | A valid URL endpoint. Add static URL as `"https://static_url"` and dynamic URL as `{{data.url_endpoint}}`. Data for dynamic URL will be picked from trigger payload. You can also combine static and dynamic part as `"https://domain" + {{data.path}}`. |
-| Params       | Query Params to pass in the request. Similar to endpoint, you can pass both static and dynamic value in query params.                                                                                                                                    |
-| Header       | Any header to be passed in the request can be added as key-value pair with key being the header type and value as header value. You can use it to pass signing key.                                                                                      |
-| Response key | Response of your webhook request is appended against response key and merged in the workflow payload. Data is merged at parent level if response key is not set.                                                                                         |
+| Field | Description |
+| - | - |
+| Method* | Supported methods- `GET`, `POST`, `PUT`, `PATCH`, `DELETE` |
+| Endpoint* | A valid URL endpoint. Add static URL as `"https://static_url"` and dynamic URL as `{{data.url_endpoint}}`. Data for dynamic URL will be picked from trigger payload. You can also combine static and dynamic part as `"https://domain" + {{data.path}}`. |
+| Params | Query Params to pass in the request. Similar to endpoint, you can pass both static and dynamic value in query params. |
+| Header | Any header to be passed in the request can be added as key-value pair with key being the header type and value as header value. You can use it to pass signing key. |
+| Response key | Response of your webhook request is appended against response key and merged in the workflow payload. Data is merged at parent level if response key is not set. |
 
 
 ### Adding variables in Webhook node
 
-Fetch node supports JSONNET rendering language. You can add workflow trigger payload variables as `data.<key>` and internal suprsend data as `data["$brand"].<key>`. Here's a list of variables supported in workflow engine:
+Webhook node supports JSONNET rendering language. You can add workflow trigger payload variables as `data.<key>` and internal suprsend data as `data["$tenant"].<key>`. Here's a list of variables supported in workflow engine:
 
-| Variable      | Description                                                                                                                                                                                                                                                     | JSONNET format           |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| Input Payload | data passed in your event or workflow trigger.                                                                                                                                                                                                                  | `data.key`               |
-| Actor         | properties of actor in your workflow trigger. In case of event, distinct_id works both as actor and recipient.                                                                                                                                                 | `data["$actor"].key`     |
-| Recipient     | properties of recipient in your workflow trigger. In case of event, distinct_id works both as actor and recipient, unless override recipient is set in workflow trigger settings. In case of override recipient, properties of overridden recipient is picked. | `data["$recipient"].key` |
-| Tenant        | properties of the tenant passed in workflow trigger.                                                                                                                                                                                                            | `data["$brand"].key`     |
+| Variable | Description | JSONNET format |
+| - | - | - |
+| Input Payload | data passed in your event or workflow trigger. | `data.key` |
+| Actor | properties of actor in your workflow trigger. In case of event, distinct_id works both as actor and recipient. | `data["$actor"].key` |
+| Recipient | properties of recipient in your workflow trigger. In case of event, distinct_id works both as actor and recipient, unless override recipient is set in workflow trigger settings. In case of override recipient, properties of overridden recipient is picked. | `data["$recipient"].key` |
+| Tenant | properties of the tenant passed in workflow trigger. | `data["$tenant"].key` |
 
 ### Request execution
 
@@ -65,7 +65,7 @@ Here's how webhook function data output would look like with response key and wi
     }
   }
 
-  //Fetch function response
+  //Webhook function response
   {
     "org":"new_org",
     "location":{
@@ -99,6 +99,9 @@ Here's how webhook function data output would look like with response key and wi
 
 
 ***
+
+
+This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 
 ## Schema Properties
 
