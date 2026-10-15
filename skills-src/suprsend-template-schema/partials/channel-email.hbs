@@ -84,6 +84,107 @@ If the HTML has no `<body>` tag (or no `</head>`), the preheader (or markup) is 
 
 The HTML is a full document so the `preheader` has a `<body>` tag to attach to. `from_address` / `reply_to` take effect only with your own email vendor (see the verified behaviour list below).
 
+## Designing a responsive, cross-client email (`raw` body)
+
+When you author a `raw` HTML email as JSON you get **no visual preview** — the HTML has to be responsive and render across clients *by construction*. A good-looking render in one previewer does **not** mean it works in Gmail, Outlook, or on a phone. Follow the rules below and start from the skeleton.
+
+### Rules that decide whether it works
+
+- **Single column, fluid width.** Put `style="width:100%; max-width:600px"` on the content table. **Never use a fixed `width:600px` (or `width="600"` on the table) as the only width** — it overflows on phones (a ~600px email on a ~375px screen) and forces the client to zoom out, shrinking the text. `max-width` lets it shrink to the screen.
+- **Tables for layout, inline CSS only.** Gmail strips `<style>` blocks and Yahoo rewrites classes, so put every style inline. With the fluid-hybrid pattern below you do not need `@media` queries at all.
+- **Web-safe fonts only.** Arial, Helvetica, Georgia, Tahoma, Verdana, Times New Roman. Custom and Google fonts fall back to system defaults everywhere except Apple Mail.
+- **Readable type.** Body 14–16px (never below 14), headings 22–28px, `line-height` ~1.5, dark text on a light background.
+- **One bulletproof CTA.** Build the button as a table cell with `bgcolor` plus a padded `display:inline-block` anchor (see the skeleton). Keep the tap target ≥ 44px tall, use one primary CTA, and label it with an action verb and outcome ("Open workspace", "View receipt").
+- **Images.** Always set `alt` text (clients block images by default) and `style="display:block; max-width:100%; height:auto; border:0;"` so they scale down on mobile. Reference a **public https URL** — never a `data:` URI (Gmail and Outlook block them) and never a local path. Keep the whole email under ~100KB; Gmail clips above ~102KB.
+- **Full document + preheader.** Always emit `<html><head></head><body>…</body></html>` so `preheader` and `email_markup` have tags to attach to. Make the hidden preheader `<div>` the first element inside `<body>`.
+- **Footer + unsubscribe.** Small muted text with a working unsubscribe link: `\{{{$hosted_preference_url}}}` (CAN-SPAM / GDPR).
+
+### Outlook on Windows (the client that breaks layouts)
+
+Outlook for Windows renders with Word's engine: it **ignores `max-width` and `border-radius`**, and `<div>` layouts are unreliable. To keep Outlook at a fixed 600px while every other client stays fluid, wrap the content table in an **MSO "ghost table"** — a `<table>` inside `<!--[if mso]>` conditional comments that only Outlook sees:
+
+```html
+<!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%; max-width:600px;">
+  … your content …
+</table>
+<!--[if mso]></td></tr></table><![endif]-->
+```
+
+Outlook reads the fixed-600 ghost table and ignores the fluid `max-width` one; Apple Mail, Gmail, Yahoo, and phones ignore the MSO comments and use the fluid table. Rounded corners still render square in Outlook — that is acceptable graceful degradation, so never rely on `border-radius` for meaning.
+
+### Complete responsive skeleton (copy it, then fill the content cells)
+
+```html
+<!DOCTYPE html>
+<html lang="en" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Your workspace is ready</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f2f4f7;">
+  <div style="display:none; max-height:0; overflow:hidden; mso-hide:all;">\{{workspace_name}} is ready — invite your team.</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f2f4f7;">
+    <tr>
+      <td align="center" style="padding:24px 12px;">
+        <!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%; max-width:600px; background-color:#ffffff; border-radius:12px; font-family:Arial,Helvetica,sans-serif;">
+          <tr>
+            <td style="padding:32px 32px 8px;">
+              <img src="\{{$tenant.logo}}" alt="\{{default $tenant.name "Acme"}}" height="26" style="height:26px; display:block; border:0;">
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 32px 8px;">
+              <h1 style="margin:0; font-size:24px; line-height:32px; color:#101828; font-weight:bold;">Your workspace is ready, \{{first_name}}</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px 32px 24px;">
+              <p style="margin:0; font-size:16px; line-height:26px; color:#475467;"><strong>\{{workspace_name}}</strong> is set up. Invite your team and send your first notification.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 32px 32px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center" bgcolor="\{{default $tenant.primary_color "#4F46E5"}}" style="border-radius:8px;">
+                    <a href="\{{{action_url}}}" style="display:inline-block; padding:14px 28px; font-size:16px; line-height:20px; font-weight:bold; color:#ffffff; text-decoration:none; border-radius:8px;">Open \{{workspace_name}}</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 32px 32px; border-top:1px solid #eaecf0;">
+              <p style="margin:16px 0 0; font-size:12px; line-height:18px; color:#98a2b3;">\{{default $tenant.name "Acme"}} · \{{default $tenant.properties.address "123 Market St"}}<br>
+              You received this because you created a workspace. <a href="\{{{$hosted_preference_url}}}" style="color:#98a2b3; text-decoration:underline;">Unsubscribe or manage preferences</a>.</p>
+            </td>
+          </tr>
+        </table>
+        <!--[if mso]></td></tr></table><![endif]-->
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+```
+
+Use `\{{ }}` (double braces) for values that go into HTML — it HTML-escapes and keeps injected markup safe — and `\{{{ }}}` (triple) only for URLs (`action_url`, `$hosted_preference_url`) and the subject, preheader, and plain-text part, which are not HTML. See [Handlebars Helpers](handlebars-helpers.md).
+
+### Checklist before you save
+
+- [ ] Content table is `width:100%; max-width:600px` (not a fixed 600px)
+- [ ] An MSO ghost table wraps it (Outlook stays fixed-600)
+- [ ] All CSS is inline; no `<style>` block, no `@media` dependency
+- [ ] Web-safe fonts; body ≥ 14px, headings 22–28px, line-height ~1.5
+- [ ] One bulletproof CTA, ≥ 44px tall, action-verb label
+- [ ] Every image has `alt` plus `max-width:100%; height:auto`, served from a public https URL
+- [ ] Full `<html><head></head><body>` document with a hidden preheader
+- [ ] Footer has a working `\{{{$hosted_preference_url}}}` unsubscribe link
+
 ## Verified behaviour (overrides the docs below)
 
 - **Plain-text part:** if `text` is empty, it's generated from the rendered HTML **at send time** (not at commit).
