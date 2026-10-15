@@ -84,6 +84,185 @@ If the HTML has no `<body>` tag (or no `</head>`), the preheader (or markup) is 
 
 The HTML is a full document so the `preheader` has a `<body>` tag to attach to. `from_address` / `reply_to` take effect only with your own email vendor (see the verified behaviour list below).
 
+## Designing a responsive, cross-client email (`raw` body)
+
+When you author a `raw` HTML email as JSON you get **no visual preview** — the HTML has to be responsive and render across clients *by construction*. A good-looking render in one previewer does **not** mean it works in Gmail, Outlook, or on a phone. Follow the rules below and start from the skeleton.
+
+### Rules that decide whether it works
+
+- **Single column, fluid width.** Put `style="width:100%; max-width:600px"` on the content table. **Never use a fixed `width:600px` (or `width="600"` on the table) as the only width** — it overflows on phones (a ~600px email on a ~375px screen) and forces the client to zoom out, shrinking the text. `max-width` lets it shrink to the screen.
+- **Tables for layout, inline CSS only.** Gmail strips `<style>` blocks and Yahoo rewrites classes, so put every *layout* style inline. The fluid-hybrid pattern needs no `@media` query; the one exception is the optional dark-mode media query in `<head>` (see Dark mode).
+- **Web-safe fonts only.** Arial, Helvetica, Georgia, Tahoma, Verdana, Times New Roman. Custom and Google fonts fall back to system defaults everywhere except Apple Mail.
+- **Readable type.** Body 14–16px (never below 14), headings 22–28px, `line-height` ~1.5, dark text on a light background.
+- **One bulletproof CTA.** Build the button as a table cell with `bgcolor` plus a padded `display:inline-block` anchor (see the skeleton). Keep the tap target ≥ 44px tall, use one primary CTA, and label it with an action verb and outcome ("Open workspace", "View receipt").
+- **Images.** Always set `alt` text (clients block images by default) and `style="display:block; max-width:100%; height:auto; border:0;"` so they scale down on mobile. Reference a **public https URL** — never a `data:` URI (Gmail and Outlook block them) and never a local path. Keep the whole email under ~100KB; Gmail clips above ~102KB.
+- **Full document + preheader.** Always emit `<html><head></head><body>…</body></html>` so `preheader` and `email_markup` have tags to attach to. Make the hidden preheader `<div>` the first element inside `<body>`.
+- **Footer + unsubscribe.** Small muted text with a working unsubscribe link: `\{{{$hosted_preference_url}}}` (CAN-SPAM / GDPR).
+
+### Outlook on Windows (the client that breaks layouts)
+
+Outlook for Windows renders with Word's engine: it **ignores `max-width` and `border-radius`**, and `<div>` layouts are unreliable. To keep Outlook at a fixed 600px while every other client stays fluid, wrap the content table in an **MSO "ghost table"** — a `<table>` inside `<!--[if mso]>` conditional comments that only Outlook sees:
+
+```html
+<!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%; max-width:600px;">
+  … your content …
+</table>
+<!--[if mso]></td></tr></table><![endif]-->
+```
+
+Outlook reads the fixed-600 ghost table and ignores the fluid `max-width` one; Apple Mail, Gmail, Yahoo, and phones ignore the MSO comments and use the fluid table. Rounded corners still render square in Outlook — that is acceptable graceful degradation, so never rely on `border-radius` for meaning.
+
+### Complete responsive skeleton (copy it, then fill the content cells)
+
+```html
+<!DOCTYPE html>
+<html lang="en" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Your workspace is ready</title>
+</head>
+<body style="margin:0; padding:0; background-color:#f2f4f7;">
+  <div style="display:none; max-height:0; overflow:hidden; mso-hide:all;">\{{workspace_name}} is ready — invite your team.</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f2f4f7;">
+    <tr>
+      <td align="center" style="padding:24px 12px;">
+        <!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%; max-width:600px; background-color:#ffffff; border-radius:12px; font-family:Arial,Helvetica,sans-serif;">
+          <tr>
+            <td style="padding:32px 32px 8px;">
+              <img src="\{{$tenant.logo}}" alt="\{{default $tenant.name "Acme"}}" height="26" style="height:26px; display:block; border:0;">
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 32px 8px;">
+              <h1 style="margin:0; font-size:24px; line-height:32px; color:#101828; font-weight:bold;">Your workspace is ready, \{{first_name}}</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:8px 32px 24px;">
+              <p style="margin:0; font-size:16px; line-height:26px; color:#475467;"><strong>\{{workspace_name}}</strong> is set up. Invite your team and send your first notification.</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 32px 32px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center" bgcolor="\{{default $tenant.primary_color "#4F46E5"}}" style="border-radius:8px;">
+                    <a href="\{{{action_url}}}" style="display:inline-block; padding:14px 28px; font-size:16px; line-height:20px; font-weight:bold; color:#ffffff; text-decoration:none; border-radius:8px;">Open \{{workspace_name}}</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 32px 32px; border-top:1px solid #eaecf0;">
+              <p style="margin:16px 0 0; font-size:12px; line-height:18px; color:#98a2b3;">\{{default $tenant.name "Acme"}} · \{{default $tenant.properties.address "123 Market St"}}<br>
+              You received this because you created a workspace. <a href="\{{{$hosted_preference_url}}}" style="color:#98a2b3; text-decoration:underline;">Unsubscribe or manage preferences</a>.</p>
+            </td>
+          </tr>
+        </table>
+        <!--[if mso]></td></tr></table><![endif]-->
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+```
+
+Use `\{{ }}` (double braces) for values that go into HTML — it HTML-escapes and keeps injected markup safe — and `\{{{ }}}` (triple) only for URLs (`action_url`, `$hosted_preference_url`) and the subject, preheader, and plain-text part, which are not HTML. See [Handlebars Helpers](handlebars-helpers.md).
+
+### Checklist before you save
+
+- [ ] Content table is `width:100%; max-width:600px` (not a fixed 600px)
+- [ ] An MSO ghost table wraps it (Outlook stays fixed-600)
+- [ ] All layout CSS is inline (the only `<style>` allowed is the optional dark-mode media query)
+- [ ] Web-safe fonts; body ≥ 14px, headings 22–28px, line-height ~1.5
+- [ ] One bulletproof CTA, ≥ 44px tall, action-verb label
+- [ ] Every image has `alt` plus `max-width:100%; height:auto`, served from a public https URL
+- [ ] Full `<html><head></head><body>` document with a hidden preheader
+- [ ] Footer has a working `\{{{$hosted_preference_url}}}` unsubscribe link
+
+## Structure and deliverability
+
+A responsive layout is not enough — these decide whether the email reads well and reaches the inbox.
+
+- **Inverted pyramid.** One idea per email: branded header → one clear headline → 2–3 sentences of context → a single primary CTA → footer. Don't bury the CTA or stack competing asks.
+- **Set a distinct, catchy preheader.** It is the inbox preview line after the subject — 40–140 characters that add a **new hook**, distinct from the subject *and* from the first visible line of the body. If it echoes either, the inbox preview reads as a duplicate: Gmail shows the preheader, then the first body text right after it. Left blank, clients pull the first body text (often a link or "view in browser"), so always set it. To stop the opening copy from bleeding into the preview after a short preheader, pad the hidden preheader with zero-width spacers — append several `&zwnj;&nbsp;` after your text. It needs a `<body>` tag to attach to (see [Body](#body)).
+- **Keep the plain-text part useful.** HTML and plain text are both sent. Leave `text` empty to auto-generate it from the HTML, or write your own for OTP, receipt, and outreach emails, where plain text is what many recipients read. A real multipart email also scores better with spam filters.
+- **Mind the image-to-text ratio.** Aim for ≤ ~40% images and ≥ 60% live text. Image-only emails land in spam and show nothing when images are blocked — prefer HTML/CSS for headers and always set `alt` text.
+- **Unsubscribe and sender.** Every email needs a **visible** unsubscribe link (Gmail and Yahoo require easy opt-out) — put `\{{{$hosted_preference_url}}}`, the per-recipient signed link to SuprSend's hosted preference page, in the footer, not hidden. Use `\{{$embedded_preference_url}}` only when you host your own preference page. Keep a recognisable `from_name`. (Sending domain, SPF, DKIM, and DMARC are vendor setup, not the template.)
+
+## From email to notification: common recipes
+
+A template is only the content. These patterns pair the email with the SuprSend flow that sends it — read the `suprsend-workflow-schema` skill for the workflow JSON.
+
+- **Transactional** (receipt, password reset, invite): one email, sent at once. Author the variant, then start it with `workflows_trigger`, or with `events_track` when an event drives the workflow (a single `send_email` node). Keep promotional content minimal (CAN-SPAM).
+- **Welcome / onboarding series:** several emails over days. One workflow with `send_email` nodes separated by `delay` nodes (Day 0 welcome → Day 2 tips → Day 5 nudge), each pointing at its own template. `workflows_save_draft` → `workflows_publish`.
+- **Promotional / announcement to many users:** one email to a whole audience. Put the recipients in a list (`lists_upsert`, static or dynamic by query), then send with `broadcasts_trigger`. A dynamic list targets a segment without managing membership by hand.
+- **Product update / digest:** batch many items into one email. Use a `digest` node in the workflow, and in the HTML iterate the batched items with a Handlebars `\{{#each}}` loop (Merge-Tag rows are the Design-Editor equivalent).
+
+The design rules above still apply to every recipe. For a notification that spans channels, add a variant per channel (inbox, push, SMS, Slack) to the same template so the message stays consistent everywhere.
+
+## Accessibility and contrast
+
+Readable for everyone, and intact when images are blocked — this also helps deliverability.
+
+- **Live text, not images, for words.** Keep the headline, body, and CTA as real HTML text. Outlook (and often Gmail) block images by default; if an image held your headline or CTA, the email then says nothing. Use images for photos and decoration only.
+- **Contrast.** Meet WCAG AA — **4.5:1** for body text, and **3:1** for large text (≥ 24px) and the CTA label on its button. Dark text on light reads best; avoid grey-on-grey.
+- **Real headings.** Use `<h1>`–`<h6>` for structure, not a bold `<p>`; screen readers navigate by headings.
+- **Layout tables are decoration.** Put `role="presentation"` on every layout `<table>` so screen readers don't read rows and cells as data (the skeleton already does).
+- **Language and alt text.** Set `lang` on `<html>`. Give informative images a descriptive `alt`, and decorative images `alt=""` so they are skipped.
+- **Never rely on colour alone.** A coloured status word also needs text or an icon.
+
+## Dark mode
+
+Dark mode is a default for a large share of readers, and clients differ — some keep your colours, some partially invert, some fully invert. Design so the email survives all three.
+
+- **Build a solid light-mode email first, then layer dark styles on top.**
+- **Declare support and add a dark override** in `<head>` (honoured by Apple Mail and a few others; most clients auto-adjust instead). This `<style>` block is the one allowed exception to inline-only CSS — keep all *layout* CSS inline, and let Gmail strip this block and fall back gracefully:
+
+```html
+<meta name="color-scheme" content="light dark">
+<meta name="supported-color-schemes" content="light dark">
+<style>
+  @media (prefers-color-scheme: dark) {
+    .email-bg   { background:#121212 !important; }
+    .email-card { background:#1e1e1e !important; }
+    .email-text { color:#e6e6e6 !important; }
+  }
+</style>
+```
+
+Add the matching classes (`email-bg`, `email-card`, `email-text`) to the elements in the skeleton.
+
+- **Recolour every coloured text element, not just the card.** The dark media query only recolours elements that carry a class it targets. An inline `color:` on a `<strong>`, a wordmark, a price, or a table cell with no class keeps its light-mode colour — so dark text on the now-dark card turns invisible. Give every coloured text element a dark-mode class (or a colour that works on both backgrounds).
+- **Avoid pure `#000000` and `#FFFFFF`** — use a soft dark (~`#121212`) and an off-white so auto-inversion does not look harsh.
+- **Logos:** use a transparent PNG; if the logo is dark, add light padding or a subtle stroke so it stays visible on a dark background (a pure-black logo disappears).
+- **Test both modes** in Apple Mail and the Gmail app before publishing.
+
+## Buttons and images
+
+- **CTA copy.** Label the button with an action and its outcome — "Open workspace", "View your invoice" — never "Click here". One primary CTA per email (repeat it at the bottom only for a long email); keep it 200–300px wide and ≥ 44px tall.
+- **Host images on SuprSend.** Upload with `assets_upload` and use the returned URL. Never use a `data:` URI (Gmail and Outlook block them) or a local path. Tenant branding (`\{{$tenant.logo}}`) is already hosted.
+- **Image specs.** Full-width ≤ 600px (a header is 600×200–300); supply a **2× retina** source (1200px for a 600px slot); set `style="display:block; max-width:100%; height:auto; border:0;"` so it scales on mobile; keep the whole email under ~100KB (Gmail clips ~102KB). Prefer HTML/CSS over images for simple headers.
+
+### Generating a banner image
+
+When a visual genuinely adds value — a promotional hero, a product or lifestyle shot — generate it with your own image capability and include it, but host it on SuprSend first; do not inline it as a `data:` URI (Gmail and Outlook block those).
+
+1. Generate the image at 600px wide (1200px for a 2x retina banner), and keep it small.
+2. Upload it with `assets_upload` — pass `base64` (or a `data:` URI) for an image up to 100 KB, or a public `url` for a larger file. It returns `{ url }`, the public link.
+3. Reference that URL, with alt text and mobile scaling:
+
+```html
+<img src="THE-URL-FROM-assets_upload" alt="40% off everything this weekend" width="600" style="display:block; max-width:100%; height:auto; border:0;">
+```
+
+**Keep the headline and CTA as live text, never baked into the image.** Images are off by default in Outlook and often Gmail, so an image-only hero shows nothing until the reader turns images on, and image-only emails score worse with spam filters. Use a generated image to *enrich* a text email, not to carry it — and for a plain coloured header, HTML/CSS still beats an image.
+
 ## Verified behaviour (overrides the docs below)
 
 - **Plain-text part:** if `text` is empty, it's generated from the rendered HTML **at send time** (not at commit).
