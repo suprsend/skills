@@ -134,6 +134,7 @@ When you author a `raw` HTML email as JSON you get **no visual preview** — the
 - **Images.** Always set `alt` text (clients block images by default) and `style="display:block; max-width:100%; height:auto; border:0;"` so they scale down on mobile. Reference a **public https URL** — never a `data:` URI (Gmail and Outlook block them) and never a local path. Keep the whole email under ~100KB; Gmail clips above ~102KB.
 - **Full document + preheader.** Always emit `<html><head></head><body>…</body></html>` so `preheader` and `email_markup` have tags to attach to. Make the hidden preheader `<div>` the first element inside `<body>`.
 - **Footer + unsubscribe.** Small muted text with a working unsubscribe link: `{{{$hosted_preference_url}}}` (CAN-SPAM / GDPR).
+- **Check feature support before you rely on it.** This guide covers the common traps, but email CSS/HTML support is broad and uneven. For any feature you are not sure every target client supports, treat [Can I Email](https://www.caniemail.com/) as the authority — prefer the widely-supported option and a table-based, inline-styled fallback. When in doubt, degrade gracefully rather than depend on something a major client drops.
 
 ### Outlook on Windows (the client that breaks layouts)
 
