@@ -221,6 +221,27 @@ Use `{{ }}` (double braces) for values that go into HTML — it HTML-escapes and
 - [ ] Full `<html><head></head><body>` document with a hidden preheader
 - [ ] Footer has a working `{{{$hosted_preference_url}}}` unsubscribe link
 
+## Structure and deliverability
+
+A responsive layout is not enough — these decide whether the email reads well and reaches the inbox.
+
+- **Inverted pyramid.** One idea per email: branded header → one clear headline → 2–3 sentences of context → a single primary CTA → footer. Don't bury the CTA or stack competing asks.
+- **Set the preheader.** It is the inbox preview line after the subject — 40–140 characters that *extend* the subject, not repeat it. Left blank, clients pull the first body text (often a link or "view in browser"). It needs a `<body>` tag to attach to (see [Body](#body)).
+- **Keep the plain-text part useful.** HTML and plain text are both sent. Leave `text` empty to auto-generate it from the HTML, or write your own for OTP, receipt, and outreach emails, where plain text is what many recipients read. A real multipart email also scores better with spam filters.
+- **Mind the image-to-text ratio.** Aim for ≤ ~40% images and ≥ 60% live text. Image-only emails land in spam and show nothing when images are blocked — prefer HTML/CSS for headers and always set `alt` text.
+- **Unsubscribe and sender.** Always include a working `{{{$hosted_preference_url}}}` link and a recognisable `from_name`. (Sending domain, SPF, DKIM, and DMARC are vendor setup, not the template.)
+
+## From email to notification: common recipes
+
+A template is only the content. These patterns pair the email with the SuprSend flow that sends it — read the `suprsend-workflow-schema` skill for the workflow JSON.
+
+- **Transactional** (receipt, password reset, invite): one email, sent at once. Author the variant, then start it with `workflows_trigger`, or with `events_track` when an event drives the workflow (a single `send_email` node). Keep promotional content minimal (CAN-SPAM).
+- **Welcome / onboarding series:** several emails over days. One workflow with `send_email` nodes separated by `delay` nodes (Day 0 welcome → Day 2 tips → Day 5 nudge), each pointing at its own template. `workflows_save_draft` → `workflows_publish`.
+- **Promotional / announcement to many users:** one email to a whole audience. Put the recipients in a list (`lists_upsert`, static or dynamic by query), then send with `broadcasts_trigger`. A dynamic list targets a segment without managing membership by hand.
+- **Product update / digest:** batch many items into one email. Use a `digest` node in the workflow, and in the HTML iterate the batched items with a Handlebars `{{#each}}` loop (Merge-Tag rows are the Design-Editor equivalent).
+
+The design rules above still apply to every recipe. For a notification that spans channels, add a variant per channel (inbox, push, SMS, Slack) to the same template so the message stays consistent everywhere.
+
 ## Verified behaviour (overrides the docs below)
 
 - **Plain-text part:** if `text` is empty, it's generated from the rendered HTML **at send time** (not at commit).
