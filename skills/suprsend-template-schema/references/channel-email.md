@@ -285,6 +285,20 @@ Add the matching classes (`email-bg`, `email-card`, `email-text`) to the element
 - **Host images on SuprSend.** Upload with `assets_upload` and use the returned URL. Never use a `data:` URI (Gmail and Outlook block them) or a local path. Tenant branding (`{{$tenant.logo}}`) is already hosted.
 - **Image specs.** Full-width ≤ 600px (a header is 600×200–300); supply a **2× retina** source (1200px for a 600px slot); set `style="display:block; max-width:100%; height:auto; border:0;"` so it scales on mobile; keep the whole email under ~100KB (Gmail clips ~102KB). Prefer HTML/CSS over images for simple headers.
 
+### Generating a banner image
+
+When a visual genuinely adds value — a promotional hero, a product or lifestyle shot — generate it with your own image capability and include it, but host it on SuprSend first; do not inline it as a `data:` URI (Gmail and Outlook block those).
+
+1. Generate the image at 600px wide (1200px for a 2x retina banner), and keep it small.
+2. Upload it with `assets_upload` — pass `base64` (or a `data:` URI) for an image up to 100 KB, or a public `url` for a larger file. It returns `{ url }`, the public link.
+3. Reference that URL, with alt text and mobile scaling:
+
+```html
+<img src="THE-URL-FROM-assets_upload" alt="40% off everything this weekend" width="600" style="display:block; max-width:100%; height:auto; border:0;">
+```
+
+**Keep the headline and CTA as live text, never baked into the image.** Images are off by default in Outlook and often Gmail, so an image-only hero shows nothing until the reader turns images on, and image-only emails score worse with spam filters. Use a generated image to *enrich* a text email, not to carry it — and for a plain coloured header, HTML/CSS still beats an image.
+
 ## Verified behaviour (overrides the docs below)
 
 - **Plain-text part:** if `text` is empty, it's generated from the rendered HTML **at send time** (not at commit).
