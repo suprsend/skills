@@ -274,6 +274,7 @@ Dark mode is a default for a large share of readers, and clients differ — some
 
 Add the matching classes (`email-bg`, `email-card`, `email-text`) to the elements in the skeleton.
 
+- **Recolour every coloured text element, not just the card.** The dark media query only recolours elements that carry a class it targets. An inline `color:` on a `<strong>`, a wordmark, a price, or a table cell with no class keeps its light-mode colour — so dark text on the now-dark card turns invisible. Give every coloured text element a dark-mode class (or a colour that works on both backgrounds).
 - **Avoid pure `#000000` and `#FFFFFF`** — use a soft dark (~`#121212`) and an off-white so auto-inversion does not look harsh.
 - **Logos:** use a transparent PNG; if the logo is dark, add light padding or a subtle stroke so it stays visible on a dark background (a pure-black logo disappears).
 - **Test both modes** in Apple Mail and the Gmail app before publishing.
