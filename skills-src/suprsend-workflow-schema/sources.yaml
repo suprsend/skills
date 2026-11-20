@@ -122,11 +122,6 @@ sources:
         replace: 'Fixed batch window (`fixed_window`) is a duration like `30m`, `1h30m` or `2d12h` with no spaces (see [Duration format](workflow-schema-guide.md#duration-format))'
       - find: 'an interval string defined as `xxd xxh xxm xxs`, where'
         replace: 'an interval string like `2d5h30m` (no spaces), where'
-      - find: 'You can customize the number of events to any value between 2 and 100.'
-        replace: 'You can customize the number of events (`retain_count`) to any value between 1 and 100.'
-      # Variable name is plural: $batched_events_count.
-      - find: '2. `$batched_event_count`: This count represents the number of events in a batch and is utilized to render the batch count in a template. For instance, you might send a message like, `Joe left 5 comments in the last 1 hour` where 5 corresponds to \$batched_event_count.'
-        replace: '2. `$batched_events_count` (plural "events"): This count represents the number of events in a batch and is utilized to render the batch count in a template. For instance, you might send a message like, `Joe left 5 comments in the last 1 hour` where 5 corresponds to `$batched_events_count`.'
 
   - type: docs
     key: docs_digest
@@ -138,39 +133,16 @@ sources:
       # Timezone fallback: user -> tenant -> account -> UTC.
       - find: "If a recipient's timezone is not set, it will default to the account timezone"
         replace: "If a recipient's timezone is not set, it falls back to the tenant's timezone, then to the account timezone"
-      # Interval caps, `time` required for daily+, dtstart bounds.
-      - find: '"interval": 1, //you can pass any integer value here, default value 1'
-        replace: '"interval": 1, // integer >= 1, default 1. Max: minutely 1440, hourly 100, daily 100, weekly_mo2fr 25, weekly 25, monthly 6'
-      - find: '"time": "08:00", // defaults to 00:00 if not passed'
-        replace: '"time": "08:00", // HH:MM. REQUIRED for daily, weekly_mo2fr, weekly, monthly (no default; missing time fails the run)'
+      # dtstart bounds.
       - find: '"dtstart": "2024-08-01T10:40:50", // defaults to current_timestamp if not passed'
         replace: '"dtstart": "2024-08-01T10:40:50", // optional, defaults to now. Must be >= 2024-01-01 and <= 6 months ahead'
-      - find: 'Interval `2` with frequency `daily` would mean repeat every 2 days. Defaults to `1` if not set. |'
-        replace: 'Interval `2` with frequency `daily` would mean repeat every 2 days. Defaults to `1` if not set. Max: `minutely` 1440, `hourly` 100, `daily` 100, `weekly_mo2fr` 25, `weekly` 25, `monthly` 6. |'
-      - find: '| `time` | string (optional) | Time for daily, weekly, or monthly frequency when the digest will close. Defined in hour and minute as `hh:mm`. Defaults to `00:00` if not set. |'
-        replace: '| `time` | string (mandatory for `daily`, `weekly_mo2fr`, `weekly`, `monthly`) | Time when the digest will close, as `HH:MM` (24-hour). No default: if it is missing, the schedule is invalid and the workflow run stops with an error. |'
       - find: 'Defaults to `current_timestamp` at the time of setting the schedule if not defined. |'
         replace: 'Defaults to `current_timestamp` at the time of setting the schedule if not defined. Must be on or after `2024-01-01T00:00:00` and at most 6 months in the future. |'
-      - find: 'You can customize the number of triggers to any value between 2 and 100.'
-        replace: 'You can customize the number of triggers (`retain_count`) to any value between 1 and 100.'
-      # Variable name is plural: $batched_events_count.
-      - find: '2. `$batched_event_count`: This count represents the number of events in a batch and is utilized to render the batch count in a template. For instance, you might send a message like,`Joe left 5 comments in the last 1 hour`where 5 corresponds to \$batched_event_count.'
-        replace: '2. `$batched_events_count` (plural "events"): This count represents the number of events in a batch and is utilized to render the batch count in a template. For instance, you might send a message like, `Joe left 5 comments in the last 1 hour` where 5 corresponds to `$batched_events_count`.'
 
   - type: docs
     key: docs_timewindow
     urls:
       - "https://docs.suprsend.com/docs/time-window"
-    replacements:
-      # A timezone change does not shorten the current wait; the window is re-checked after it.
-      - find: |-
-          If a recipient’s timezone is updated while they are waiting in a Time Window, the delay will be recalculated based on the new timezone. If the adjustment results in a time past the end of the current Time Window, the delivery will be pushed to the start of the next schedule.
-        replace: |-
-          If a recipient’s timezone is updated while they are waiting in a Time Window, the current wait is **not** shortened or recalculated: the run first sleeps for the wait computed on entry, then re-checks the window in the recipient's current timezone. If that moment is outside the window, it waits again until the next window start.
-      - find: |-
-          * If the timezone is updated to Europe/London (UTC+1) while waiting, the delay will be recalculated to 1 hour.
-        replace: |-
-          * If the timezone is updated to Europe/London (UTC+1) while waiting, the run still waits the full 7 hours (until 14:00 UTC = 3:00 PM Europe/London); that is inside the window, so it proceeds then.
 
   - type: docs
     key: docs_branch
@@ -193,9 +165,9 @@ sources:
           | `is empty` / `is not empty` | key is missing or is `null`, `""`, `false`, `0`, `[]` or `{}` / key has any other value | All |
       # A bare `properties.x` in a value reads the trigger payload, not the tenant.
       - find: |-
-          add as `properties.<property_key>` for custom properties (for example, `$tenant.timezone`, `properties.timezone`)
+          (for example, `$tenant.timezone`, `$tenant.properties.address`)
         replace: |-
-          add as `$tenant.properties.<property_key>` for custom properties (for example, `$tenant.timezone`, `$tenant.properties.region`). A bare `properties.<property_key>` reads the trigger payload, not the tenant
+          (for example, `$tenant.timezone`, `$tenant.properties.address`). A bare `properties.<property_key>` reads the trigger payload, not the tenant
 
   - type: docs
     key: docs_wait_until
@@ -243,8 +215,10 @@ sources:
       - "https://docs.suprsend.com/docs/smart-delivery"
     replacements:
       # Inbox is only auto-first when neither mandatory_channels nor a channel sequence is set.
-      - find: 'Inbox is always delivered at T+0** - it is exempt from channel routing entirely. Regardless of the optimize-on setting, channel order, or cost, Inbox fires immediately alongside the first outside-app channel whenever it is active on the template and user profile. It does not count toward the outside-app channel sequence or interval calculation.'
-        replace: 'Inbox is delivered at T+0 only in the default setup** - when neither Must Send To (`mandatory_channels`) nor a channel sequence is set. Then Inbox fires immediately alongside the first outside-app channel and does not count toward the sequence or interval calculation. If either setting is used, Inbox gets no special treatment: it is ordered like any other channel (by cost, or by its position in the sequence) unless you list it in `mandatory_channels`.'
+      - find: |-
+          Inbox is delivered at T+0** - when no Must-Send-To channels are configured, Inbox is exempt from channel routing: it fires immediately alongside the first outside-app channel whenever it is active on the template and user profile, and does not count toward the outside-app channel sequence or interval calculation. If you configure Must-Send-To channels, Inbox is ordered like any other channel (add it to Must-Send-To to keep it at T+0).
+        replace: |-
+          Inbox is delivered at T+0 only in the default setup** - when neither Must Send To (`mandatory_channels`) nor a channel sequence is set. Then Inbox fires immediately alongside the first outside-app channel and does not count toward the sequence or interval calculation. If either setting is used, Inbox gets no special treatment: it is ordered like any other channel (by cost, or by its position in the sequence) unless you list it in `mandatory_channels`.
       - find: 'Notifications go out in this sequence:'
         replace: 'Default sequence (no Must Send To channel, no channel sequence):'
       # Interval differs when a Must Send To channel is sent at T+0.
@@ -262,8 +236,10 @@ sources:
           Workflow JSON can't set the channel order: `routing_basis` and `routing_channels_sequence` are dropped on save without an error, so a node saved from JSON always routes by cost.
       - find: 'Channels listed here are delivered to **immediately at T+0**, outside of routing order. Use this for channels that must always receive the notification regardless of sequencing.'
         replace: 'Channels listed here (`mandatory_channels`) are delivered to **immediately at T+0**, outside of routing order. Use this for channels that must always receive the notification regardless of sequencing. Setting it turns off the automatic Inbox-at-T+0 rule (add `inbox` here if you need it immediately), and when a must-send channel is sent, the first routed channel waits one full interval instead of going at T+0.'
-      - find: 'This is expected. Inbox is exempt from routing logic and always fires at T+0 - alongside the first outside-app channel (Email, in this case).'
-        replace: 'This is expected in the default setup (no Must Send To, no channel sequence): Inbox then fires at T+0 alongside the first outside-app channel (Email, in this case).'
+      - find: |-
+          This is expected. Unless you configure Must-Send-To channels, Inbox is exempt from routing logic and fires at T+0 - alongside the first outside-app channel (Email, in this case).
+        replace: |-
+          This is expected in the default setup (no Must Send To, no channel sequence): Inbox then fires at T+0 alongside the first outside-app channel (Email, in this case).
 
   - type: docs
     key: docs_webhook
@@ -284,15 +260,11 @@ sources:
           can be added as key-value pair with key being the header type and value as header value.
         replace: |-
           can be added as key-value pair with key being the header type and value as header value. Both key and value are JSONNET expressions — quote literal strings: `{"key": "\"Authorization\"", "value": "\"Bearer \" + data.api_token"}`.
-      # Any 2xx is success; 15s timeout.
+      # Redirects are not followed.
       - find: |-
-          * The response to the request is one of: 200 OK, 201 Created, or 204 No Content.
+          * The response to the request has a 2xx status code (e.g., 200 OK, 201 Created, or 204 No Content).
         replace: |-
-          * The response status is any 2xx. Redirects (301/302) are not followed and count as a failure.
-      - find: |-
-          * The response to the request takes no longer than 5 seconds for SuprSend to receive.
-        replace: |-
-          * The response to the request takes no longer than 15 seconds (the request timeout).
+          * The response to the request has a 2xx status code (e.g., 200 OK, 201 Created, or 204 No Content). Redirects (301/302) are not followed and count as a failure.
 
   - type: docs
     key: docs_fetch
@@ -313,15 +285,11 @@ sources:
           can be added as key-value pair with key being the header type and value as header value.
         replace: |-
           can be added as key-value pair with key being the header type and value as header value. Both key and value are JSONNET expressions — quote literal strings: `{"key": "\"Authorization\"", "value": "\"Bearer \" + data.api_token"}`.
-      # Any 2xx is success; 15s timeout.
+      # Redirects are not followed.
       - find: |-
-          * The response to the request is one of: 200 OK, 201 Created, or 204 No Content.
+          * The response to the request has a 2xx status code (e.g., 200 OK, 201 Created, or 204 No Content).
         replace: |-
-          * The response status is any 2xx. Redirects (301/302) are not followed and count as a failure.
-      - find: |-
-          * The response to the request takes no longer than 5 seconds for SuprSend to receive.
-        replace: |-
-          * The response to the request takes no longer than 15 seconds (the request timeout).
+          * The response to the request has a 2xx status code (e.g., 200 OK, 201 Created, or 204 No Content). Redirects (301/302) are not followed and count as a failure.
 
   - type: docs
     key: docs_transform
@@ -343,15 +311,6 @@ sources:
           📘 Please note Data modifications after a batch or digest node will not affect the invoke node's variables, which means `$batched...` variables will not be available in this node's input.
         replace: |-
           Variables added by an earlier batch or digest node (`$batched_events`, `$batched_events_count`) are part of this node's input: you can use them in expressions, and they are forwarded to the invoked workflow when `append_current_run_data` is `true`.
-      # append_current_run_data defaults to false.
-      - find: |-
-          By default, data from the current workflow run is passed.
-        replace: |-
-          By default (`append_current_run_data: false`) only the data JSON field is passed (or `{}` if empty) — the current run's data is **not** included.
-      - find: |-
-          * To exclude the current workflow data, uncheck the `Append current workflow execution data` option.
-        replace: |-
-          * To include the current workflow data, set `append_current_run_data: true` (the `Append current workflow execution data` option).
 
   - type: docs
     key: docs_user_update

@@ -14,76 +14,64 @@ Delay node halts the workflow for a given time period before moving to the next 
 
 There are 3 types of delay types available: **Fixed** (fixed for all users), **Dynamic** (Passed in trigger payload), Relative (relative to a future timestamp, for example 10 minutes before task due time).
 
+### Fixed
 
-  ### Fixed
-    Fixed delay is defined in your workflow form as `xxd xxh xxm xxs` (in workflow JSON: no spaces, hours 0–23, minutes/seconds 0–59, total > 0 and ≤ 90d — e.g. `"value": "2d"`, not `"48h"`) and it delays the workflow for a fixed duration for all users.
+Fixed delay is defined in your workflow form as `xxd xxh xxm xxs` (in workflow JSON: no spaces, hours 0–23, minutes/seconds 0–59, total > 0 and ≤ 90d — e.g. `"value": "2d"`, not `"48h"`) and it delays the workflow for a fixed duration for all users.
 
-    
 
-    
+Some examples of fixed delay are:
 
-    Some examples of fixed delay are:
+* Sending multiple payment or activity reminders at predetermined intervals. For instance, sending three payment reminders spaced 24 hours apart from the last due date.
+* Implementing conditional sends across multiple channels. for example, sending an approval notification via Inbox and scheduling an email to be sent one hour later if the approval is not received. [Smart channel routing](https://docs.suprsend.com/docs/smart-delivery.md) is a better approach to solve this use case.
 
-    * Sending multiple payment or activity reminders at predetermined intervals. For instance, sending three payment reminders spaced 24 hours apart from the last due date.
-    * Implementing conditional sends across multiple channels. for example, sending an approval notification via Inbox and scheduling an email to be sent one hour later if the approval is not received. [Smart channel routing](/docs/smart-delivery) is a better approach to solve this use case.
-  
+### Dynamic
 
-  ### Dynamic
-    In case of dynamic delay, delay duration is computed using the data from trigger payload. Dynamic delays are helpful for reminders where the schedule is dictated by the user or when reminders need to be sent before the event or task due date.
+In case of dynamic delay, delay duration is computed using the data from trigger payload. Dynamic delays are helpful for reminders where the schedule is dictated by the user or when reminders need to be sent before the event or task due date.
 
-    
 
-    
+For instance, you might want to send a reminder one day before an interview date. In such scenarios, the reminder schedule can also be user-defined, resulting in variable delays per user. Consider the example of Google Calendar, where each user sets their own reminder schedule for meetings-some opt for reminders 10 minutes before, while others prefer 30 minutes before. Dynamic delays accommodate these individual preferences seamlessly.
 
-    For instance, you might want to send a reminder one day before an interview date. In such scenarios, the reminder schedule can also be user-defined, resulting in variable delays per user. Consider the example of Google Calendar, where each user sets their own reminder schedule for meetings-some opt for reminders 10 minutes before, while others prefer 30 minutes before. Dynamic delays accommodate these individual preferences seamlessly.
+You can add duration key as a [JQ-expression](https://jqlang.github.io/jq/manual/). Below are some examples of how to add duration key in JQ format:
 
-    You can add duration key as a [JQ-expression](https://jqlang.github.io/jq/manual/). Below are some examples of how to add duration key in JQ format:
+* General format for duration key at parent level is `.duration_key`
+* If the duration key is a nested event property key like shown below, enter it in the format `.appointment_details.time`
 
-    * General format for duration key at parent level is `.duration_key`
-    * If the duration key is a nested event property key like shown below, enter it in the format `.appointment_details.time`
+  ```json Trigger Payload theme={"system"}
+  properties = {
+    "appointment_details": {
+      "time": "2024-03-02T20:34:07Z",
+      "location": "1775 Stanford Ave, Menlo Park, CA 94025"
+    }
+  ```
 
-          
-            ```json Trigger Payload theme={"system"}
-            properties = {
-              "appointment_details": {
-                "time": "2024-03-02T20:34:07Z",
-                "location": "1775 Stanford Ave, Menlo Park, CA 94025"
-              }
-            ```
-          
+Your duration key variable can be computed to either:
 
-    Your duration key variable can be computed to either:
+* An ISO-8601 timestamp (for example 2024-03-02T20:34:07Z). A timestamp already in the past gives zero delay (the workflow continues immediately, no error), or
+* A relative duration unit, which can be
+  * an integer like `50`, considered as duration in seconds.
 
-    * An ISO-8601 timestamp (for example 2024-03-02T20:34:07Z). A timestamp already in the past gives zero delay (the workflow continues immediately, no error), or
-    * A relative duration unit, which can be
-      * an integer like `50`, considered as duration in seconds.
-      * an interval string defined as `xxdxxhxxmxxs`, where d = day, h = hour, m = minutes and s = seconds
+  * an interval string defined as `xxdxxhxxmxxs`, where d = day, h = hour, m = minutes and s = seconds
 
-    > **Warning:**
-      When the duration key specified is missing, or resolves to an invalid value, workflow execution will stop and corresponding error will be logged in the logs
-    
-  
+> **Warning:**
+>
+> When the duration key specified is missing, or resolves to an invalid value, workflow execution will stop and corresponding error will be logged in the logs
 
-  ### Relative
-    Relative delay is calculated based on a future timestamp. for example, sending a reminder 30 minutes before a task's due time, where `task_due_time` is a key in the trigger payload. It consists of three key components:
+### Relative
 
-    * **Interval**: The delay from the future timestamp, formatted as xxdxxhxxmxxs (for example 30m for 30 minutes). This can be:
-      * **Fixed** (for example always 30 minutes before).
-      * **Dynamic**, where the value is retrieved from the payload (for example in Google Calendar, users can set reminders for 10 or 20 minutes before an event).
-    * **Before/After**: Determines whether the interval is subtracted (before) or added (after) to the timestamp.
-    * **Timestamp**: An ISO-8601 format datetime (for example 2024-03-02T20:34:07Z). If timestamp ± interval is already in the past, the delay is zero and the workflow continues immediately (no error).
+Relative delay is calculated based on a future timestamp. for example, sending a reminder 30 minutes before a task's due time, where `task_due_time` is a key in the trigger payload. It consists of three key components:
 
-    Dynamic Interval & Timestamp must be passed as a JQ expression. Examples:
+* **Interval**: The delay from the future timestamp, formatted as xxdxxhxxmxxs (for example 30m for 30 minutes). This can be:
+  * **Fixed** (for example always 30 minutes before).
+  * **Dynamic**, where the value is retrieved from the payload (for example in Google Calendar, users can set reminders for 10 or 20 minutes before an event).
+* **Before/After**: Determines whether the interval is subtracted (before) or added (after) to the timestamp.
+* **Timestamp**: An ISO-8601 format datetime (for example 2024-03-02T20:34:07Z). If timestamp ± interval is already in the past, the delay is zero and the workflow continues immediately (no error).
 
-    * Timestamp at the parent level: `.timestamp`
-    * If the dynamic interval is set as recipient property: `."$recipient".interval`
-  
+Dynamic Interval & Timestamp must be passed as a JQ expression. Examples:
 
+* Timestamp at the parent level: `.timestamp`
+* If the dynamic interval is set as recipient property: `."$recipient".interval`
 
 ***
-
-
-This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 
 ## Schema Properties
 

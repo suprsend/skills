@@ -173,29 +173,27 @@ Variants let you send different content to different recipients from the same te
 
 Every template starts with a **default** variant. Add more only when you need them.
 
-You can embed the template editor directly in your application using the [Embeddable Templates SDK](/docs/embeddable-template-react-sdk). This lets your customers edit notification templates within your product, or your internal team manage templates and run campaigns - all without switching to the SuprSend dashboard.
+You can embed the template editor directly in your application using the [Embeddable Templates SDK](https://docs.suprsend.com/docs/embeddable-template-react-sdk.md). This lets your customers edit notification templates within your product, or your internal team manage templates and run campaigns - all without switching to the SuprSend dashboard.
 
 ***
 
 ## When to use variants
 
-<CardGroup cols={2}>
-  <Card title="Multi-tenant" icon="buildings" iconType="solid">
-    Each tenant's users see their own branding - logos, colours, copy. One template serves all [tenants](/docs/tenants).
-  </Card>
+> **Multi-tenant**
+>
+> Each tenant's users see their own branding - logos, colours, copy. One template serves all [tenants](https://docs.suprsend.com/docs/tenants.md).
 
-  <Card title="Multi-lingual" icon="language" iconType="solid">
-    One variant per language. SuprSend auto-selects based on the recipient's preferred language. See [Multi-lingual Templates](/docs/multi-lingual-template).
-  </Card>
+> **Multi-lingual**
+>
+> One variant per language. SuprSend auto-selects based on the recipient's preferred language. See [Multi-lingual Templates](https://docs.suprsend.com/docs/multi-lingual-template.md).
 
-  <Card title="Payload-based" icon="code-branch" iconType="solid">
-    Different content based on trigger data — for example, `plan == "pro"` gets a premium message.
-  </Card>
+> **Payload-based**
+>
+> Different content based on trigger data — for example, `plan == "pro"` gets a premium message.
 
-  <Card title="A/B testing" icon="flask" iconType="solid">
-    Different copy to different segments. Compare in [Analytics](/docs/analytics). Needs manual maintenance - use for specific hypotheses, not as a default.
-  </Card>
-</CardGroup>
+> **A/B testing**
+>
+> Different copy to different segments. Compare in [Analytics](https://docs.suprsend.com/docs/analytics.md). Needs manual maintenance - use for specific hypotheses, not as a default.
 
 ***
 
@@ -204,15 +202,21 @@ You can embed the template editor directly in your application using the [Embedd
 Click the **+** button next to "All Variants" in the left panel. You'll see two options:
 
 
+Add New Channel or New Variant
+
 ### Add a new channel
 
 Select **New Channel** to add a channel to the template (for example, add SMS to a template that only had Email). Pick the channels and click **Add Channels**.
 
 
+Select channels to add
+
 ### Add a new variant
 
 Select **New Variant** to create a variant with conditions for an existing channel.
 
+
+Create Variant modal
 
 Fill in:
 
@@ -224,7 +228,7 @@ Fill in:
 
 **Tenant** - scope to a specific tenant. Leave blank for non-tenant variants.
 
-**Conditions** - rules that determine when this variant is sent. Each condition has a **Data Type** (Recipient, Actor, Tenant, or Input Payload), **Property**, **Operator**, and **Value**. Add multiple conditions with **+ OR**.
+**Conditions** - rules that determine when this variant is sent. Each condition has a **Data Type** (Recipient, Actor, Tenant, or Input Payload), **Property**, **Operator**, and **Value**. Combine conditions with **+ AND** and **+ OR**.
 
 | Common operators | |
 | - | - |
@@ -235,9 +239,9 @@ Fill in:
 | `datetime is`, `datetime is before`, `datetime is after` | Date comparisons |
 | `intersects (array)`, `not intersects (array)` | Array overlap checks |
 
-<Tip>
-  **AI prompt - design variant conditions:** *"Design SuprSend template variants for \[describe scenario]. Data available: \[payload keys, tenant props, recipient props]. For each variant suggest: ID, conditions, ordering (first match wins), and which should be the default fallback."*
-</Tip>
+> **Tip:**
+>
+> **AI prompt - design variant conditions:** *"Design SuprSend template variants for \[describe scenario]. Data available: \[payload keys, tenant props, recipient props]. For each variant suggest: ID, conditions, ordering (first match wins), and which should be the default fallback."*
 
 ***
 
@@ -246,8 +250,8 @@ Fill in:
 Click any variant in the left panel to open it. You're always editing the **draft** - the live version is untouched until you commit.
 
 * **Edit content** - write directly in the channel editor. Content auto-saves.
-* **Edit conditions** - click the **settings icon** on the variant to change its ID, locale, tenant, or conditions after creation.
-* **Import content** - use the Import button to copy content from another variant or template instead of starting from scratch. See [Import content](/docs/templates#import-content).
+* **Edit conditions** - click the three-dot menu on the variant and select **Edit Variant** to change its locale, tenant, or conditions after creation. The ID can't be changed.
+* **Import content** - use the Import button to copy content from another variant or template instead of starting from scratch. See [Import content](https://docs.suprsend.com/docs/templates.md#import-content).
 
 ***
 
@@ -256,7 +260,9 @@ Click any variant in the left panel to open it. You're always editing the **draf
 Click **Commit** to publish. The modal shows all changes - you can deselect specific variants you're not ready to publish.
 
 
-For **WhatsApp** and **SMS (DLT)** variants, committing puts the variant into **Approval Pending** - it goes live only after vendor approval. For multi-lingual templates, each language is approved separately. If a [fallback vendor](/docs/vendor-fallback) is configured, you'll need to confirm approval for each vendor.
+Commit modal - review changes before publishing
+
+For **WhatsApp** and **SMS (DLT)** variants, committing puts the variant into **Approval Pending** - it goes live only after vendor approval. For multi-lingual templates, each language is approved separately. If a [fallback vendor](https://docs.suprsend.com/docs/vendor-fallback.md) is configured, you'll need to confirm approval for each vendor.
 
 ***
 
@@ -264,10 +270,12 @@ For **WhatsApp** and **SMS (DLT)** variants, committing puts the variant into **
 
 When a notification is triggered, SuprSend picks one variant per channel. Candidates are variants whose **Tenant** is empty or exactly the send's tenant and whose **Locale** is in the recipient's fallback list (for example `hi-IN` → `hi` → `en`). They are tried by locale first, then non-default variants in panel order, and the first whose conditions match is sent. The **default** variant (always at the top of the panel) is tried last, as the fallback. Broadcasts use a simpler rule: variants with conditions are ignored, and the tenant is checked before the locale (a tenant's `en` variant beats a tenant-less variant in the recipient's language).
 
-* Conditions added with **+ OR** are alternatives — the variant matches if any one of them is true. The rules inside a single condition must all be true.
-* **Tenant** and **locale** are soft checks with fallback, and **locale comes first**: recipient locale → base language → `en`. Within a base language, if the tenant has a variant for it in one of the recipient's fallback locales, tenant-less variants for that language are skipped (even if the tenant's variants don't match); otherwise tenant-less variants are used. So for a French recipient a tenant-less `fr` variant beats the tenant's `en` variant. Sub-tenants don't inherit a parent tenant's variants.
+* A variant matches when every condition in at least one **OR** group is true - partial matches are skipped.
+* **Tenant** and **locale** are soft checks with fallback. Locale is resolved first (exact locale → base language → `en`); within each language, the tenant's variants are used if the tenant has any in that language, otherwise non-tenant variants. The **default** variant is the final fallback. When the tenant has variants in a language, tenant-less variants for that language are skipped even if none of the tenant's variants match. So for a French recipient a tenant-less `fr` variant beats the tenant's `en` variant. Sub-tenants don't inherit a parent tenant's variants.
 * All other conditions (like `$recipient.plan == "pro"`) are hard checks - no fallback, the variant is just skipped.
 
+
+Variants panel - all variants grouped by channel
 
 ### Ordering variants
 
@@ -287,7 +295,7 @@ To verify the right variant is being picked for a specific condition, **test the
 2. Enter a **Recipient** whose profile matches the condition you want to test.
 3. Select a **Tenant** if your variant is scoped to a tenant.
 4. Click **Send Test** - SuprSend evaluates all variant conditions and sends the matching one.
-5. Check [Logs](/docs/logging) to confirm which variant was selected.
+5. Check [Logs](https://docs.suprsend.com/docs/logging.md) to confirm which variant was selected.
 
 This is the only way to verify that ordering and conditions work as expected end-to-end.
 
@@ -297,8 +305,10 @@ This is the only way to verify that ordering and conditions work as expected end
 
 ### Duplicate a variant
 
-Click the three-dot menu (**...**) on any variant to duplicate it. The content is copied into a new variant - adjust the ID and conditions.
+Click the three-dot menu on any variant to duplicate it. The content is copied into a new variant - adjust the ID and conditions.
 
+
+Duplicate a variant
 
 ### Delete a variant
 
@@ -306,8 +316,10 @@ Click the three-dot menu on a variant and select **Delete**. This permanently re
 
 ### Disable a channel
 
-Click the three-dot menu on a **channel name** (not a variant) to disable it. Notifications stop on that channel immediately, but the content is preserved. Re-enable anytime without losing work.
+Click the three-dot menu on a **channel name** (not a variant) to disable it. Notifications stop on that channel once you commit, and the content is preserved. Re-enable anytime without losing work.
 
+
+Disable a channel - content is preserved
 
 This is useful when you want to temporarily pause a channel (for example, stop sending SMS during a vendor migration) without deleting the content and having to recreate it later.
 
@@ -321,35 +333,31 @@ This is useful when you want to temporarily pause a channel (for example, stop s
 
 **A/B testing** — create a variant targeting a subset (for example, `$recipient.cohort = beta`). Compare metrics. To promote: widen the conditions or update the default. To end: delete the challenger.
 
-After setting up any pattern, [test with a specific tenant and recipient](/docs/templates#test) to verify the right variant is picked.
+After setting up any pattern, [test with a specific tenant and recipient](https://docs.suprsend.com/docs/templates.md#test) to verify the right variant is picked.
 
 ***
 
 ## Frequently asked questions
 
+### What happens if no variant matches?
 
-  ### What happens if no variant matches?
-    The **default** variant is sent. It cannot be deleted and always acts as the fallback.
-  
+The **default** variant is sent. It cannot be deleted and always acts as the fallback.
 
-  ### Can I have different variants per channel?
-    Yes. Variants are per-channel - you can have 3 for Email, 1 for SMS, and just the default for Push. Each channel is evaluated independently.
-  
+### Can I have different variants per channel?
 
-  ### How do I test which variant gets picked?
-    Click **Test** in the editor, enter a recipient, select a tenant, and send. The variant whose conditions match is used. Check [Logs](/docs/logging) to confirm.
-  
+Yes. Variants are per-channel - you can have 3 for Email, 1 for SMS, and just the default for Push. Each channel is evaluated independently.
 
-  ### What's the difference between soft and hard conditions?
-    **Soft** (tenant, locale): SuprSend falls back through a hierarchy if no exact match exists. **Hard** (everything else): no fallback - the variant is skipped if the condition doesn't match.
-  
+### How do I test which variant gets picked?
 
-  ### Can I reorder variants?
-    Yes. Drag them up or down in the panel. The default always stays at the top and cannot be moved.
-  
+Click **Test** in the editor, enter a recipient, select a tenant, and send. The variant whose conditions match is used. Check [Logs](https://docs.suprsend.com/docs/logging.md) to confirm.
 
+### What's the difference between soft and hard conditions?
 
-This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
+**Soft** (tenant, locale): SuprSend falls back through a hierarchy if no exact match exists. **Hard** (everything else): no fallback - the variant is skipped if the condition doesn't match.
+
+### Can I reorder variants?
+
+Yes. Drag them up or down in the panel. The default always stays at the top and cannot be moved.
 
 ## Examples
 

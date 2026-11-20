@@ -50,11 +50,11 @@ Webhook node supports JSONNET rendering language. You can add workflow trigger p
 
 When executing a webhook function, SuprSend expects the following from your service:
 
-* The response status is any 2xx. Redirects (301/302) are not followed and count as a failure.
+* The response to the request has a 2xx status code (e.g., 200 OK, 201 Created, or 204 No Content). Redirects (301/302) are not followed and count as a failure.
 
 * If the request response contains data, it's encoded as JSON and can be decoded into a map/dictionary/hash.
 
-* The response to the request takes no longer than 15 seconds (the request timeout).
+* The response to the request takes no longer than 15 seconds for SuprSend to receive.
 
 ### Merging response to workflow input
 
@@ -64,54 +64,49 @@ If you have added a response key in your setting. The response is first appended
 
 Here's how webhook function data output would look like with response key and without response key
 
+```json json theme={"system"}
 
-  ```json json theme={"system"}
-
-  // node input data
-  {
-    "name":"old_name",
-    "location":{
-      "city":"old_city"
-    }
+// node input data
+{
+  "name":"old_name",
+  "location":{
+    "city":"old_city"
   }
+}
 
-  //Webhook function response
-  {
+//Webhook function response
+{
+  "org":"new_org",
+  "location":{
+    "state":"new_state"
+  }
+}
+
+//Merged data with response key = webhook_response
+{
+  "name":"old_name",
+  "location":{
+    "city":"old_city"
+  },
+  "webhook_response":{
     "org":"new_org",
     "location":{
       "state":"new_state"
     }
   }
+}
 
-  //Merged data with response key = webhook_response
-  {
-    "name":"old_name",
-    "location":{
-      "city":"old_city"
-    },
-    "webhook_response":{
-      "org":"new_org",
-      "location":{
-        "state":"new_state"
-      }
-    }
+//Merged data with empty response key
+{
+  "name":"old_name",
+  "org":"new_org",
+  "location":{
+    "state":"new_state"
   }
-
-  //Merged data with empty response key
-  {
-    "name":"old_name",
-    "org":"new_org",
-    "location":{
-      "state":"new_state"
-    }
-  }
-  ```
-
+}
+```
 
 ***
-
-
-This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 
 ## Schema Properties
 

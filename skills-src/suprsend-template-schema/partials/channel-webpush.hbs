@@ -30,6 +30,21 @@ These are saved, but recorded as variant errors; the template can't be committed
 
 `vibrate` is an array of positive integers (alternating vibration / pause durations in ms — service worker reads it directly).
 
+### `ttl` (time-to-live)
+
+How long the push service keeps the notification for a browser that is offline. Optional — when it is omitted or its `value` is empty, it is stored as `null` and the send-time default is 1 hour.
+
+{{schema-table (get webpush_schema "$defs.webpush_ttl_def")}}
+
+- `fixed` — `value` is a relative duration such as `30m`, `6h` or `2d12h` (no spaces), from `1s` to `28d`. Anything else is a variant error and blocks commit.
+- `dynamic` — `value` is resolved at send time (for example `\{{ push_ttl }}` from the trigger data) and is not checked on save. If it doesn't resolve to a TTL between 1s and 28d, the 1 hour default is used.
+
+```json
+"ttl": { "type": "fixed", "value": "6h" }
+```
+
+Use a short TTL for time-sensitive pushes (OTP, live alerts) so a stale notification isn't delivered when the browser comes back online.
+
 ### URLs and special characters
 
 Push content is not HTML, but `\{{ }}` still HTML-escapes its output (`&` → `&amp;`, `=` → `&#x3D;`, `'` → `&#x27;`) and nothing reverses it. A whole URL in `\{{ }}` (for example an avatar URL with a query string) arrives broken. Use triple braces `\{{{ }}}` for any variable that holds a URL or may contain those characters.

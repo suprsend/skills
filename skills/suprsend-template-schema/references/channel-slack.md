@@ -125,31 +125,33 @@ NEVER mix Handlebars `{{ }}` and JSONNET in the same template.
 The Slack editor supports two modes: a **Text** editor for simple messages, and a **JSONNET** editor for rich [Block Kit](https://api.slack.com/block-kit) layouts with buttons, images, and structured sections.
 
 
-> **Note:**
-  To send Slack notifications, you need a Slack vendor integrated with SuprSend. See [Slack vendor integration](/docs/slack) for setup.
+Slack editor with JSONNET and live preview
 
+> **Note:**
+>
+> To send Slack notifications, you need a Slack vendor integrated with SuprSend. See [Slack vendor integration](https://docs.suprsend.com/docs/slack.md) for setup.
 
 ## Slack fields
 
-**Text mode** - a single text field, sent to Slack as `plain_text`: mrkdwn (`*bold*`), `<@U123>` mentions and `<url|text>` links show literally, so use JSONNET for any formatting. Supports [Handlebars](/docs/handlebars-helpers) variables (`{{variable_name}}`). Use triple braces `{{{url}}}` for URLs with special characters.
+**Text mode** - a single text field, sent to Slack as `plain_text`: mrkdwn (`*bold*`), `<@U123>` mentions and `<url|text>` links show literally, so use JSONNET for any formatting. Supports [Handlebars](https://docs.suprsend.com/docs/handlebars-helpers.md) variables (`{{variable_name}}`). Use triple braces `{{{url}}}` for URLs with special characters.
 
-**JSONNET mode** - a code editor that outputs [Slack Block Kit](https://api.slack.com/block-kit) JSON. Variables use `data.key` syntax (not Handlebars). Design visually in the [Block Kit Builder](https://app.slack.com/block-kit-builder/) first, then adapt the JSON into JSONNET. See the full [JSONNET reference](/docs/jsonnet-templates) for syntax, examples, and debugging.
+**JSONNET mode** - a code editor that outputs [Slack Block Kit](https://api.slack.com/block-kit) JSON. Variables use `data.key` syntax (not Handlebars). Design visually in the [Block Kit Builder](https://app.slack.com/block-kit-builder/) first, then adapt the JSON into JSONNET. See the full [JSONNET reference](https://docs.suprsend.com/docs/jsonnet-templates.md) for syntax, examples, and debugging.
 
 > **Warning:**
-  Slack JSONNET templates must be wrapped in `{"blocks": [...]}`. A bare array of blocks will not render - see the [JSONNET reference](/docs/jsonnet-templates#slack-block-kit-examples) for the correct shape.
+>
+> Slack JSONNET templates must be wrapped in `{"blocks": [...]}`. A bare array of blocks will not render - see the [JSONNET reference](https://docs.suprsend.com/docs/jsonnet-templates.md#slack-block-kit-examples) for the correct shape.
 
+> **Tip:**
+>
+> **AI prompt - convert text to Block Kit:** *"Convert this Slack notification into Block Kit JSON: \[paste message]. Variables: \[list]. Return valid JSON I can adapt into JSONNET for SuprSend (replacing values with data.key)."*
 
-<Tip>
-  **AI prompt - convert text to Block Kit:** *"Convert this Slack notification into Block Kit JSON: \[paste message]. Variables: \[list]. Return valid JSON I can adapt into JSONNET for SuprSend (replacing values with data.key)."*
-</Tip>
+> **Tip:**
+>
+> **AI prompt - debug JSONNET:** *"Fix this JSONNET error from the SuprSend Slack editor. Error: \[paste error]. Code: \[paste JSONNET]. Variables are accessed as data.key or data\['\$special_key']."*
 
-<Tip>
-  **AI prompt - debug JSONNET:** *"Fix this JSONNET error from the SuprSend Slack editor. Error: \[paste error]. Code: \[paste JSONNET]. Variables are accessed as data.key or data\['\$special_key']."*
-</Tip>
-
-<Info>
-  You can switch between Text and JSONNET at any time. Content is saved independently for each mode.
-</Info>
+> **Note:**
+>
+> You can switch between Text and JSONNET at any time. Content is saved independently for each mode.
 
 ## Adding dynamic content
 
@@ -161,21 +163,21 @@ The Slack editor supports two modes: a **Text** editor for simple messages, and 
 * `{{$recipient.name}}` - recipient property
 * `{{$tenant.name}}` - tenant property
 
-**In JSONNET mode** - variables use `data.key` syntax. See [JSONNET variable reference](/docs/jsonnet-templates#variable-syntax) for the full table.
+**In JSONNET mode** - variables use `data.key` syntax. See [JSONNET variable reference](https://docs.suprsend.com/docs/jsonnet-templates.md#variable-syntax) for the full table.
 
-For conditionals, loops, and helpers in Text mode, see [Handlebars Helpers](/docs/handlebars-helpers).
+For conditionals, loops, and helpers in Text mode, see [Handlebars Helpers](https://docs.suprsend.com/docs/handlebars-helpers.md).
 
 > **Warning:**
-  If a variable cannot be rendered at send time (missing or mismatched data), SuprSend discards the Slack notification for that user. Other channels in the same template group are still sent.
-
+>
+> If a variable cannot be rendered at send time (missing or mismatched data), SuprSend discards the Slack notification for that user. Other channels in the same template group are still sent.
 
 ## Preview and test
 
-**Text mode** - the right panel shows a Slack message preview. It does not update automatically - **refresh the page** to see the latest changes.
+**Text mode** - the right panel shows a Slack message preview that updates as you type.
 
-**JSONNET mode** - preview is not available in the editor. Click **View on Slack Builder** to render and validate your Block Kit output in Slack's [Block Kit Builder](https://app.slack.com/block-kit-builder/).
+**JSONNET mode** - click **Load Preview** to render the JSONNET output in the preview panel, then click **View in Slack Block Kit** to render and validate your Block Kit output in Slack's [Block Kit Builder](https://app.slack.com/block-kit-builder/).
 
-Click **Test** in the top-right corner to send a real Slack message. This uses the **live version** - commit your changes before testing. See [Testing a Template](/docs/templates#test) for the full guide.
+Click **Test** in the top-right corner to send a real Slack message. In the editor this uses the **draft version**; from the live view it uses the **live version**. See [Testing a Template](https://docs.suprsend.com/docs/templates.md#test) for the full guide.
 
 ## Commit
 
@@ -183,50 +185,40 @@ Click **Commit** in the top bar to publish the current draft as a new live versi
 
 ## Common patterns
 
+### Mentioning users
 
-  ### Thread-aware notifications
-    Not supported from a template. SuprSend posts every notification as a new message and sends only the `blocks` array of your JSONNET output. `thread_ts`, top-level `text`, `attachments` and any other keys are dropped, and a `thread_ts` in the trigger payload is not used.
-  
+Use `<@SLACK_USER_ID>` in a JSONNET `mrkdwn` text object to @mention a user: `"<@" + data.assignee_slack_id + ">"`. Text mode is sent as plain text, so mentions don't render there.
 
-  ### Mentioning users
-    JSONNET mode only: put `<@SLACK_USER_ID>` inside a `mrkdwn` text object, for example `"text": "Assigned to <@" + data.assignee_slack_id + ">"`. In Text mode the body is sent as `plain_text`, so `<@...>` shows literally and nobody is notified.
-  
+### Linking to resources
 
-  ### Linking to resources
-    Slack uses `<URL|display text>` syntax inside a `mrkdwn` text object (JSONNET mode only; Text mode shows it literally). In JSONNET: `"*<" + data.url + "|" + data.title + ">*"`.
-  
+Slack uses `<URL|display text>` syntax inside a `mrkdwn` text object (JSONNET mode only; Text mode shows it literally). In JSONNET: `"*<" + data.url + "|" + data.title + ">*"`.
 
-  ### Emoji
-    Use `:emoji_name:` syntax (for example, `:white_check_mark:`, `:warning:`).
-  
+### Emoji
 
+Use `:emoji_name:` syntax (for example, `:white_check_mark:`, `:warning:`).
 
 ## Frequently asked questions
 
+### Text or JSONNET - which should I use?
 
-  ### Text or JSONNET - which should I use?
-    **Default to JSONNET.** Text mode is sent as `plain_text`, so mrkdwn, mentions and links show literally. Use Text only for unformatted one-liner alerts with no CTA, and JSONNET for everything else.
-  
+**Default to JSONNET.** Text mode is sent as `plain_text`, so mrkdwn, mentions and links show literally. Use Text only for unformatted one-liner alerts with no CTA, and JSONNET for everything else.
 
-  ### How do I validate my Block Kit JSON?
-    The JSONNET editor has no preview. Click **View on Slack Builder** in the JSONNET editor to check the output in Slack's Block Kit Builder. To review it elsewhere, replace every `data.key` with its mock value, resolve the `+` concatenations, keep the `{ "blocks": [...] }` wrapper, then paste the JSON into Block Kit Builder. Slack does not silently drop invalid blocks: it rejects the whole message with `invalid_blocks` and the notification fails. Always validate before committing.
-  
+### How do I validate my Block Kit JSON?
 
-  ### Why isn't my Slack template rendering?
-    The most common reason is missing the `{"blocks": [...]}` wrapper. The SuprSend JSONNET editor only accepts the object form - a bare array (`[{...}]`) will not work. Wrap all your blocks inside a top-level object with a `blocks` key.
-  
+Click **Load Preview**, then **View in Slack Block Kit** in the JSONNET editor to check the output in Slack's Block Kit Builder. To review it elsewhere, replace every `data.key` with its mock value, resolve the `+` concatenations, keep the `{ "blocks": [...] }` wrapper, then paste the JSON into Block Kit Builder. Slack does not silently drop invalid blocks: it rejects the whole message with `invalid_blocks` and the notification fails. Always validate before committing.
 
-  ### What's the message length limit?
-    Slack does not truncate. A section `text` over 3000 characters is rejected with `invalid_blocks` and the notification fails. Text mode sends the whole body as one section, so keep `body_text` under 3000 characters (the template accepts up to 4000). The JSONNET source (`body_block`) is capped at 13200 characters on save. For batched notifications with many items, show the top 5-10 and add a "View all" button.
-  
+### Why isn't my Slack template rendering?
 
-  ### What formatting does Slack support?
-    JSONNET mode only: `mrkdwn` text objects use Slack mrkdwn, not standard Markdown. Bold: `*text*`, italic: `_text_`, strikethrough: `~text~`, code: triple backticks. Text mode is sent as `plain_text`, so no formatting is applied (emoji `:shortcodes:` still render).
-  
+The most common reason is missing the `{"blocks": [...]}` wrapper. The SuprSend JSONNET editor only accepts the object form - a bare array (`[{...}]`) will not work. Wrap all your blocks inside a top-level object with a `blocks` key.
 
-  ### What happens if a variable is missing at send time?
-    SuprSend discards the Slack notification for that user. Other channels in the same template group are still sent.
-  
+### What's the message length limit?
 
+Slack does not truncate. A section `text` over 3000 characters is rejected with `invalid_blocks` and the notification fails. Text mode sends the whole body as one section, so keep `body_text` under 3000 characters (the template accepts up to 4000). The JSONNET source (`body_block`) is capped at 13200 characters on save. For batched notifications with many items, show the top 5-10 and add a "View all" button.
 
-This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
+### What formatting does Slack support?
+
+Slack uses `mrkdwn`, not standard Markdown, in JSONNET `mrkdwn` text objects. Bold: `*text*`, italic: `_text_`, strikethrough: `~text~`, code: triple backticks. Text mode messages are sent as plain text.
+
+### What happens if a variable is missing at send time?
+
+SuprSend discards the Slack notification for that user. Other channels in the same template group are still sent.

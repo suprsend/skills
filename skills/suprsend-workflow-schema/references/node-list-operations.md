@@ -28,19 +28,16 @@ List will only be created if the `Create list if it doesn't exist` setting is ON
 One common use case of creating list dynamically is when you need to create different lists based on user topic subscription. for example, there are multiple events happening and you want to create a separate list for each event. List ID in such case can be `{{event_id}}_subscribers` and List name `{{event_name}} - subscribers`.
 
 > **Warning:**
-  Please note that list ID only supports following characters- \`a-z,0-9,-,_\`. Ensure that list_id variable resolves to a valid format; otherwise, list creation will fail. 🚧
-
+>
+> Please note that list ID only supports following characters- \`a-z,0-9,-,_\`. Ensure that list_id variable resolves to a valid format; otherwise, list creation will fail. 🚧
 
 ### Lists vs. Objects for topic subscriptions
 
-* [Lists](/docs/lists) are ideal for one-time broadcasts to large user groups with high throughput (up to 1000 notifications/second). Example: Sending announcements or updates to all users subscribed to a particular event.
+* [Lists](https://docs.suprsend.com/docs/lists.md) are ideal for one-time broadcasts to large user groups with high throughput (up to 1000 notifications/second). Example: Sending announcements or updates to all users subscribed to a particular event.
 
-* [Objects](/docs/objects) are better for reusable topic subscriptions when additional workflows need to be triggered for the same subscribers. Example: Notifying team members or running nested workflows for hierarchical subscribers.
+* [Objects](https://docs.suprsend.com/docs/objects.md) are better for reusable topic subscriptions when additional workflows need to be triggered for the same subscribers. Example: Notifying team members or running nested workflows for hierarchical subscribers.
 
 ***
-
-
-This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 
 ## Remove User from List
 
@@ -62,19 +59,16 @@ You can either add users to a pre-defined list or dynamically render list ID dur
 One common use-case of computing list ID dynamically is when you have different lists based on user topic subscription. For example, there are multiple events happening and you have separate list for each event. List ID in such case can be `{{event_id}}_subscribers` and List name `{{event_name}} - subscribers`.
 
 > **Warning:**
-  There should be an existing list with the ID computed during trigger else this action will fail.
-
+>
+> There should be an existing list with the ID computed during trigger else this action will fail.
 
 ### Lists vs. Objects for topic subscriptions
 
-* [Lists](/docs/lists) are ideal for one-time broadcasts to large user groups with high throughput (up to 1000 notifications/second). Example: Sending announcements or updates to all users subscribed to a particular event.
+* [Lists](https://docs.suprsend.com/docs/lists.md) are ideal for one-time broadcasts to large user groups with high throughput (up to 1000 notifications/second). Example: Sending announcements or updates to all users subscribed to a particular event.
 
-* [Objects](/docs/objects) are better for reusable topic subscriptions when additional workflows need to be triggered for the same subscribers. Example: Notifying team members or running nested workflows for hierarchical subscribers.
+* [Objects](https://docs.suprsend.com/docs/objects.md) are better for reusable topic subscriptions when additional workflows need to be triggered for the same subscribers. Example: Notifying team members or running nested workflows for hierarchical subscribers.
 
 ***
-
-
-This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 
 ## Schema Properties (shared)
 

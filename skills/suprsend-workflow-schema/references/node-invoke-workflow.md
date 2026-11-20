@@ -46,8 +46,8 @@ Recipient refers to the recipient of the target workflow. It can be:
 * Any key from the node's **input data**, including data added or modified during the workflow run (for example from fetch or webhook nodes).
 
 > **Note:**
-  Variables added by an earlier batch or digest node (`$batched_events`, `$batched_events_count`) are part of this node's input: you can use them in expressions, and they are forwarded to the invoked workflow when `append_current_run_data` is `true`.
-
+>
+> Variables added by an earlier batch or digest node (`$batched_events`, `$batched_events_count`) are part of this node's input: you can use them in expressions, and they are forwarded to the invoked workflow when `append_current_run_data` is `true`.
 
 You can refer to input data variables in JSONNET format, prefixed by `data` key. The same format is followed for adding variable in actor and data field as well. Following data types are available in workflow:
 
@@ -55,7 +55,7 @@ You can refer to input data variables in JSONNET format, prefixed by `data` key.
 | - | - | - |
 | Input Payload | pass as `data.<property_key>` | This includes the data from your trigger payload and any data modified or added by nodes such as data transform, or webhook/fetch nodes before the invoke node. |
 | Actor | pass as `data["$actor"].<property_key>` | Actor properties. In case of event trigger, `distinct_id` works both as actor and recipient and for inline workflow trigger, it is the `distinct_id` in actor object. |
-| Recipient | pass as `data["$recipient"].<property_key>` | Recipient properties. It is the `distinct_id` in your event trigger or the key value defined in [override recipient](/docs/override-recipient-list) field. For inline workflow trigger, it is the `distinct_id` in recipient object. |
+| Recipient | pass as `data["$recipient"].<property_key>` | Recipient properties. It is the `distinct_id` in your event trigger or the key value defined in [override recipient](https://docs.suprsend.com/docs/override-recipient-list.md) field. For inline workflow trigger, it is the `distinct_id` in recipient object. |
 | Tenant | pass as`data["$tenant"].<property_key>` | Tenant properties corresponding to the tenant_id passed in workflow trigger. |
 
 ### Actor
@@ -64,24 +64,21 @@ The actor defines the user who performed the action in the target workflow. It c
 
 * The current workflow's **actor** or **recipient**.
 
-* Any key from the node's **input data**, referred in the same format as in the [recipient](/docs/invoke-workflow#recipient) field.
+* Any key from the node's **input data**, referred in the same format as in the [recipient](https://docs.suprsend.com/docs/invoke-workflow.md#recipient) field.
 
 ### Data
 
-This defines the data context for the target workflow, which is used to render templates and workflow variables. By default (`append_current_run_data: false`) only the data JSON field is passed (or `{}` if empty) — the current run's data is **not** included.
+This defines the data context for the target workflow, which is used to render templates and workflow variables. By default, data from the current workflow run is not passed.
 
-* To include the current workflow data, set `append_current_run_data: true` (the `Append current workflow execution data` option).
+* To include the current workflow data, check the `Append current workflow execution data` option.
 
-* Additional data can be provided in the data JSON field, using the node's input data in JSONNET format, referred in the same format as in the [recipient](/docs/invoke-workflow#recipient) field.
+* Additional data can be provided in the data JSON field, using the node's input data in JSONNET format, referred in the same format as in the [recipient](https://docs.suprsend.com/docs/invoke-workflow.md#recipient) field.
 
 #### Merge strategy
 
 We use a shallow merge strategy to combine extra input data (defined in data JSON field) with the current workflow execution data. If the same key exists in both, the value from data JSON field will override the value in existing workflow data.
 
 ***
-
-
-This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 
 ## Schema Properties
 

@@ -122,27 +122,23 @@ Use tenant properties inside your template to render tenant-specific branding at
 
 Inside the email template designer, you get pre-built tenant components that auto-render the branded header, footer, and buttons for the tenant.
 
+**1. Find and add the tenant component**
 
-  **Find and add the tenant component**
-    Inside the email template designer, find the tenant component in the right-side content menu and add it to your template.
+Inside the email template designer, find the tenant component in the right-side content menu and add it to your template.
 
-    
 
-    
-  
+Find and add tenant component in template editor
 
-  **Select the relevant block type**
-    Select the relevant block type (header, footer, buttons) from the right panel.
+**2. Select the relevant block type**
 
-    
+Select the relevant block type (header, footer, buttons) from the right panel.
 
-    
-  
 
-  **Customize the selected block**
-    Tenant blocks use the tenant's primary color and logo by default. Click any block to customize colors, padding, and styling from the right panel. To insert tenant variables anywhere in a block, use `{{$tenant.<property>}}`. See the full list of [available variables](#available-variables).
-  
+Select relevant block type
 
+**3. Customize the selected block**
+
+Tenant blocks use the tenant's primary color and logo by default. Click any block to customize colors, padding, and styling from the right panel. To insert tenant variables anywhere in a block, use `{{$tenant.<property>}}`. See the full list of [available variables](#available-variables).
 
 ### Other channels
 
@@ -184,7 +180,7 @@ Use `{{$tenant.<property>}}` in Handlebars templates and `data["$tenant"].<prope
 
 ## Custom content with template variants
 
-When variable substitution isn't enough — a tenant needs a different subject line, an extra body section, or a different CTA — create a [template variant](/docs/template-variants) with its **Tenant** field (`tenant_id`) set to that tenant. At send time each channel picks its own variant; a tenant variant is a candidate only when the send's `tenant_id` matches it exactly, and if no candidate matches, the default variant is used.
+When variable substitution isn't enough — a tenant needs a different subject line, an extra body section, or a different CTA — create a [template variant](https://docs.suprsend.com/docs/template-variants.md) with its **Tenant** field (`tenant_id`) set to that tenant. At send time each channel picks its own variant; a tenant variant is a candidate only when the send's `tenant_id` matches it exactly, and if no candidate matches, the default variant is used.
 
 Because the default template is the fallback, you can add a variant for one specific tenant without touching how anyone else receives the notification.
 
@@ -193,77 +189,68 @@ Because the default template is the fallback, you can add a variant for one spec
 * **Tenant-specific content** — the enterprise-tier tenant needs a compliance disclaimer in every notification; add a variant with **Tenant** set to `enterprise-corp` and put the disclaimer in the body.
 * **Tenant-specific channels** — not done with variants: channels are enabled per template and each channel picks its own variant, so a channel with no variant for the tenant still sends its default content. To stop a channel for one tenant, add it to that tenant's `blocked_channels`.
 * **Completely different layout** — a strategic customer wants their password-reset email to match their brand's structure, not yours; the variant can override the full email HTML while still using `{{$tenant.*}}` variables inside.
-* **Combined tenant + language** — set both the **Tenant** and **Locale** fields on one variant (and add conditions on trigger data or user properties if needed), so you can layer tenant customization on top of [multi-lingual templates](/docs/multi-lingual-template).
+* **Combined tenant + language** — set both the **Tenant** and **Locale** fields on one variant (and add conditions on trigger data or user properties if needed), so you can layer tenant customization on top of [multi-lingual templates](https://docs.suprsend.com/docs/multi-lingual-template.md).
 
 ### Creating a tenant variant
 
+**1. Open the template and add a new variant**
 
-  **Open the template and add a new variant**
-    In the template editor's left panel, click the **+** next to **All Variants** and choose **New Variant**.
-  
+In the template editor's left panel, click the **+** next to **All Variants** and choose **New Variant**.
 
-  **Add a tenant condition**
-    In the Create Variant modal, set the **Tenant** field to your tenant id — not a condition (a condition on `tenant_id` reads the trigger payload). Pick the channels this variant applies to; picking a channel the template doesn't have yet adds that channel to the template for everyone, with its own default variant.
-  
+**2. Add a tenant condition**
 
-  **Edit the variant's content**
-    Edit the subject, body, or channel-specific content the same way you would the default template. Brand variables still work inside the variant.
-  
+In the Create Variant modal, set the **Tenant** field to your tenant id — not a condition (a condition on `tenant_id` reads the trigger payload). Pick the channels this variant applies to; picking a channel the template doesn't have yet adds that channel to the template for everyone, with its own default variant.
 
-  **Commit and test**
-    Commit the template, then trigger the workflow with a `tenant_id` matching the variant to see it render. Tenants whose `tenant_id` doesn't match will continue to see the default template.
-  
+**3. Edit the variant's content**
 
+Edit the subject, body, or channel-specific content the same way you would the default template. Brand variables still work inside the variant.
 
-<Tip>
-  Keep the default template as the canonical content and treat variants as focused overrides — this keeps maintenance predictable. A variant targets exactly one tenant and there is no `in` operator, so if two tenants need the same override, duplicate the variant and change its Tenant. Sub-tenants don't inherit a parent tenant's variants.
-</Tip>
+**4. Commit and test**
 
-See [Template Variants](/docs/template-variants) for the full variant reference — condition operators, evaluation order, and variant limits.
+Commit the template, then trigger the workflow with a `tenant_id` matching the variant to see it render. Tenants whose `tenant_id` doesn't match will continue to see the default template.
+
+> **Tip:**
+>
+> Keep the default template as the canonical content and treat variants as focused overrides — this keeps maintenance predictable. A variant targets exactly one tenant and there is no `in` operator, so if two tenants need the same override, duplicate the variant and change its Tenant. Sub-tenants don't inherit a parent tenant's variants.
+
+See [Template Variants](https://docs.suprsend.com/docs/template-variants.md) for the full variant reference — condition operators, evaluation order, and variant limits.
 
 ## FAQ
 
+### Should I use brand variables or a template variant?
 
-  ### Should I use brand variables or a template variant?
-    Use `$tenant.*` variables when the content is the same and only tenant-specific *values* change (logo, primary color, product name, support email) — one shared template stays maintainable and every new tenant just needs its properties populated. Use a [template variant](/docs/template-variants) when the *content itself* differs — a different CTA, an extra section, a tenant-specific layout, or a legal footer only one tenant needs.
-  
+Use `$tenant.*` variables when the content is the same and only tenant-specific *values* change (logo, primary color, product name, support email) — one shared template stays maintainable and every new tenant just needs its properties populated. Use a [template variant](https://docs.suprsend.com/docs/template-variants.md) when the *content itself* differs — a different CTA, an extra section, a tenant-specific layout, or a legal footer only one tenant needs.
 
-  ### What happens if a tenant doesn't have a matching variant?
-    Only variants whose Tenant matches the send's `tenant_id` exactly (or that have no Tenant) are candidates, and the first match is used. If no variant matches, the default template is used — so you can safely add a variant for one tenant without affecting anyone else.
-  
+### What happens if a tenant doesn't have a matching variant?
 
-  ### Do brand variables still work inside a variant?
-    Yes. `{{$tenant.*}}` variables substitute in every variant, including the default. A variant overrides the *content*, not the variable resolution — so a tenant variant can still render `{{$tenant.logo}}` and get the tenant's logo.
-  
+Only variants whose Tenant matches the send's `tenant_id` exactly (or that have no Tenant) are candidates, and the first match is used. If no variant matches, the default template is used — so you can safely add a variant for one tenant without affecting anyone else.
 
-  ### Can a variant enable a different set of channels than the default template?
-    No. Channels are enabled per template, not per variant. Picking channels when you create a variant creates the variant in each picked channel (and adds any channel the template doesn't have yet, for everyone). Each channel picks its variant independently, so if a tenant has variants only for Email + In-App Inbox, the other channels still send their default content. To stop a channel for one tenant, use the tenant's `blocked_channels`.
-  
+### Do brand variables still work inside a variant?
 
-  ### Can I combine tenant conditions with language or user-property conditions?
-    Yes. Set the tenant with the variant's **Tenant** field and the language with its **Locale** field (the recipient's locale comes from `$locale`, falling back to `$preferred_language`); conditions can add trigger-data or user-property rules on top. Common pattern: one variant per tenant for content differences, plus multi-lingual [translations](/docs/multi-lingual-template) inside each variant for language differences.
-  
+Yes. `{{$tenant.*}}` variables substitute in every variant, including the default. A variant overrides the *content*, not the variable resolution — so a tenant variant can still render `{{$tenant.logo}}` and get the tenant's logo.
 
+### Can a variant enable a different set of channels than the default template?
+
+No. Channels are enabled per template, not per variant. Picking channels when you create a variant creates the variant in each picked channel (and adds any channel the template doesn't have yet, for everyone). Each channel picks its variant independently, so if a tenant has variants only for Email + In-App Inbox, the other channels still send their default content. To stop a channel for one tenant, use the tenant's `blocked_channels`.
+
+### Can I combine tenant conditions with language or user-property conditions?
+
+Yes. Set the tenant with the variant's **Tenant** field and the language with its **Locale** field (the recipient's locale comes from `$locale`, falling back to `$preferred_language`); conditions can add trigger-data or user-property rules on top. Common pattern: one variant per tenant for content differences, plus multi-lingual [translations](https://docs.suprsend.com/docs/multi-lingual-template.md) inside each variant for language differences.
 
 ## Next steps
 
-<CardGroup cols={2}>
-  <Card title="Template Variants" icon="code-branch" href="/docs/template-variants">
-    Learn the full variant model — conditions, evaluation order, and multi-lingual support.
-  </Card>
+> **[Template Variants](https://docs.suprsend.com/docs/template-variants.md)**
+>
+> Learn the full variant model — conditions, evaluation order, and multi-lingual support.
 
-  <Card title="Tenant Workflows" icon="sitemap" href="/docs/tenant-workflows">
-    Trigger a workflow with a `tenant_id` and see brand variables and variants resolve at runtime.
-  </Card>
+> **[Tenant Workflows](https://docs.suprsend.com/docs/tenant-workflows.md)**
+>
+> Trigger a workflow with a `tenant_id` and see brand variables and variants resolve at runtime.
 
-  <Card title="Multi-lingual Templates" icon="language" href="/docs/multi-lingual-template">
-    Combine tenant variants with per-language translations for global multi-tenant apps.
-  </Card>
+> **[Multi-lingual Templates](https://docs.suprsend.com/docs/multi-lingual-template.md)**
+>
+> Combine tenant variants with per-language translations for global multi-tenant apps.
 
-  <Card title="Managing Tenants" icon="wrench" href="/docs/tenant-management">
-    Create tenants, set brand properties, and manage the tenant lifecycle.
-  </Card>
-</CardGroup>
-
-
-This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
+> **[Managing Tenants](https://docs.suprsend.com/docs/tenant-management.md)**
+>
+> Create tenants, set brand properties, and manage the tenant lifecycle.

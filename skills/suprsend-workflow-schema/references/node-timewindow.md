@@ -46,14 +46,14 @@ Time window has 3 inputs
    Timezones should be in [IANA (TZ identifier)](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List) format, such as `America/New_York`.
 
 > **Note:**
-  If a recipient's timezone is not set, it will default to the account timezone specified in the [SuprSend dashboard -> Account settings](https://app.suprsend.com/en/account-settings/general). If no account timezone is set, UTC (Coordinated Universal Time) will be used as the final fallback.
-
+>
+> If a recipient's timezone is not set, it will default to the account timezone specified in the [SuprSend dashboard -> Account settings](https://app.suprsend.com/en/account-settings/general). If no account timezone is set, UTC (Coordinated Universal Time) will be used as the final fallback.
 
 You can also configure multiple Time Windows in `OR`. for example, send notifications Monday to Thursday from 9:00 AM - 5:00 PM or on Friday from 9:00 AM - 1:00 PM.
 
 ## Changing recipient's timezone while they wait in a time window
 
-If a recipient’s timezone is updated while they are waiting in a Time Window, the current wait is **not** shortened or recalculated: the run first sleeps for the wait computed on entry, then re-checks the window in the recipient's current timezone. If that moment is outside the window, it waits again until the next window start.
+If a recipient’s timezone is updated while they are waiting in a Time Window, the time window is re-evaluated with the new timezone once the originally computed wait completes (the ongoing wait is not interrupted). If the recipient is inside the window at that point, the workflow proceeds immediately; otherwise, the delivery will be pushed to the start of the next window.
 
 for example,
 
@@ -61,7 +61,7 @@ for example,
 
 * The recipient's timezone is America/New_York (UTC-5), so the delay is 7 hours until 9:00 AM (America/New_York).
 
-* If the timezone is updated to Europe/London (UTC+1) while waiting, the run still waits the full 7 hours (until 14:00 UTC = 3:00 PM Europe/London); that is inside the window, so it proceeds then.
+* If the timezone is updated to Europe/London (UTC+1) while waiting, the window is re-checked after the 7-hour wait (at 2:00 PM UTC, 3:00 PM Europe/London). Since this falls inside the window, the workflow proceeds immediately.
 
 ## Some common notification use cases
 
@@ -75,24 +75,19 @@ for example,
 
 ## Frequently asked questions
 
+### Does timezone setting take care of clock changes like day light savings?
 
-  ### Does timezone setting take care of clock changes like day light savings?
-    Yes, one of the reasons for storing timezone in [IANA (TZ identifier)](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List) format was to take care of these clock shifts across the globe.
-  
+Yes, one of the reasons for storing timezone in [IANA (TZ identifier)](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List) format was to take care of these clock shifts across the globe.
 
-  ### What happens when I add batch node below time window?
-    Triggers before the Time Window start and during its open time (between start time and end time) will be accumulated in the batch.
+### What happens when I add batch node below time window?
 
-    For instance, with a Time Window set from 9:00 AM to 5:00 PM UTC and a 2-hour batch window, triggers from 5:00 PM to 9:00 AM (pre-window open) and 9:00 AM to 11:00 AM (during batch window) will be batched together.
+Triggers before the Time Window start and during its open time (between start time and end time) will be accumulated in the batch.
 
-    So, if you have to create a digest of all events coming outside office hours and send it next day at office start time, you can achieve it with time window and batch node in series with batch open for 5 minutes (just to accumulate all events).
-  
+For instance, with a Time Window set from 9:00 AM to 5:00 PM UTC and a 2-hour batch window, triggers from 5:00 PM to 9:00 AM (pre-window open) and 9:00 AM to 11:00 AM (during batch window) will be batched together.
 
+So, if you have to create a digest of all events coming outside office hours and send it next day at office start time, you can achieve it with time window and batch node in series with batch open for 5 minutes (just to accumulate all events).
 
 ***
-
-
-This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 
 ## Schema Properties
 

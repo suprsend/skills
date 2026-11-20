@@ -83,12 +83,14 @@ With `needs_vendor_approval: true`, the template's mock data must include a non-
 
 > Design SMS notification content in SuprSend using a single body field with Handlebars variables, live phone preview, and unicode and length indicators.
 
-The SMS editor is a text editor with a live phone preview on the right. Content is personalised with [Handlebars](/docs/handlebars-helpers) variables (`{{variable_name}}`).
+The SMS editor is a text editor with a live phone preview on the right. Content is personalised with [Handlebars](https://docs.suprsend.com/docs/handlebars-helpers.md) variables (`{{variable_name}}`).
 
+
+SMS editor with live device preview
 
 > **Note:**
-  To send SMS, you need an SMS vendor integrated with SuprSend. See [SMS vendor integrations](/docs/acl-sinch) for the vendor list and setup.
-
+>
+> To send SMS, you need an SMS vendor integrated with SuprSend. See [SMS vendor integrations](https://docs.suprsend.com/docs/acl-sinch.md) for the vendor list and setup.
 
 ***
 
@@ -102,54 +104,50 @@ The SMS editor has a single field:
 
 You can add variables in the template to personalise it for each recipient. Variables are replaced with actual data at send time. Pass values via your workflow trigger payload or use recipient/tenant properties.
 
+**1. Add variables in the Variables panel**
 
-  **Add variables in the Variables panel**
-    Add sample data in the **Variables panel** (Input Payload section) on the left side of the editor. This powers auto-suggestions and the live preview. For the full guide on setting up variables, see [Adding dynamic content](/docs/templates#the-variables-panel).
-  
+Add sample data in the **Variables panel** (Input Payload section) on the left side of the editor. This powers auto-suggestions and the live preview. For the full guide on setting up variables, see [Adding dynamic content](https://docs.suprsend.com/docs/templates.md#the-variables-panel).
 
-  **Use variables in the template**
-    Type `{{` in the body field - matching variables appear as auto-suggestions. You can also type variable names manually following [Handlebars syntax](https://handlebarsjs.com/guide/#what-is-handlebars).
+**2. Use variables in the template**
 
-    **Examples using this sample data:**
+Type `{{` in the body field - matching variables appear as auto-suggestions. You can also type variable names manually following [Handlebars syntax](https://handlebarsjs.com/guide/#what-is-handlebars).
 
-    
-      ```json json theme={"system"}
-      {
-        "event": {
-          "location": {
-            "city": "Bangalore",
-            "state": "KA"
-          },
-          "order_id": "11200123",
-          "first_name": "Emma"
-        },
-        "tracking_url": "https://yourapp.com/track/11200123"
-      }
-      ```
-    
+**Examples using this sample data:**
 
-    * **Nested variable:** `{{event.location.city}}` → renders as `Bangalore`
-    * **Variable with space in name:** `{{event.[first name]}}`
-    * **URL (avoid escaping):** use triple braces `{{{tracking_url}}}` for URLs with `&`, `?`, `=`
+```json json theme={"system"}
+{
+  "event": {
+    "location": {
+      "city": "Bangalore",
+      "state": "KA"
+    },
+    "order_id": "11200123",
+    "first_name": "Emma"
+  },
+  "tracking_url": "https://yourapp.com/track/11200123"
+}
+```
 
-    The preview section shows sample values rendered in real-time. If a variable isn't rendering, check:
+* **Nested variable:** `{{event.location.city}}` → renders as `Bangalore`
+* **Variable with space in name:** `{{event.[first name]}}`
+* **URL (avoid escaping):** use triple braces `{{{tracking_url}}}` for URLs with `&`, `?`, `=`
 
-    1. The variable is defined in the Variables panel.
-    2. The variable name matches the Handlebars syntax exactly.
-  
+The preview section shows sample values rendered in real-time. If a variable isn't rendering, check:
 
+1. The variable is defined in the Variables panel.
+2. The variable name matches the Handlebars syntax exactly.
 
-For conditionals and helpers, see [Handlebars Helpers](/docs/handlebars-helpers).
+For conditionals and helpers, see [Handlebars Helpers](https://docs.suprsend.com/docs/handlebars-helpers.md).
 
 > **Warning:**
-  If a variable cannot be rendered at send time (missing or mismatched data), SuprSend discards the SMS for that user. Other channels in the same template group (email, push, etc.) are still sent.
-
+>
+> If a variable cannot be rendered at send time (missing or mismatched data), SuprSend discards the SMS for that user. Other channels in the same template group (email, push, etc.) are still sent.
 
 ## Preview and test
 
 The right panel shows a live phone preview, updated in real time as you type. Variables render using data from the **Variables panel**.
 
-Click **Test** in the top-right corner to send a real SMS to a real phone number. This uses the **live version** - commit your changes before testing. See [Testing a Template](/docs/templates#test) for the full guide.
+Click **Test** in the top-right corner to send a real SMS to a real phone number. In the editor this uses the **draft version**; from the live view it uses the **live version**. See [Testing a Template](https://docs.suprsend.com/docs/templates.md#test) for the full guide.
 
 ## Commit
 
@@ -163,19 +161,16 @@ India requires all SMS templates to be registered and approved through a DLT (Di
 
 ### Enable DLT approval
 
+**1. Go to Settings**
 
-  **Go to Settings**
-    Navigate to **Settings** on the SuprSend dashboard.
-  
+Navigate to **Settings** on the SuprSend dashboard.
 
-  **Enable SMS template approval**
-    Toggle on **SMS Template Approval Required**. This enables the DLT workflow - the SMS editor will now show three fields instead of one.
+**2. Enable SMS template approval**
 
-    
+Toggle on **SMS Template Approval Required**. This enables the DLT workflow - the SMS editor will now show three fields instead of one.
 
-    
-  
 
+Enable SMS Template Approval Required in Workspace Settings
 
 ### DLT fields
 
@@ -189,111 +184,103 @@ With DLT enabled, the SMS editor shows:
 
 ### DLT approval flow
 
+**1. Design and commit**
 
-  **Design and commit**
-    Author the template content and click **Commit**. The version enters **Approval Pending** state (it does not go live).
-  
+Author the template content and click **Commit**. The version enters **Approval Pending** state (it does not go live).
 
-  **Approval at vendor portal**
-    SuprSend doesn't upload DLT templates for you: register the template on your DLT / vendor portal, then record the approval (with the vendor's template ID) for the variant in SuprSend. If identical content was already approved in the workspace, that approval is reused.
-  
+**2. Approval at vendor portal**
 
-  **Live or revise**
-    On approval, the version goes **Live**. On rejection, it returns to **Draft** for revision.
-  
+SuprSend doesn't upload DLT templates for you: register the template on your DLT / vendor portal, then record the approval (with the vendor's template ID) for the variant in SuprSend. If identical content was already approved in the workspace, that approval is reused.
 
+**3. Live or revise**
 
-Templates pending approval are visible in the **Approvals** tab on the [template listing page](/docs/templates#managing-templates). For DLT content guidelines, see [DLT Guidelines](/docs/dlt-guidelines).
+On approval, the version goes **Live**. On rejection, it returns to **Draft** for revision.
+
+Templates pending approval are visible in the **Approvals** tab on the [template listing page](https://docs.suprsend.com/docs/templates.md#managing-templates). For DLT content guidelines, see [DLT Guidelines](https://docs.suprsend.com/docs/dlt-guidelines.md).
 
 > **Warning:**
-  DLT templates **cannot be tested in draft**. You can only test a DLT SMS after it has been committed and approved. The Test button sends using the live (approved) version.
+>
+> DLT templates **cannot be tested in draft**. You can only test a DLT SMS after it has been committed and approved. The Test button sends using the live (approved) version.
 
-
-<Tip>
-  **AI prompt - DLT compliance check:** *"Convert this SMS body to DLT format. Header: \[6-char sender ID]. Category: \[transactional/promotional]. Body: \[paste text]. Convert Handlebars variables to DLT placeholder format, verify category match, and flag rejection risks."*
-</Tip>
+> **Tip:**
+>
+> **AI prompt - DLT compliance check:** *"Convert this SMS body to DLT format. Header: \[6-char sender ID]. Category: \[transactional/promotional]. Body: \[paste text]. Convert Handlebars variables to DLT placeholder format, verify category match, and flag rejection risks."*
 
 ***
 
 ## Common scenarios
 
+### OTP / verification code
 
-  ### OTP / verification code
-    | Field | Value |
-    | - | - |
-    | Body | `Your verification code is {{otp_code}}. It expires in {{expiry_minutes}} minutes. Do not share this code with anyone.` |
+| Field | Value |
+| - | - |
+| Body | `Your verification code is {{otp_code}}. It expires in {{expiry_minutes}} minutes. Do not share this code with anyone.` |
 
-    Keep OTP messages under one segment (160 characters). No URLs needed - just the code and expiry.
-  
+Keep OTP messages under one segment (160 characters). No URLs needed - just the code and expiry.
 
-  ### Order / delivery update
-    | Field | Value |
-    | - | - |
-    | Body | `Hi {{$recipient.name}}, your order #{{order_id}} has been shipped! Track it here: {{{tracking_url}}}` |
+### Order / delivery update
 
-    Use triple curly braces `{{{tracking_url}}}` for URLs to avoid HTML-escaping special characters like `&` and `?`.
-  
+| Field | Value |
+| - | - |
+| Body | `Hi {{$recipient.name}}, your order #{{order_id}} has been shipped! Track it here: {{{tracking_url}}}` |
 
-  ### Appointment reminder
-    | Field | Value |
-    | - | - |
-    | Body | `Reminder: Your appointment with {{provider_name}} is on {{appointment_date}} at {{appointment_time}}. Reply CONFIRM to confirm or CANCEL to cancel.` |
+Use triple curly braces `{{{tracking_url}}}` for URLs to avoid HTML-escaping special characters like `&` and `?`.
 
-    Pair with a [delay node](/docs/delay) or [time window](/docs/time-window) in your workflow to send at the right time.
-  
+### Appointment reminder
 
-  ### Promotional offer
-    | Field | Value |
-    | - | - |
-    | Body | `Flash sale! Get {{discount}}% off on all items. Shop now: {{{shop_url}}}. Valid till {{expiry_date}}. Reply STOP to opt out.` |
+| Field | Value |
+| - | - |
+| Body | `Reminder: Your appointment with {{provider_name}} is on {{appointment_date}} at {{appointment_time}}. Reply CONFIRM to confirm or CANCEL to cancel.` |
 
-    Always include opt-out language for promotional messages.
-  
+Pair with a [delay node](https://docs.suprsend.com/docs/delay.md) or [time window](https://docs.suprsend.com/docs/time-window.md) in your workflow to send at the right time.
 
+### Promotional offer
+
+| Field | Value |
+| - | - |
+| Body | `Flash sale! Get {{discount}}% off on all items. Shop now: {{{shop_url}}}. Valid till {{expiry_date}}. Reply STOP to opt out.` |
+
+Always include opt-out language for promotional messages.
 
 ## Best practices
 
 * **Identify yourself** - start with your brand name or use a registered sender ID so recipients know who the message is from.
-* **Time-sensitive messages** - pair SMS with a [delay node](/docs/delay) or [time window](/docs/time-window) to avoid sending at inconvenient hours.
+* **Time-sensitive messages** - pair SMS with a [delay node](https://docs.suprsend.com/docs/delay.md) or [time window](https://docs.suprsend.com/docs/time-window.md) to avoid sending at inconvenient hours.
 * **DLT (India)** - ensure your template body exactly matches the DLT-registered content, including punctuation and variable placeholders.
 
 ## Frequently asked questions
 
+### What is DLT and when do I need it?
 
-  ### What is DLT and when do I need it?
-    DLT (Distributed Ledger Technology) is a regulatory requirement in India. All SMS templates sent in India must be registered with a DLT portal, have an approved header (sender ID), and go through an approval process before going live. If you're sending SMS outside India, you don't need DLT - templates go live immediately on commit.
-  
+DLT (Distributed Ledger Technology) is a regulatory requirement in India. All SMS templates sent in India must be registered with a DLT portal, have an approved header (sender ID), and go through an approval process before going live. If you're sending SMS outside India, you don't need DLT - templates go live immediately on commit.
 
-  ### Why was my DLT template rejected?
-    Common reasons: the template body doesn't exactly match the content registered on the DLT portal (even minor punctuation differences count), the header is not registered for the selected message type, or the variable placeholders don't match the DLT registration.
-  
+### Why was my DLT template rejected?
 
-  ### Why is my SMS being sent as multiple segments?
-    SMS has a per-segment character limit. Each extra segment is billed separately by your vendor.
+Common reasons: the template body doesn't exactly match the content registered on the DLT portal (even minor punctuation differences count), the header is not registered for the selected message type, or the variable placeholders don't match the DLT registration.
 
-    | Encoding | Chars per segment | When it applies |
-    | - | - | - |
-    | GSM-7 | 160 (single), 153 (multi-part) | Standard Latin characters, digits, basic punctuation |
-    | UCS-2 | 70 (single), 67 (multi-part) | Emojis, non-Latin scripts (Hindi, Arabic, Chinese, etc.) |
+### Why is my SMS being sent as multiple segments?
 
-    A single emoji or non-Latin character forces the **entire** message into UCS-2, cutting capacity from 160 to 70. Avoid emojis in transactional SMS to keep costs down.
-  
+SMS has a per-segment character limit. Each extra segment is billed separately by your vendor.
 
-  ### How do I add URLs in SMS without them breaking?
-    Use triple curly braces `{{{url}}}` instead of double. Double braces HTML-escape characters like `&`, `?`, `=` - which breaks URLs. Triple braces output the raw value.
-  
+| Encoding | Chars per segment | When it applies |
+| - | - | - |
+| GSM-7 | 160 (single), 153 (multi-part) | Standard Latin characters, digits, basic punctuation |
+| UCS-2 | 70 (single), 67 (multi-part) | Emojis, non-Latin scripts (Hindi, Arabic, Chinese, etc.) |
 
-  ### Can I send SMS in different languages?
-    Yes - use [template variants](/docs/template-variants). Create a variant for each language with a locale condition. Set the user's preferred language via `$locale` on their profile - SuprSend auto-selects the matching variant. The default variant acts as the English fallback.
-  
+A single emoji or non-Latin character forces the **entire** message into UCS-2, cutting capacity from 160 to 70. Avoid emojis in transactional SMS to keep costs down.
 
-  ### Can I test a DLT template before approval?
-    No. DLT templates can only be tested after they are committed and approved by the vendor. The Test button uses the live (approved) version. Non-DLT templates can be tested immediately after committing.
-  
+### How do I add URLs in SMS without them breaking?
 
-  ### What happens if a variable is missing at send time?
-    SuprSend discards the SMS notification for that user. Other channels in the same template group (email, push, etc.) are still sent if they render successfully.
-  
+Use triple curly braces `{{{url}}}` instead of double. Double braces HTML-escape characters like `&`, `?`, `=` - which breaks URLs. Triple braces output the raw value.
 
+### Can I send SMS in different languages?
 
-This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
+Yes - use [template variants](https://docs.suprsend.com/docs/template-variants.md). Create a variant for each language with a locale condition. Set the user's preferred language via `$locale` on their profile - SuprSend auto-selects the matching variant. The default variant acts as the English fallback.
+
+### Can I test a DLT template before approval?
+
+No. DLT templates can only be tested after they are committed and approved by the vendor. The Test button uses the live (approved) version. Non-DLT templates can be tested from the draft, without committing.
+
+### What happens if a variable is missing at send time?
+
+SuprSend discards the SMS notification for that user. Other channels in the same template group (email, push, etc.) are still sent if they render successfully.

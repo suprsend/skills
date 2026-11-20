@@ -189,12 +189,14 @@ Put links in a URL button rather than in the body: the static part is fixed at a
 
 > Design WhatsApp notification templates with header, body, footer, and buttons - with Meta approval and a live conversation preview.
 
-The WhatsApp editor is a structured form (header, body, footer, buttons) with a live WhatsApp conversation preview on the right. Content is personalised with [Handlebars](/docs/handlebars-helpers) variables (`{{variable_name}}`).
+The WhatsApp editor is a structured form (header, body, footer, buttons) with a live WhatsApp conversation preview on the right. Content is personalised with [Handlebars](https://docs.suprsend.com/docs/handlebars-helpers.md) variables (`{{variable_name}}`).
 
+
+WhatsApp editor with live device preview
 
 > **Note:**
-  To send WhatsApp messages, you need a WhatsApp vendor integrated with SuprSend. See [WhatsApp vendor integrations](/docs/karix-whatsapp) for the vendor list and setup.
-
+>
+> To send WhatsApp messages, you need a WhatsApp vendor integrated with SuprSend. See [WhatsApp vendor integrations](https://docs.suprsend.com/docs/karix-whatsapp.md) for the vendor list and setup.
 
 ***
 
@@ -214,71 +216,69 @@ The WhatsApp editor is a structured form (header, body, footer, buttons) with a 
 
 **Buttons** - choose Call to Action, Quick Reply, or None.
 
-* **Call to Action** — up to 3 buttons: at most 2 **Visit Website** buttons and 1 **Call Phone Number** button; button text max 25 characters. **Visit Website** redirects to a URL (Static or Dynamic — one variable at the **end** only, for example `https://yourapp.com/product/{{id}}`). **Call Phone Number** initiates a call.
-* **Quick Reply** — up to 10 tap-to-reply buttons, each with unique text (max 25 characters). Variables and emojis are not allowed in button text.
+* **Call to Action** — up to 2 **Visit Website** buttons and 1 **Call Phone Number** button. **Visit Website** redirects to a URL (Static or Dynamic — one variable at the **end** only, for example `https://yourapp.com/product/{{id}}`). **Call Phone Number** initiates a call.
+* **Quick Reply** — up to 10 tap-to-reply buttons. Variables and emojis are not allowed in button text. Each button needs unique text (max 25 characters; Call to Action button text has the same 25-character limit).
 
+
+WhatsApp Call to Action button configuration
 
 ## Adding dynamic content
 
 You can add variables in the template to personalise it for each recipient. Variables are replaced with actual data at send time.
 
+**1. Add variables in the Variables panel**
 
-  **Add variables in the Variables panel**
-    Add sample data in the **Variables panel** (Input Payload section) on the left side of the editor. This powers auto-suggestions and the live preview. For the full guide, see [Adding dynamic content](/docs/templates#the-variables-panel).
-  
+Add sample data in the **Variables panel** (Input Payload section) on the left side of the editor. This powers auto-suggestions and the live preview. For the full guide, see [Adding dynamic content](https://docs.suprsend.com/docs/templates.md#the-variables-panel).
 
-  **Use variables in the template**
-    Type `{{` in any field - matching variables appear as auto-suggestions. You can also type variable names manually following [Handlebars syntax](https://handlebarsjs.com/guide/#what-is-handlebars).
+**2. Use variables in the template**
 
-    **Examples using this sample data:**
+Type `{{` in any field - matching variables appear as auto-suggestions. You can also type variable names manually following [Handlebars syntax](https://handlebarsjs.com/guide/#what-is-handlebars).
 
-    
-      ```json json theme={"system"}
-      {
-        "event": {
-          "location": {
-            "city": "San Francisco",
-            "state": "California"
-          },
-          "order_id": "11200123",
-          "first_name": "Joe"
-        },
-        "tracking_url": "https://yourapp.com/track/11200123"
-      }
-      ```
-    
+**Examples using this sample data:**
 
-    * **Nested variable:** `{{event.location.city}}` → renders as `San Francisco`
-    * **Variable with space in name:** `{{event.[first name]}}`
+```json json theme={"system"}
+{
+  "event": {
+    "location": {
+      "city": "San Francisco",
+      "state": "California"
+    },
+    "order_id": "11200123",
+    "first_name": "Joe"
+  },
+  "tracking_url": "https://yourapp.com/track/11200123"
+}
+```
 
-    The preview section shows sample values rendered in real-time. If a variable isn't rendering, check:
+* **Nested variable:** `{{event.location.city}}` → renders as `San Francisco`
+* **Variable with space in name:** `{{event.[first name]}}`
 
-    1. The variable is defined in the Variables panel.
-    2. The variable name matches the Handlebars syntax exactly.
-  
+The preview section shows sample values rendered in real-time. If a variable isn't rendering, check:
 
+1. The variable is defined in the Variables panel.
+2. The variable name matches the Handlebars syntax exactly.
 
-<Info>
-  When SuprSend submits your template to Meta for approval, named Handlebars variables like `{{order_id}}` are automatically converted to Meta's positional format (`{{1}}`, `{{2}}`). You always write named variables - SuprSend handles the conversion.
-</Info>
+> **Note:**
+>
+> When SuprSend submits your template to Meta for approval, named Handlebars variables like `{{order_id}}` are automatically converted to Meta's positional format (`{{1}}`, `{{2}}`). You always write named variables - SuprSend handles the conversion.
 
 > **Warning:**
-  If a variable cannot be rendered at send time (missing or mismatched data), SuprSend discards the WhatsApp notification for that user. Other channels in the same template group are still sent.
-
+>
+> If a variable cannot be rendered at send time (missing or mismatched data), SuprSend discards the WhatsApp notification for that user. Other channels in the same template group are still sent.
 
 ## Preview and test
 
 The right panel shows a live WhatsApp conversation preview, updated in real time as you fill in fields. Variables render using data from the **Variables panel**.
 
-Click **Test** in the top-right corner to send a real WhatsApp message. This uses the **live version** - commit and get approval before testing. See [Testing a Template](/docs/templates#test) for the full guide.
+Click **Test** in the top-right corner to send a real WhatsApp message. In the editor this uses the **draft version**; from the live view it uses the **live version**. Either way, the template must be approved before you can test it. See [Testing a Template](https://docs.suprsend.com/docs/templates.md#test) for the full guide.
 
 ## Commit
 
 Click **Commit** in the top bar to publish the current draft. The template enters **Approval Pending** state. SuprSend submits it for approval automatically only when the WhatsApp vendor is Meta Cloud API or Twilio; with other vendors, get the template approved in the vendor's portal and record the approval in SuprSend. You'll be notified when approved or rejected. Once approved, the version goes **Live** and is used for all subsequent workflow triggers.
 
 > **Warning:**
-  WhatsApp templates **cannot be tested until approved**. The Test button uses the live (approved) version. If the template is still pending approval, testing is not available.
-
+>
+> WhatsApp templates **cannot be tested until approved**. If the template is still pending approval, testing is not available.
 
 ***
 
@@ -286,25 +286,23 @@ Click **Commit** in the top bar to publish the current draft. The template enter
 
 Every WhatsApp template must be approved by Meta before it can be sent. This applies globally, not just in specific regions.
 
+**1. Design and commit**
 
-  **Design and commit**
-    Author the template content and click **Commit**. The version enters **Approval Pending** state.
-  
+Author the template content and click **Commit**. The version enters **Approval Pending** state.
 
-  **Meta reviews the template**
-    With Meta Cloud API or Twilio as the WhatsApp vendor, SuprSend submits the template automatically; with other vendors, approve it in the vendor's portal and record the approval in SuprSend. Most templates are approved within minutes to hours (up to 24 hours in some cases).
-  
+**2. Meta reviews the template**
 
-  **Live or revise**
-    On approval, the version goes **Live**. On rejection, it returns to **Draft** for revision.
-  
+With Meta Cloud API or Twilio as the WhatsApp vendor, SuprSend submits the template automatically; with other vendors, approve it in the vendor's portal and record the approval in SuprSend. Most templates are approved within minutes to hours (up to 24 hours in some cases).
 
+**3. Live or revise**
 
-Templates pending approval are visible in the **Approvals** tab on the [template listing page](/docs/templates#managing-templates). For content guidelines to avoid rejection, see [WhatsApp Template Guidelines](/docs/whatsapp-template-guidelines).
+On approval, the version goes **Live**. On rejection, it returns to **Draft** for revision.
 
-<Tip>
-  **AI prompt - check approval likelihood:** *"Review this WhatsApp template for Meta approval. Category: \[UTILITY/MARKETING]. Header: \[text]. Body: \[paste]. Footer: \[text]. Buttons: \[describe]. Check category match, prohibited content, variable placement, character limits, and formatting. Suggest fixes."*
-</Tip>
+Templates pending approval are visible in the **Approvals** tab on the [template listing page](https://docs.suprsend.com/docs/templates.md#managing-templates). For content guidelines to avoid rejection, see [WhatsApp Template Guidelines](https://docs.suprsend.com/docs/whatsapp-template-guidelines.md).
+
+> **Tip:**
+>
+> **AI prompt - check approval likelihood:** *"Review this WhatsApp template for Meta approval. Category: \[UTILITY/MARKETING]. Header: \[text]. Body: \[paste]. Footer: \[text]. Buttons: \[describe]. Check category match, prohibited content, variable placement, character limits, and formatting. Suggest fixes."*
 
 ## Choosing the right category
 
@@ -316,8 +314,8 @@ WhatsApp enforces different rules and pricing for each category. Choosing the wr
 | **Marketing** | Proactively reaching out with promotions or re-engagement. Requires opt-in. | Flash sale, product recommendation, abandoned cart nudge |
 
 > **Warning:**
-  WhatsApp may **reclassify** your template if the content doesn't match the selected category. A "Utility" template with promotional language may be reclassified as "Marketing" - with different pricing and opt-in requirements.
-
+>
+> WhatsApp may **reclassify** your template if the content doesn't match the selected category. A "Utility" template with promotional language may be reclassified as "Marketing" - with different pricing and opt-in requirements.
 
 ## Formatting WhatsApp messages
 
@@ -334,36 +332,34 @@ WhatsApp has its own text formatting syntax. **HTML and Markdown do not work.**
 
 ## Common scenarios
 
+### Utility - order shipped
 
-  ### Utility - order shipped
-    | Field | Value |
-    | - | - |
-    | Category | Utility |
-    | Header | `Order Shipped` |
-    | Body | `Hi {{customer_name}}, your order #{{order_id}} has been shipped! Expected delivery: {{delivery_date}}.` |
-    | Footer | `SuprSend Logistics` |
-    | Button | Track Order → `https://yourapp.com/track/{{order_id}}` |
-  
+| Field | Value |
+| - | - |
+| Category | Utility |
+| Header | `Order Shipped` |
+| Body | `Hi {{customer_name}}, your order #{{order_id}} has been shipped! Expected delivery: {{delivery_date}}.` |
+| Footer | `SuprSend Logistics` |
+| Button | Track Order → `https://yourapp.com/track/{{order_id}}` |
 
-  ### Marketing - flash sale
-    | Field | Value |
-    | - | - |
-    | Category | Marketing |
-    | Header | `Flash Sale` |
-    | Body | `Hi {{$recipient.name}}, our biggest sale starts now! Up to 50% off on all products.` |
-    | Footer | `Reply STOP to opt out` |
-    | Button | Shop Now → `https://yourapp.com/sale` |
-  
+### Marketing - flash sale
 
-  ### Utility - appointment reminder with buttons
-    | Field | Value |
-    | - | - |
-    | Category | Utility |
-    | Body | `Reminder: Your appointment with {{provider_name}} is on {{appointment_date}} at {{appointment_time}}.` |
-    | Button 1 (Quick Reply) | `Confirm` |
-    | Button 2 (Quick Reply) | `Reschedule` |
-  
+| Field | Value |
+| - | - |
+| Category | Marketing |
+| Header | `Flash Sale` |
+| Body | `Hi {{$recipient.name}}, our biggest sale starts now! Up to 50% off on all products.` |
+| Footer | `Reply STOP to opt out` |
+| Button | Shop Now → `https://yourapp.com/sale` |
 
+### Utility - appointment reminder with buttons
+
+| Field | Value |
+| - | - |
+| Category | Utility |
+| Body | `Reminder: Your appointment with {{provider_name}} is on {{appointment_date}} at {{appointment_time}}.` |
+| Button 1 (Quick Reply) | `Confirm` |
+| Button 2 (Quick Reply) | `Reschedule` |
 
 ## Best practices
 
@@ -373,38 +369,34 @@ WhatsApp has its own text formatting syntax. **HTML and Markdown do not work.**
 
 ## Frequently asked questions
 
+### Why was my WhatsApp template rejected?
 
-  ### Why was my WhatsApp template rejected?
-    Common reasons: content doesn't match the selected category, too many variables without clear context, URL shorteners in the body, or example values that don't make sense. Review the [WhatsApp Template Guidelines](/docs/whatsapp-template-guidelines) and resubmit.
-  
+Common reasons: content doesn't match the selected category, too many variables without clear context, URL shorteners in the body, or example values that don't make sense. Review the [WhatsApp Template Guidelines](https://docs.suprsend.com/docs/whatsapp-template-guidelines.md) and resubmit.
 
-  ### How long does approval take?
-    Most templates are approved within minutes to hours. In some cases, up to 24 hours. SuprSend submits automatically only with Meta Cloud API or Twilio as the WhatsApp vendor (other vendors need the approval recorded in SuprSend) - you'll be notified when the status changes.
-  
+### How long does approval take?
 
-  ### Can I edit a template after it's approved?
-    No. To make changes, edit in draft mode and commit again. The new version goes through approval separately.
-  
+Most templates are approved within minutes to hours. In some cases, up to 24 hours. SuprSend submits automatically only with Meta Cloud API or Twilio as the WhatsApp vendor (other vendors need the approval recorded in SuprSend) - you'll be notified when the status changes.
 
-  ### What happens if WhatsApp pauses my template?
-    The template stops being sent until the quality score recovers. Fix the content and monitor in your vendor portal (for example, WhatsApp Business Manager).
-  
+### Can I edit a template after it's approved?
 
-  ### How do dynamic URLs work in buttons?
-    One variable allowed at the **end** only — for example, `https://yourapp.com/product/{{id}}`. The static prefix must be a valid URL on its own.
-  
+No. To make changes, edit in draft mode and commit again. The new version goes through approval separately.
 
-  ### Can I send WhatsApp in multiple languages?
-    Yes - use [template variants](/docs/template-variants). Each language variant goes through approval separately. The default variant acts as the fallback.
-  
+### What happens if WhatsApp pauses my template?
 
-  ### Can I test a template before approval?
-    No. WhatsApp templates can only be tested after they are committed and approved by Meta. The Test button uses the live (approved) version.
-  
+The template stops being sent until the quality score recovers. Fix the content and monitor in your vendor portal (for example, WhatsApp Business Manager).
 
-  ### What happens if a variable is missing at send time?
-    SuprSend discards the WhatsApp notification for that user. Other channels in the same template group are still sent.
-  
+### How do dynamic URLs work in buttons?
 
+One variable allowed at the **end** only — for example, `https://yourapp.com/product/{{id}}`. The static prefix must be a valid URL on its own.
 
-This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
+### Can I send WhatsApp in multiple languages?
+
+Yes - use [template variants](https://docs.suprsend.com/docs/template-variants.md). Each language variant goes through approval separately. The default variant acts as the fallback.
+
+### Can I test a template before approval?
+
+No. WhatsApp templates can only be tested after they are committed and approved by Meta.
+
+### What happens if a variable is missing at send time?
+
+SuprSend discards the WhatsApp notification for that user. Other channels in the same template group are still sent.

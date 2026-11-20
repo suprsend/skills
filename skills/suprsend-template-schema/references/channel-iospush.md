@@ -67,10 +67,12 @@ Push content is not HTML, but `{{ }}` still HTML-escapes its output (`&` → `&a
 
 # iOS Push
 
-> Design iOS push notification templates in SuprSend with title, body, image, deep link, and action buttons, previewed live on a lock screen mockup.
+> Design iOS push notification templates in SuprSend with title, body, image, and deep link, previewed live on a lock screen mockup.
 
-The iOS Push editor is a form with title, body, image, and action URL - with a live lock screen preview on the right. Content is personalised with [Handlebars](/docs/handlebars-helpers) variables (`{{variable_name}}`).
+The iOS Push editor is a form with title, body, image, and action URL - with a live lock screen preview on the right. Content is personalised with [Handlebars](https://docs.suprsend.com/docs/handlebars-helpers.md) variables (`{{variable_name}}`).
 
+
+iOS Push editor with live lock screen preview
 
 ## iOS Push fields
 
@@ -78,65 +80,61 @@ The iOS Push editor is a form with title, body, image, and action URL - with a l
 
 **Body** - multi-line message text. Front-load key info in the first line (4 lines visible in expanded view). Supports Handlebars variables.
 
-**Image URL** - *optional.* Public URL for a rich notification image (PNG, JPG, JPEG, min 1024x1024 for best rendering). GIFs play in the expanded view. Requires a Notification Service Extension in your app - the SuprSend iOS SDK includes this by default. See [iOS SDK integration](/docs/ios-integration).
+**Image URL** - *optional.* Public URL for a rich notification image (PNG, JPG, JPEG, min 1024x1024 for best rendering). GIFs play in the expanded view. Requires a Notification Service Extension in your app - the SuprSend iOS SDK includes this by default. See [iOS SDK integration](https://docs.suprsend.com/docs/ios-integration.md).
 
 **Action URL** - *optional.* URL opened on tap. Always set one - without it, tapping opens the app's default screen. Supports deep links and Handlebars variables.
 
 > **Note:**
-  **Expo SDK support**
-
-  When delivering iOS Push via the [Expo SDK](/docs/expo-push-notifications), all fields on this page are supported **except Image URL**. Rich notification images are not delivered through Expo.
-
+>
+> **Expo SDK support**
+>
+> When delivering iOS Push via the [Expo SDK](https://docs.suprsend.com/docs/expo-push-notifications.md), all fields on this page are supported **except Image URL**. Rich notification images are not delivered through Expo.
 
 ## Adding dynamic content
 
 You can add variables in the template to personalise it for each recipient. Variables are replaced with actual data at send time.
 
+**1. Add variables in the Variables panel**
 
-  **Add variables in the Variables panel**
-    Add sample data in the **Variables panel** (Input Payload section) on the left side of the editor. This powers auto-suggestions and the live preview. For the full guide, see [Adding dynamic content](/docs/templates#the-variables-panel).
-  
+Add sample data in the **Variables panel** (Input Payload section) on the left side of the editor. This powers auto-suggestions and the live preview. For the full guide, see [Adding dynamic content](https://docs.suprsend.com/docs/templates.md#the-variables-panel).
 
-  **Use variables in the template**
-    Type `{{` in any field - matching variables appear as auto-suggestions. You can also type variable names manually following [Handlebars syntax](https://handlebarsjs.com/guide/#what-is-handlebars).
+**2. Use variables in the template**
 
-    **Examples using this sample data:**
+Type `{{` in any field - matching variables appear as auto-suggestions. You can also type variable names manually following [Handlebars syntax](https://handlebarsjs.com/guide/#what-is-handlebars).
 
-    
-      ```json json theme={"system"}
-      {
-        "event": {
-          "location": {
-            "city": "San Francisco",
-            "state": "California"
-          },
-          "order_id": "11200123",
-          "first_name": "Joe"
-        },
-        "product_image_url": "https://yourapp.com/images/product.jpg"
-      }
-      ```
-    
+**Examples using this sample data:**
 
-    * **Nested variable:** `{{event.location.city}}` → renders as `San Francisco`
-    * **Variable with space in name:** `{{event.[first name]}}`
+```json json theme={"system"}
+{
+  "event": {
+    "location": {
+      "city": "San Francisco",
+      "state": "California"
+    },
+    "order_id": "11200123",
+    "first_name": "Joe"
+  },
+  "product_image_url": "https://yourapp.com/images/product.jpg"
+}
+```
 
-    The preview section shows sample values rendered in real-time. If a variable isn't rendering, check:
+* **Nested variable:** `{{event.location.city}}` → renders as `San Francisco`
+* **Variable with space in name:** `{{event.[first name]}}`
 
-    1. The variable is defined in the Variables panel.
-    2. The variable name matches the Handlebars syntax exactly.
-  
+The preview section shows sample values rendered in real-time. If a variable isn't rendering, check:
 
+1. The variable is defined in the Variables panel.
+2. The variable name matches the Handlebars syntax exactly.
 
 > **Warning:**
-  If a variable cannot be rendered at send time (missing or mismatched data), SuprSend discards the iOS Push notification for that user. Other channels in the same template group are still sent.
-
+>
+> If a variable cannot be rendered at send time (missing or mismatched data), SuprSend discards the iOS Push notification for that user. Other channels in the same template group are still sent.
 
 ## Preview and test
 
 The right panel shows a live iOS lock screen preview, updated in real time as you edit. Variables render using data from the **Variables panel**.
 
-Click **Test** in the top-right corner to send a real push notification to a real device. This uses the **live version** - commit your changes before testing. See [Testing a Template](/docs/templates#test) for the full guide.
+Click **Test** in the top-right corner to send a real push notification to a real device. In the editor this uses the **draft version**; from the live view it uses the **live version**. See [Testing a Template](https://docs.suprsend.com/docs/templates.md#test) for the full guide.
 
 ## Commit
 
@@ -144,61 +142,55 @@ Click **Commit** in the top bar to publish the current draft as a new live versi
 
 ## Common scenarios
 
+### Delivery update
 
-  ### Delivery update
-    | Field | Value |
-    | - | - |
-    | Title | `Your order is out for delivery` |
-    | Body | `Order #{{order_id}} will arrive by {{eta}}. Tap to track.` |
-    | Image URL | `{{product_image_url}}` |
-    | Action URL | `https://yourapp.com/track/{{order_id}}` |
-  
+| Field | Value |
+| - | - |
+| Title | `Your order is out for delivery` |
+| Body | `Order #{{order_id}} will arrive by {{eta}}. Tap to track.` |
+| Image URL | `{{product_image_url}}` |
+| Action URL | `https://yourapp.com/track/{{order_id}}` |
 
-  ### Social engagement
-    | Field | Value |
-    | - | - |
-    | Title | `{{actor_name}} liked your post` |
-    | Body | `"{{post_excerpt}}"` |
-    | Action URL | `yourapp://posts/{{post_id}}` |
-  
+### Social engagement
 
-  ### Restock reminder
-    | Field | Value |
-    | - | - |
-    | Title | `Running low?` |
-    | Body | `It might be time to restock {{product_name}}.` |
-    | Image URL | `{{product_image_url}}` |
-    | Action URL | `https://yourapp.com/product/{{product_id}}` |
-  
+| Field | Value |
+| - | - |
+| Title | `{{actor_name}} liked your post` |
+| Body | `"{{post_excerpt}}"` |
+| Action URL | `yourapp://posts/{{post_id}}` |
 
+### Restock reminder
+
+| Field | Value |
+| - | - |
+| Title | `Running low?` |
+| Body | `It might be time to restock {{product_name}}.` |
+| Image URL | `{{product_image_url}}` |
+| Action URL | `https://yourapp.com/product/{{product_id}}` |
 
 ## Frequently asked questions
 
+### Why aren't images showing in my push notification?
 
-  ### Why aren't images showing in my push notification?
-    Your app needs a **Notification Service Extension** to display rich media (images, GIFs). The SuprSend iOS SDK includes this by default. If you're not using the SDK, add the extension manually. Supported formats: JPEG, PNG, GIF. Max size: 10 MB. Images display in the expanded notification view (long-press or swipe down). See [iOS SDK integration](/docs/ios-integration).
-    **Expo SDK:** Image URL is **not** supported when delivering via the [Expo SDK](/docs/expo-push-notifications) — images will not render on Expo apps.
-  
+Your app needs a **Notification Service Extension** to display rich media (images, GIFs). The SuprSend iOS SDK includes this by default. If you're not using the SDK, add the extension manually. Supported formats: JPEG, PNG, GIF. Max size: 10 MB. Images display in the expanded notification view (long-press or swipe down). See [iOS SDK integration](https://docs.suprsend.com/docs/ios-integration.md).
+**Expo SDK:** Image URL is **not** supported when delivering via the [Expo SDK](https://docs.suprsend.com/docs/expo-push-notifications.md) — images will not render on Expo apps.
 
-  ### How do deep links work in iOS push?
-    The **Action URL** supports three URL types:
+### How do deep links work in iOS push?
 
-    | URL type | Format | Behaviour |
-    | - | - | - |
-    | Web URL | `https://yourapp.com/orders/123` | Opens in Safari (or your app if [Universal Links](https://developer.apple.com/ios/universal-links/) are configured) |
-    | Custom scheme | `yourapp://orders/123` | Opens the matching view controller in your app |
-    | Universal Link | `https://yourapp.com/orders/123` (Associated Domains) | Opens your app directly |
+The **Action URL** supports three URL types:
 
-    Prefer Universal Links - they work as both web fallback and in-app deep links.
-  
+| URL type | Format | Behaviour |
+| - | - | - |
+| Web URL | `https://yourapp.com/orders/123` | Opens in Safari (or your app if [Universal Links](https://developer.apple.com/ios/universal-links/) are configured) |
+| Custom scheme | `yourapp://orders/123` | Opens the matching view controller in your app |
+| Universal Link | `https://yourapp.com/orders/123` (Associated Domains) | Opens your app directly |
 
-  ### How does badge count work?
-    SuprSend does not set the app badge. The template `badge` field is ignored and no `badge` key is sent to APNs. Set and clear the badge count from your app (for example, from your unread count).
-  
+Prefer Universal Links - they work as both web fallback and in-app deep links.
 
-  ### What happens if a variable is missing at send time?
-    SuprSend discards the iOS Push notification for that user. Other channels in the same template group are still sent if they render successfully.
-  
+### How does badge count work?
 
+SuprSend doesn't set the `badge` field in iOS push payloads, so notifications don't change the app badge. Manage the badge count in your app - for example, clear it when the user opens it or reads notifications.
 
-This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
+### What happens if a variable is missing at send time?
+
+SuprSend discards the iOS Push notification for that user. Other channels in the same template group are still sent if they render successfully.

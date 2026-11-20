@@ -120,14 +120,16 @@ Set only `text` and `url`. Any `id` you set is replaced on save (see above).
 
 > Design Android push templates in SuprSend with title, image, buttons, action URLs, sound, silent and sticky notification options, plus live device preview.
 
-The Android Push editor is a form with title, message, image, action URL, and buttons - with a live device preview on the right. Content is personalised with [Handlebars](/docs/handlebars-helpers) variables (`{{variable_name}}`).
+The Android Push editor is a form with title, message, image, action URL, and buttons - with a live device preview on the right. Content is personalised with [Handlebars](https://docs.suprsend.com/docs/handlebars-helpers.md) variables (`{{variable_name}}`).
 
+
+Android Push editor with live device preview
 
 ## Android Push fields
 
 **Title** - single-line heading. Keep under 40 characters - Android truncates to one line. Supports Handlebars variables.
 
-**Small Icon** - icon in the status bar and notification header. Defaults to the SuprSend bell icon. See [custom icon setup](#how-to-change-the-small-icon-for-a-notification) to use your app icon.
+**Small Icon** - icon in the status bar and notification header. Defaults to the SuprSend bell icon. See [custom icon setup](#how-do-i-add-a-custom-app-icon) to use your app icon.
 
 **Large Icon** - appears left of the text on Android 4.0–6.0, right on Android 7.0+. Defaults to your organisation logo (set in Organisation Settings).
 
@@ -137,89 +139,85 @@ The Android Push editor is a form with title, message, image, action URL, and bu
 
 **Banner Image** - *optional.* Supported formats: PNG, JPG, JPEG. Recommended: 2:1 aspect ratio, under 700 KB. Static uploads are auto-scaled and optimised by SuprSend.
 
-**Action URL** - URL opened on notification tap. Supports [deep links](#deep-linking) and Handlebars variables.
+**Action URL** - URL opened on notification tap. Supports [deep links](#how-do-deep-links-work-in-push-notifications) and Handlebars variables.
 
 **Action Buttons** - *optional.* Up to 3 buttons with label + URL. Use 1-2 buttons with concise labels (2-3 words): "Track Order", "View Details". Supports Handlebars in both fields. Button colour is set in Organisation Settings.
 
 > **Note:**
-  **Expo SDK support**
-
-  When delivering Android Push via the [Expo SDK](/docs/expo-push-notifications), only the following fields are supported:
-
-  * Title
-  * Message (Body)
-  * Banner Image
-  * App Icon
-  * Sound
-  * Custom Key-Value Pairs
-
-  Action URL is **not** a supported field on Expo — pass the destination URL through a **Custom Key-Value Pair** and handle the tap in your app code.
-
-  Other fields listed on this page (Small Icon, Large Icon, Subtext, Action Buttons, Silent, Timeout, Sticky, Notification Group) are not delivered through the Expo SDK.
-
+>
+> **Expo SDK support**
+>
+> When delivering Android Push via the [Expo SDK](https://docs.suprsend.com/docs/expo-push-notifications.md), only the following fields are supported:
+>
+> * Title
+> * Message (Body)
+> * Banner Image
+> * App Icon
+> * Sound
+> * Custom Key-Value Pairs
+>
+> Action URL is **not** a supported field on Expo — pass the destination URL through a **Custom Key-Value Pair** and handle the tap in your app code.
+>
+> Other fields listed on this page (Small Icon, Large Icon, Subtext, Action Buttons, Silent, Timeout, Sticky, Notification Group) are not delivered through the Expo SDK.
 
 ## Adding dynamic content in Android Push
 
 There will always be the case where you would be required to add dynamic content to a template, so as to personalise it for your users. To achieve this, you can add variables in the template, which will be replaced with the dynamic content at the time of sending push. To send actual values to replace variables at the time of communication trigger, use one of our frontend or backend SDKs. Here is a step-by-step guide:
 
+**1. Add variables in the Variables panel**
 
-  **Add variables in the Variables panel**
-    Add sample data in the **Variables panel** (Input Payload section) on the left side of the editor. If you have declared the variables and added sample data, they will come as auto-suggestions when you type a curly bracket `{`. This removes the chances of error like variable mismatch at the time of template rendering. To see how to declare variables, refer to [this section in the Templates documentation](/docs/templates#the-variables-panel).
-  
+Add sample data in the **Variables panel** (Input Payload section) on the left side of the editor. If you have declared the variables and added sample data, they will come as auto-suggestions when you type a curly bracket `{`. This removes the chances of error like variable mismatch at the time of template rendering. To see how to declare variables, refer to [this section in the Templates documentation](https://docs.suprsend.com/docs/templates.md#the-variables-panel).
 
-  **Use variables in the template**
-    We support `handlebars` to add variables in the template. As a general rule, all the variables have to be entered within double curly brackets: `{{variable_name}}`
+**2. Use variables in the template**
 
-    Note that you will be able to enter a variable name even when you have not declared it in the Variables panel. To manually enter the variable name, follow the [handlebars guide here](https://handlebarsjs.com/guide/#what-is-handlebars).
+We support `handlebars` to add variables in the template. As a general rule, all the variables have to be entered within double curly brackets: `{{variable_name}}`
 
-    Below are some examples:
+Note that you will be able to enter a variable name even when you have not declared it in the Variables panel. To manually enter the variable name, follow the [handlebars guide here](https://handlebarsjs.com/guide/#what-is-handlebars).
 
-    
-      ```json json theme={"system"}
-      {
-        "array": [
-          {
-            "product_name": "Aldo Sling Bag",
-            "product_price": "3,950.00"
-          },
-          {
-            "product_name": "Clarles & Keith Women Slipper, Biege, 38UK",
-            "product_price": "2,549.00"
-          },
-          {
-            "product_name": "RayBan Sunglasses",
-            "product_price": "7,899.00"
-          }
-        ],
-        "event": {
-          "location": {
-            "city": "Bangalore",
-            "state": "KA"
-          },
-          "order_id": "11200123",
-          "first_name": "Emma"
-        },
-        "product_page": "https://www.suprsend.com"
-      }
-      ```
-    
+Below are some examples:
 
-    * To enter a nested variable: `{{event.location.city}}`
-    * To refer to an array element: `{{array.[0].product_name}}`
-    * If you have a space in the variable name: `{{event.[first name]}}`
+```json json theme={"system"}
+{
+  "array": [
+    {
+      "product_name": "Aldo Sling Bag",
+      "product_price": "3,950.00"
+    },
+    {
+      "product_name": "Clarles & Keith Women Slipper, Biege, 38UK",
+      "product_price": "2,549.00"
+    },
+    {
+      "product_name": "RayBan Sunglasses",
+      "product_price": "7,899.00"
+    }
+  ],
+  "event": {
+    "location": {
+      "city": "Bangalore",
+      "state": "KA"
+    },
+    "order_id": "11200123",
+    "first_name": "Emma"
+  },
+  "product_page": "https://www.suprsend.com"
+}
+```
 
-    You will be able to see the sample values in the Preview section. If a variable isn't rendering, check:
+* To enter a nested variable: `{{event.location.city}}`
+* To refer to an array element: `{{array.[0].product_name}}`
+* If you have a space in the variable name: `{{event.[first name]}}`
 
-    1. The variable is defined in the Variables panel.
-    2. The variable name matches the Handlebars syntax exactly.
-  
+You will be able to see the sample values in the Preview section. If a variable isn't rendering, check:
 
+1. The variable is defined in the Variables panel.
+2. The variable name matches the Handlebars syntax exactly.
 
 > **Warning:**
-  At the time of sending communication, if there is a variable present in the template whose value is not rendered due to mismatch or missing, SuprSend will simply discard the template and not send that particular notification to your user.
-
-  Please note that the rest of the templates will be sent. For example if there is an error in rendering Android Push template, but email template is successfully rendered, Android Push notification will not be triggered, but email notification will be triggered by SuprSend.
-
+>
+> At the time of sending communication, if there is a variable present in the template whose value is not rendered due to mismatch or missing, SuprSend will simply discard the template and not send that particular notification to your user.
+>
+> Please note that the rest of the templates will be sent. For example if there is an error in rendering Android Push template, but email template is successfully rendered, Android Push notification will not be triggered, but email notification will be triggered by SuprSend.
 
 ## Advanced configurations
 
@@ -234,23 +232,23 @@ There will always be the case where you would be required to add dynamic content
 | Custom Key-Value Pairs | Key-value | Send custom data to the app. Both key and value are strings. Combine with silent notifications for background data updates. |
 
 > **Note:**
-  **SDK version requirements:**
-
-  * App icon: Android native and React Native SDK version 0.1.8+
-  * Custom sound: Android native and React Native SDK version 2.2.0+
-
+>
+> **SDK version requirements:**
+>
+> * App icon: Android native and React Native SDK version 0.1.8+
+> * Custom sound: Android native SDK version 1.0.2+ and React Native SDK version 2.2.0+
 
 > **Note:**
-  **Expo SDK support for advanced configurations**
-
-  From the table above, only **App Icon**, **Sound**, and **Custom Key-Value Pairs** are delivered through the [Expo SDK](/docs/expo-push-notifications). **Silent**, **Timeout**, **Sticky Notifications**, and **Notification Group** are not supported on Expo.
-
+>
+> **Expo SDK support for advanced configurations**
+>
+> From the table above, only **App Icon**, **Sound**, and **Custom Key-Value Pairs** are delivered through the [Expo SDK](https://docs.suprsend.com/docs/expo-push-notifications.md). **Silent**, **Timeout**, **Sticky Notifications**, and **Notification Group** are not supported on Expo.
 
 ## Preview and test
 
 The right panel shows a live Android device preview, updated in real time as you edit. Variables render using data from the **Variables panel**.
 
-Click **Test** in the top-right corner to send a real push notification to a real device. This uses the **live version** - commit your changes before testing. See [Testing a Template](/docs/templates#test) for the full guide.
+Click **Test** in the top-right corner to send a real push notification to a real device. In the editor this uses the **draft version**; from the live view it uses the **live version**. See [Testing a Template](https://docs.suprsend.com/docs/templates.md#test) for the full guide.
 
 ## Commit
 
@@ -258,94 +256,88 @@ Click **Commit** in the top bar to publish the current draft as a new live versi
 
 ## Common scenarios
 
+### Order update with tracking
 
-  ### Order update with tracking
-    | Field | Value |
-    | - | - |
-    | Title | `Order #{{order_id}} shipped` |
-    | Message | `Your package is on the way! Expected delivery: {{delivery_date}}` |
-    | Banner Image | `{{product_image_url}}` |
-    | Action URL | `https://yourapp.com/track/{{order_id}}` |
-  
+| Field | Value |
+| - | - |
+| Title | `Order #{{order_id}} shipped` |
+| Message | `Your package is on the way! Expected delivery: {{delivery_date}}` |
+| Banner Image | `{{product_image_url}}` |
+| Action URL | `https://yourapp.com/track/{{order_id}}` |
 
-  ### Promotional with action buttons
-    | Field | Value |
-    | - | - |
-    | Title | `Flash sale ends tonight` |
-    | Message | `Up to 50% off on your favourites. Don't miss out!` |
-    | Banner Image | (static promotional banner) |
-    | Button 1 | `Shop Now` → `https://yourapp.com/sale` |
-    | Button 2 | `View Wishlist` → `yourapp://wishlist` |
-  
+### Promotional with action buttons
 
-  ### Silent data sync
-    | Field | Value |
-    | - | - |
-    | Silent | `ON` |
-    | Custom Key-Value Pairs | `sync_type` = `catalog_update`, `version` = `{{catalog_version}}` |
+| Field | Value |
+| - | - |
+| Title | `Flash sale ends tonight` |
+| Message | `Up to 50% off on your favourites. Don't miss out!` |
+| Banner Image | (static promotional banner) |
+| Button 1 | `Shop Now` → `https://yourapp.com/sale` |
+| Button 2 | `View Wishlist` → `yourapp://wishlist` |
 
-    Use silent notifications to trigger background data fetches — for example, pre-loading content so it's ready when the user opens the app.
-  
+### Silent data sync
 
+| Field | Value |
+| - | - |
+| Silent | `ON` |
+| Custom Key-Value Pairs | `sync_type` = `catalog_update`, `version` = `{{catalog_version}}` |
+
+Use silent notifications to trigger background data fetches — for example, pre-loading content so it's ready when the user opens the app.
 
 ## Frequently asked questions
 
+### How do deep links work in push notifications?
 
-  ### How do deep links work in push notifications?
-    The **Action URL** and **Action Button URLs** support three URL types:
+The **Action URL** and **Action Button URLs** support three URL types:
 
-    | URL type | Format | Behaviour |
-    | - | - | - |
-    | Web URL | `https://yourapp.com/orders/123` | Opens in the browser (or your app if [App Links](https://developer.android.com/training/app-links) are configured) |
-    | Custom scheme | `yourapp://orders/123` | Opens the matching activity in your app directly |
-    | App Link | `https://yourapp.com/orders/123` (verified) | Opens your app directly without a browser redirect |
+| URL type | Format | Behaviour |
+| - | - | - |
+| Web URL | `https://yourapp.com/orders/123` | Opens in the browser (or your app if [App Links](https://developer.android.com/training/app-links) are configured) |
+| Custom scheme | `yourapp://orders/123` | Opens the matching activity in your app directly |
+| App Link | `https://yourapp.com/orders/123` (verified) | Opens your app directly without a browser redirect |
 
-    If your app supports App Links, prefer `https://` URLs - they work as both web fallback and deep links.
-  
+If your app supports App Links, prefer `https://` URLs - they work as both web fallback and deep links.
 
-  ### How do I add a custom app icon?
-    Add a small icon named `ic_suprsend_app_icon` in the drawable folders of your app. Android only uses the alpha channel - the icon displays as monochrome in the status bar. You can use a vector drawable (`androidApp/src/main/res/drawable/`) or PNG icons at each density:
+### How do I add a custom app icon?
 
-    | Density | Size |
-    | - | - |
-    | MDPI | 24x24 |
-    | HDPI | 36x36 |
-    | XHDPI | 48x48 |
-    | XXHDPI | 72x72 |
-    | XXXHDPI | 96x96 |
+Add a small icon named `ic_suprsend_app_icon` in the drawable folders of your app. Android only uses the alpha channel - the icon displays as monochrome in the status bar. You can use a vector drawable (`androidApp/src/main/res/drawable/`) or PNG icons at each density:
 
-    Use [Android Asset Studio](https://romannurik.github.io/AndroidAssetStudio/icons-notification.html) for quick icon generation. If you see the default bell icon, ensure all density sizes are present. If you see a solid square, the image lacks alpha transparency.
+| Density | Size |
+| - | - |
+| MDPI | 24x24 |
+| HDPI | 36x36 |
+| XHDPI | 48x48 |
+| XXHDPI | 72x72 |
+| XXXHDPI | 96x96 |
 
-    **SDK requirement:** Android native and React Native SDK version 0.1.8+.
-    **Expo SDK:** App Icon is supported when delivering via the [Expo SDK](/docs/expo-push-notifications).
-  
+Use [Android Asset Studio](https://romannurik.github.io/AndroidAssetStudio/icons-notification.html) for quick icon generation. If you see the default bell icon, ensure all density sizes are present. If you see a solid square, the image lacks alpha transparency.
 
-  ### How do I add a custom notification sound?
-    Add the sound file to `projectroot/app/res/raw` (lowercase filename, underscores instead of spaces, for example `notification_music.mp3`).
+**SDK requirement:** Android native and React Native SDK version 0.1.8+.
+**Expo SDK:** App Icon is supported when delivering via the [Expo SDK](https://docs.suprsend.com/docs/expo-push-notifications.md).
 
-    **Important:** On Android 8.0+ (\~95% of users), sound is set at the [notification channel](https://developer.android.com/develop/ui/views/notifications/channels) level when the [category](/docs/notification-category) is first created. Changing the sound in the template only takes effect for:
+### How do I add a custom notification sound?
 
-    * a new preference category
-    * a user installing the app for the first time
-    * a user who uninstalled and reinstalled the app
+Add the sound file to `projectroot/app/res/raw` (lowercase filename, underscores instead of spaces, for example `notification_music.mp3`).
 
-    **SDK requirement:** Android native and React Native SDK version 2.2.0+.
-  
+**Important:** On Android 8.0+ (\~95% of users), sound is set at the [notification channel](https://developer.android.com/develop/ui/views/notifications/channels) level when the [category](https://docs.suprsend.com/docs/notification-category.md) is first created. Changing the sound in the template only takes effect for:
 
-  ### How does SuprSend optimise push notification images?
-    For static images uploaded in the Banner Image field, SuprSend applies two optimisations:
+* a new preference category
+* a user installing the app for the first time
+* a user who uninstalled and reinstalled the app
 
-    * **Screen width** - large images are resized to fit the user's mobile screen width.
-    * **Network-aware** - image quality is adjusted based on the user's connection (WiFi, 4G, 3G, 2G) to improve delivery speed on slow networks.
-  
+**SDK requirement:** Android native SDK version 1.0.2+ and React Native SDK version 2.2.0+.
 
-  ### What are silent notifications used for?
-    Silent notifications deliver a payload to the app without displaying anything to the user. Use them for background data sync, content pre-fetching, or triggering app-level logic. Combine with **Custom Key-Value Pairs** to pass structured data.
-  
+### How does SuprSend optimise push notification images?
 
-  ### What happens if a variable is missing at send time?
-    SuprSend discards the Android Push notification for that user. Other channels in the same template group (email, SMS, etc.) are still sent if they render successfully.
-  
+For static images uploaded in the Banner Image field, SuprSend applies two optimisations:
 
+* **Screen width** - large images are resized to fit the user's mobile screen width.
+* **Network-aware** - image quality is adjusted based on the user's connection (WiFi, 4G, 3G, 2G) to improve delivery speed on slow networks.
 
-This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
+### What are silent notifications used for?
+
+Silent notifications deliver a payload to the app without displaying anything to the user. Use them for background data sync, content pre-fetching, or triggering app-level logic. Combine with **Custom Key-Value Pairs** to pass structured data.
+
+### What happens if a variable is missing at send time?
+
+SuprSend discards the Android Push notification for that user. Other channels in the same template group (email, SMS, etc.) are still sent if they render successfully.

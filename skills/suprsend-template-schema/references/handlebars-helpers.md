@@ -33,11 +33,11 @@ Templates render in **strict mode**:
 
 > Handlebars syntax, built-in helpers, and the custom helpers available in SuprSend templates — conditionals, dates, JSON, strings, math, arrays, and translations.
 
-SuprSend templates use Handlebars to insert variables and format data. This page is the syntax and helper reference. Slack and MS Teams templates use a different language — see [JSONNET templates](/docs/jsonnet-templates).
+SuprSend templates use Handlebars to insert variables and format data. This page is the syntax and helper reference. Slack and MS Teams templates use a different language — see [JSONNET templates](https://docs.suprsend.com/docs/jsonnet-templates.md).
 
 > **Warning:**
-  Block helpers (`#if`, `#each`, `#with`, `#unless`, `#compare`, …), partials, and comments are rejected in WhatsApp templates and in SMS that needs pre-approved copy (e.g. India DLT). Inline helpers (`default`, `datetime-format`, `join`, …) and plain variables are allowed. Block helpers do work for US SMS on Twilio and MessageBird.
-
+>
+> Block helpers (`#if`, `#each`, `#with`, `#unless`, `#compare`, …), partials, and comments are rejected in WhatsApp templates and in SMS that needs pre-approved copy (e.g. India DLT). Inline helpers (`default`, `datetime-format`, `join`, …) and plain variables are allowed. Block helpers do work for US SMS on Twilio and MessageBird.
 
 ## Syntax
 
@@ -50,14 +50,14 @@ SuprSend templates use Handlebars to insert variables and format data. This page
 
 ## Reserved variables
 
-These are injected at render time, not by your trigger payload. Full preview context is on [Templates](/docs/templates).
+These are injected at render time, not by your trigger payload. Full preview context is on [Templates](https://docs.suprsend.com/docs/templates.md).
 
 | Syntax | Source |
 | :- | :- |
 | `{{$recipient.name}}` | Recipient profile. |
-| `{{$actor.name}}` | Actor on the trigger. If the trigger has no actor, `$actor` is unset and this fails the render — wrap it in `{{#if $actor}}…{{/if}}`. |
-| `{{$tenant.name}}` | Tenant reserved property. Custom values: `{{$tenant.properties.address}}`. Full list: [Tenant templates](/docs/tenant-templates). |
-| `{{$batched_events_count}}` | Count of events in a [batch](/docs/batch) or [digest](/docs/digest). |
+| `{{$actor.name}}` | Actor on the trigger. Not set if the trigger has no actor, so the render fails - guard it with `{{#if $actor}}`. |
+| `{{$tenant.name}}` | Tenant reserved property. Custom values: `{{$tenant.properties.address}}`. Full list: [Tenant templates](https://docs.suprsend.com/docs/tenant-templates.md). |
+| `{{$batched_events_count}}` | Count of events in a [batch](https://docs.suprsend.com/docs/batch.md) or [digest](https://docs.suprsend.com/docs/digest.md). |
 | `{{$batched_events.[0].name}}` | Field on the nth batched event (`[0]` is the first). |
 
 ## Helper index
@@ -80,9 +80,9 @@ These are injected at render time, not by your trigger payload. Full preview con
 | [`unique`](#unique) / [`list-agg`](#list-agg) / [`itemAt`](#itemat) / [`join`](#join) / [`length`](#length) | inline | Arrays |
 | [`t`](#t) | inline | Localized string from translation files |
 
-<Tip>
-  You can ask the copilot in the template editor to add a Handlebars helper. Describe the output you want and include your variables.
-</Tip>
+> **Tip:**
+>
+> You can ask the copilot in the template editor to add a Handlebars helper. Describe the output you want and include your variables.
 
 ## Built-in helpers
 
@@ -305,7 +305,7 @@ Each row is the output of the expression with that mock data.
 
 ### compare
 
-Renders a block when the comparison is truthy. For email, you can also hide a row or block with [display conditions](/docs/email-template#display-conditions) instead of a helper.
+Renders a block when the comparison is truthy. For email, you can also hide a row or block with [display conditions](https://docs.suprsend.com/docs/email-template.md#display-conditions) instead of a helper.
 
 **Syntax**
 
@@ -380,8 +380,8 @@ Each row is the output of the expression with that mock data.
 Operators match [`compare`](#compare), except `typeof` is **not** supported.
 
 > **Note:**
-  `condition` is not a block helper. Use `{{#if (condition ...)}}`, not `{{#condition ...}}`.
-
+>
+> `condition` is not a block helper. Use `{{#if (condition ...)}}`, not `{{#condition ...}}`.
 
 ### and
 
@@ -747,7 +747,7 @@ Rounds to the nearest integer.
 
 ### mod
 
-Returns the remainder of `dividend / divisor`. The result takes the sign of the dividend. Throws an error if an input is not a number. A divisor of `0` returns `NaN` (no error).
+Returns the remainder of `dividend / divisor`. The result takes the sign of the dividend. Throws an error if an input is not a number. If the divisor is `0`, it returns `NaN`.
 
 **Syntax**
 
@@ -789,8 +789,6 @@ Returns unique items from an array. Duplicate values are dropped.
 | `{{unique cities "city"}}` | `{"cities":[{"city":"San Francisco"},{"city":"Austin"},{"city":"Austin"}]}` | `San Francisco,Austin` |
 | `{{unique personal_details "name.first_name"}}` | `{"personal_details":[{"name":{"first_name":"john"}},{"name":{"first_name":"mike"}}]}` | `john,mike` |
 
-Printed directly, the array is comma-joined with **no space**. Wrap it in `join` for `, `: `{{join (unique email)}}` → `joe@abc.com, steve@abc.com`.
-
 ### list-agg
 
 Collects values from an array into a new array. Unlike `unique`, **duplicates are kept**.
@@ -816,7 +814,7 @@ Collects values from an array into a new array. Unlike `unique`, **duplicates ar
 
 ### itemAt
 
-Returns the item at an index. In a [batch](/docs/batch) or [digest](/docs/digest), use this to name the first person and `$batched_events_count` for the rest — *liked by Mike and 3 others*.
+Returns the item at an index. In a [batch](https://docs.suprsend.com/docs/batch.md) or [digest](https://docs.suprsend.com/docs/digest.md), use this to name the first person and `$batched_events_count` for the rest — *liked by Mike and 3 others*.
 
 **Syntax**
 
@@ -837,8 +835,8 @@ Returns the item at an index. In a [batch](/docs/batch) or [digest](/docs/digest
 | `liked by {{itemAt (unique $batched_events "name") 0}} and {{subtract $batched_events_count 1}} others` | `{"$batched_events_count":4,"$batched_events":[{"name":"Mike"},{"name":"Juliana"},{"name":"Nova"},{"name":"Steve"}]}` | `liked by Mike and 3 others` |
 
 > **Note:**
-  Works on arrays of primitives (string, boolean, number). For an array of objects, combine with `unique` or `list-agg` first, as in the batch example.
-
+>
+> Works on arrays of primitives (string, boolean, number). For an array of objects, combine with `unique` or `list-agg` first, as in the batch example.
 
 ### join
 
@@ -853,7 +851,7 @@ Concatenates array values with a separator between each item.
 | Parameter | Required | Description |
 | :- | :- | :- |
 | `variable` | yes | Array of primitives (string, number, boolean). Throws an error otherwise. |
-| `separator` | no | String inserted between items. Defaults to `", "` (comma + space). Falsy items (`0`, `""`, `false`, `null`) are silently dropped; a plain string input is returned unchanged. |
+| `separator` | no | String inserted between items. Defaults to `, ` (comma and space). Falsy items (`0`, `""`, `false`, `null`) are silently dropped; a plain string input is returned unchanged. |
 
 **Examples**
 
@@ -863,8 +861,8 @@ Concatenates array values with a separator between each item.
 | `{{join email ' - '}}` | `{"email":["joe@abc.com","steve@abc.com","joe@abc.com"]}` | `joe@abc.com - steve@abc.com - joe@abc.com` |
 
 > **Note:**
-  For an array of objects, combine with `unique` or `list-agg` first. `{{join (unique cities "city")}}` returns `San Francisco, Austin`; `{{join (list-agg cities "city")}}` keeps duplicates.
-
+>
+> For an array of objects, combine with `unique` or `list-agg` first. `{{join (unique cities "city")}}` returns `San Francisco, Austin`; `{{join (list-agg cities "city")}}` keeps duplicates.
 
 ### length
 
@@ -890,7 +888,7 @@ Returns the number of truthy items in an array (`null`, `0`, `""`, `false` are n
 
 Resolves a translated string from the template's translation files. Only works when translations are enabled for your account, a translation version is published, and the key exists — otherwise the render fails. Translation strings see **only** the hash arguments you pass (`name=first_name`), not the template's variables. Interpolated values are HTML-escaped twice (`A&B` → `A&amp;amp;B`; `{{{t ...}}}` still escapes them once), and a literal `&` in a translation renders as `&amp;` under `{{t ...}}`. Prefer `{{{t ...}}}` and keep `&`, `<`, `'` out of interpolated values.
 
-Use this helper to keep one template and swap copy per locale. For file setup, pluralization examples, and CLI/API management, see [Translations](/docs/translations).
+Use this helper to keep one template and swap copy per locale. For file setup, pluralization examples, and CLI/API management, see [Translations](https://docs.suprsend.com/docs/translations.md).
 
 **Syntax**
 
@@ -943,14 +941,14 @@ With this mock data, the examples render:
 | Plural | `{{t "cart.items" count=item_count}}` | `You have 3 items in your cart` |
 
 > **Warning:**
-  `t` throws an error if translations are disabled, translation data is empty, the key is missing, or required interpolation variables are absent.
-
+>
+> `t` throws an error if translations are disabled, translation data is empty, the key is missing, or required interpolation variables are absent.
 
 ## Nested paths
 
 > **Warning:**
-  Helpers only resolve a nested path if every parent key exists. `{{default place.city "San Francisco"}}` does **not** fall back when `place` is missing — the whole expression fails.
-
+>
+> Helpers only resolve a nested path if every parent key exists. `{{default place.city "San Francisco"}}` does **not** fall back when `place` is missing — the whole expression fails.
 
 Guard the parent first:
 
@@ -972,53 +970,46 @@ Guard the parent first:
 
 ## Troubleshooting
 
+### Apostrophes or special characters arrive as `&#x27;` / `&amp;`
 
-  ### Apostrophes or special characters arrive as `&#x27;` / `&amp;`
-    Double braces (`{{ var }}`) turn special characters into safe codes so they display as text. This happens in every channel, not just preview: SMS, push, WhatsApp, and Inbox deliver `O'Brien & Sons` as `O&#x27;Brien &amp; Sons`.
+Double braces (`{{ var }}`) turn special characters into safe codes so they display as text. This happens in every channel, not just preview: SMS, push, WhatsApp, and Inbox deliver `O'Brien & Sons` as `O&#x27;Brien &amp; Sons`.
 
-    To print the value exactly as stored — apostrophes, `&`, or URLs — use triple braces: `{{{ variable }}}`.
-  
+To print the value exactly as stored — apostrophes, `&`, or URLs — use triple braces: `{{{ variable }}}`.
 
-  ### How does SuprSend avoid HTML injection when printing variables?
-    By default, `{{ var }}` converts characters that could change the page (`<`, `>`, `"`, `'`, `&`) into safe text codes (HTML entities). That way a variable can't inject HTML or scripts into the message.
+### How does SuprSend avoid HTML injection when printing variables?
 
-    Use `{{{ var }}}` when you need the raw characters: URLs, and any text in SMS, push, WhatsApp, or Inbox. In email HTML, use it only for values you trust.
-  
+By default, `{{ var }}` converts characters that could change the page (`<`, `>`, `"`, `'`, `&`, `` ` ``, `=`) into safe text codes (HTML entities). That way a variable can't inject HTML or scripts into the message.
 
-  ### When do I use if vs compare vs condition?
-    **`if`** — show a block when something is present or true. Example: is this user on premium?
+Use `{{{ var }}}` when you need the raw characters: URLs, and any text in SMS, push, WhatsApp, or Inbox. In email HTML, use it only for values you trust.
 
-    **`compare`** — show a block when two values match (or don't). Example: is `plan` equal to `"pro"`?
+### When do I use if vs compare vs condition?
 
-    **`condition`** — the same kind of comparison as `compare`, but you place it *inside* `if` so you can combine checks with `and` / `or`: `{{#if (and (condition plan '==' "pro") has_access)}}`.
+**`if`** — show a block when something is present or true. Example: is this user on premium?
 
-    `condition` does not support `typeof`. Use `compare` for that.
-  
+**`compare`** — show a block when two values match (or don't). Example: is `plan` equal to `"pro"`?
 
-  ### Why did the t helper throw an error in the template preview?
-    Preview errors when `t` can't find a string to print. That happens if translations are off for this template, the translation files are empty, the key isn't in the default locale file, or the string expects a variable (like `{{name}}`) that you didn't pass.
+**`condition`** — the same kind of comparison as `compare`, but you place it *inside* `if` so you can combine checks with `and` / `or`: `{{#if (and (condition plan '==' "pro") has_access)}}`.
 
-    Turn translations on, add the key to the default locale file, and pass every variable the string uses. See [Translations](/docs/translations).
-  
+`condition` does not support `typeof`. Use `compare` for that.
 
-  ### Why is my nested default not rendering?
-    You're asking for a field inside an object that isn't in the data — for example `place.city` when `place` itself is missing. Helpers can't look inside something that isn't there, so the fallback never runs.
+### Why did the t helper throw an error in the template preview?
 
-    Check the parent first with `{{#if place}}`, then use `default`. See [Nested paths](#nested-paths).
-  
+Preview errors when `t` can't find a string to print. That happens if translations are off for this template, the translation files are empty, the key isn't in the default locale file, or the string expects a variable (like `{{name}}`) that you didn't pass.
 
+Turn translations on, add the key to the default locale file, and pass every variable the string uses. See [Translations](https://docs.suprsend.com/docs/translations.md).
+
+### Why is my nested default not rendering?
+
+You're asking for a field inside an object that isn't in the data — for example `place.city` when `place` itself is missing. Helpers can't look inside something that isn't there, so the fallback never runs.
+
+Check the parent first with `{{#if place}}`, then use `default`. See [Nested paths](#nested-paths).
 
 ## Next steps
 
-<CardGroup cols={2}>
-  <Card title="Translations" icon="language" href="/docs/translations">
-    File setup, pluralization, and locale fallback for the t helper.
-  </Card>
+> **[Translations](https://docs.suprsend.com/docs/translations.md)**
+>
+> File setup, pluralization, and locale fallback for the t helper.
 
-  <Card title="JSONNET templates" icon="code" href="/docs/jsonnet-templates">
-    Slack and MS Teams templates, which do not use Handlebars.
-  </Card>
-</CardGroup>
-
-
-This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
+> **[JSONNET templates](https://docs.suprsend.com/docs/jsonnet-templates.md)**
+>
+> Slack and MS Teams templates, which do not use Handlebars.
