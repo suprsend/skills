@@ -26,7 +26,7 @@ The pairing is enforced: `body_type: "block"` forces `templating_language: "json
 {{schema-enum (get slack_schema "properties.body_type.enum")}}
 
 - `text` — `body_text` is sent as one Slack section of type **`plain_text`**. mrkdwn (`*bold*`, `_italic_`), `<@U123>` mentions and `<url|text>` links show up **literally**; only emoji shortcodes (`:tada:`) render. Use `block` for any formatting, mentions or links.
-- `block` — `body_block` is a JSONNET expression whose output conforms to Slack's [Block Kit](https://api.slack.com/block-kit) spec.
+- `block` — `body_block` is a JSONNET expression whose output conforms to Slack's [Block Kit](https://docs.slack.dev/block-kit/) spec.
 
 ## Default mode: JSONNET (Block Kit)
 
