@@ -349,7 +349,7 @@ sources:
         replace: 'Slack uses `<URL|display text>` syntax inside a `mrkdwn` text object (JSONNET mode only; Text mode shows it literally). In JSONNET:'
       - find: 'Start with Text for simple alerts and status updates. Switch to JSONNET when you need buttons, images, structured layouts, or batched event lists.'
         replace: '**Default to JSONNET.** Text mode is sent as `plain_text`, so mrkdwn, mentions and links show literally. Use Text only for unformatted one-liner alerts with no CTA, and JSONNET for everything else.'
-      # JSONNET editor has no preview (Load Preview is the Teams editor); Slack rejects invalid blocks, it doesn't drop them.
+      # Slack rejects invalid blocks (`invalid_blocks`), it doesn't drop them.
       - find: |-
           Click **Load Preview**, then **View in Slack Block Kit** in the JSONNET editor. Slack silently drops invalid blocks instead of showing errors - always validate before committing.
         replace: |-
