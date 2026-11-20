@@ -22,6 +22,29 @@ function extractSection(markdown: string, selector: string): string {
 }
 
 /**
+ * Mintlify's markdown export renders an accordion as a blockquote whose first line is
+ * `> [accordion] Title`. Turn the title into a heading and unquote the body, so the
+ * content reads as a normal section.
+ */
+function unquoteAccordions(content: string): string {
+  const out: string[] = [];
+  let inAccordion = false;
+  for (const line of content.split("\n")) {
+    const title = line.match(/^>[ \t]?\[accordion\][ \t]*(.*)$/);
+    if (title) {
+      out.push(`### ${title[1]}`);
+      inAccordion = true;
+    } else if (inAccordion && line.startsWith(">")) {
+      out.push(line.replace(/^>[ \t]?/, ""));
+    } else {
+      inAccordion = false;
+      out.push(line);
+    }
+  }
+  return out.join("\n");
+}
+
+/**
  * Clean up raw Mintlify markdown for agent consumption.
  * Removes boilerplate, images, proprietary components, and escape artifacts.
  */
@@ -37,6 +60,26 @@ export function cleanMintlifyMarkdown(content: string): string {
 
   // Remove "Built with Mintlify" lines
   result = result.replace(/^\s*Built with \[Mintlify\]\(https?:\/\/mintlify\.com\)\.?\s*$/gm, "");
+
+  // Remove the "built and hosted on Mintlify" footer line
+  result = result.replace(/^\s*This documentation is built and hosted on \[Mintlify\]\([^)]*\)[^\n]*$/gm, "");
+
+  // Remove the auto-generated trailing "Related topics" link list
+  result = result.replace(/\n## Related topics[ \t]*\n(?:\s*- \[[^\n]*\]\([^\n]*\)[ \t]*\n?)+\s*$/, "\n");
+
+  // Blockquote-style components from Mintlify's markdown export
+  // `> [accordion] Title` + quoted body → `### Title` + unquoted body
+  result = unquoteAccordions(result);
+  // `> [!NOTE]` / `> [!TIP]` / `> [!WARNING]` → `> **Note:**` (nested quotes keep their depth)
+  result = result.replace(
+    /^((?:>[ \t]?)+)\[!([A-Za-z]+)\][ \t]*$/gm,
+    (_m, quote: string, kind: string) => `${quote}**${kind[0].toUpperCase()}${kind.slice(1).toLowerCase()}:**`,
+  );
+  // `> [card] Title` → `> **Title**`
+  result = result.replace(/^((?:>[ \t]?)+)\[card\][ \t]*(.+)$/gm, "$1**$2**");
+
+  // Remove standalone markdown images (agents can't render images)
+  result = result.replace(/^(?:>[ \t]?)*!\[[^\]\n]*\]\([^)\n]*\)[ \t]*$/gm, "");
 
   // Remove <img> tags (agents can't render images)
   result = result.replace(/^\s*<img\s+[^>]*\/?\s*>\s*$/gm, "");
@@ -164,37 +207,28 @@ export async function resolveDocs(skillName: string, source: DocsSource): Promis
       fetchUrl = url + ".md";
     }
 
+    // Only a failed fetch falls back to the original URL. A selector or replacement
+    // error on fetched content is reported as-is, not masked by a retry against HTML.
+    let content: string;
     try {
       logger.info(`Fetching docs: ${fetchUrl}`);
-      let content = await fetchText(fetchUrl);
-
-      if (source.selector) {
-        content = extractSection(content, source.selector);
-      }
-
-      content = cleanMintlifyMarkdown(content);
-      content = applyReplacements(content, replacements, source.key);
-
-      parts.push(content);
+      content = await fetchText(fetchUrl);
     } catch (err) {
-      // If .md failed, try the original URL
-      if (fetchUrl !== url) {
-        logger.debug(`Retrying with original URL: ${url}`);
-        try {
-          let content = await fetchText(url);
-          if (source.selector) {
-            content = extractSection(content, source.selector);
-          }
-          content = cleanMintlifyMarkdown(content);
-          content = applyReplacements(content, replacements, source.key);
-          parts.push(content);
-        } catch (retryErr) {
-          throw new Error(`Failed to fetch docs from ${url}: ${retryErr}`);
-        }
-      } else {
-        throw err;
+      if (fetchUrl === url) throw err;
+      logger.debug(`Retrying with original URL: ${url}`);
+      try {
+        content = await fetchText(url);
+      } catch (retryErr) {
+        throw new Error(`Failed to fetch docs from ${url}: ${retryErr}`);
       }
     }
+
+    if (source.selector) {
+      content = extractSection(content, source.selector);
+    }
+    content = cleanMintlifyMarkdown(content);
+    content = applyReplacements(content, replacements, source.key);
+    parts.push(content);
   }
 
   return parts.join("\n\n---\n\n");

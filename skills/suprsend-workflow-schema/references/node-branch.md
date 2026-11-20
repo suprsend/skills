@@ -22,6 +22,8 @@ The Branch node supports two branch types:
 2. **Default Branch**: Executes when no condition branch evaluates to true.
 
 
+Branch workflow example showing conditional routing
+
 **Execution rules:**
 
 * Conditions are evaluated in order from first to last.
@@ -56,8 +58,8 @@ Conditions evaluate data from trigger payloads, user properties, tenant properti
 | `intersects` / `not intersects` | Any array value matches / No array values match | Arrays |
 
 > **Note:**
-  **Type constraints**: If a key's data type doesn't match the operator (for example, using `>` on a string), the condition will always evaluate to false.
-
+>
+> **Type constraints**: If a key's data type doesn't match the operator (for example, using `>` on a string), the condition will always evaluate to false.
 
 ### Values
 
@@ -82,7 +84,7 @@ Dynamic values are evaluated based on the data available at the node input along
 | Input payload | Add key directly (for example, `payment_due_date`) |
 | Actor | Add as `$actor.<property_key>` (for example, `$actor.role`) |
 | Recipient | Add as `$recipient.<property_key>` (for example, `$recipient.plan`) |
-| Tenant | Add as `$tenant.<property_key>` for reserved properties, add as `$tenant.properties.<property_key>` for custom properties (for example, `$tenant.timezone`, `$tenant.properties.region`). A bare `properties.<property_key>` reads the trigger payload, not the tenant |
+| Tenant | Add as `$tenant.<property_key>` for reserved properties, add as `$tenant.properties.<property_key>` for custom properties (for example, `$tenant.timezone`, `$tenant.properties.address`). A bare `properties.<property_key>` reads the trigger payload, not the tenant |
 
 ## Combining Conditions
 
@@ -94,8 +96,8 @@ Combine conditions using `AND` and `OR` logical operators:
 **Example:** `(user_role == "admin" OR user_role == "manager") AND priority == "high"`
 
 > **Note:**
-  Nested grouping is not supported. Rewrite complex logic using equivalent expanded conditions. For example, `(a OR b) AND c` becomes `(a AND c) OR (b AND c)`.
-
+>
+> Nested grouping is not supported. Rewrite complex logic using equivalent expanded conditions. For example, `(a OR b) AND c` becomes `(a AND c) OR (b AND c)`.
 
 ## Condition on Message Status
 
@@ -103,9 +105,10 @@ Message Status is a special data type that lets you evaluate the delivery or eng
 
 When using message status checks, always add a delay before evaluating the status to allow sufficient time for vendors to report delivery or engagement events.
 
+**Condition Syntax:**\
 
-**Condition Syntax:**
-Condition on message status looks like this `<node slug> IS/ IS_NOT <message status>`. Eg. `message_status from node "welcome_email" is "seen"`.
+Condition on message status looks like this\
+&#x20;`<node slug> IS/ IS_NOT <message status>`. Eg. `message_status from node "welcome_email" is "seen"`.
 
 You can find node slug below node name in the workflow editor.
 
@@ -122,7 +125,10 @@ You can find node slug below node name in the workflow editor.
 On UI, it looks like this:
 
 
-**Message Status and their meaning:**
+Message Status condition on UI
+
+**Message Status and their meaning:**\
+
 Here's a list of all message statuses, supported operators and their meaning.
 
 | Status | `IS` | `IS_NOT` | Description |
@@ -133,10 +139,11 @@ Here's a list of all message statuses, supported operators and their meaning.
 | `delivery_failed` | ✅ | ❌ | Vendor reported some error which prevented delivery |
 
 > **Note:**
-  For multi-channel and smart channel routing, `delivered`, `seen` and `clicked` status requires at least one successful channel, while `delivery_failed` requires all channels to fail.
+>
+> For multi-channel and smart channel routing, `delivered`, `seen` and `clicked` status requires at least one successful channel, while `delivery_failed` requires all channels to fail.
 
+**Per-Channel Message Status:**\
 
-**Per-Channel Message Status:**
 Following message statuses are currently tracked for each channel:
 
 | Channels | Delivered | Seen | Clicked |
@@ -146,56 +153,44 @@ Following message statuses are currently tracked for each channel:
 | SMS, Slack, MS Teams | ✅ | ❌ | ❌ |
 
 > **Note:**
-  To track message status for external channels like WhatsApp, SMS, and Email, you'll need to add suprsend tracking URL as webhook in your vendor dashboard.
-
+>
+> To track message status for external channels like WhatsApp, SMS, and Email, you'll need to add suprsend tracking URL as webhook in your vendor dashboard.
 
 ## Frequently Asked Questions
 
+### How many branches can I add?
 
-  ### How many branches can I add?
-    Up to 10 branches total: 9 condition branches + 1 default branch.
-  
+Up to 10 branches total: 9 condition branches + 1 default branch.
 
-  ### What happens if multiple branches are satisfied?
-    The first branch in order is executed (as mentioned in the intro). Place branch with more specificity before the branch with lesser condition if they have common condition set.
-  
+### What happens if multiple branches are satisfied?
 
-  ### When are Message Status conditions evaluated?
-    Only after the referenced node has executed and vendor feedback has been received. The condition checks actual delivery state, not input data.
-  
+The first branch in order is executed (as mentioned in the intro). Place branch with more specificity before the branch with lesser condition if they have common condition set.
 
-  ### Why don't my Message Status conditions work?
-    Message Status requires vendor tracking to be setup. Ensure you have:
+### When are Message Status conditions evaluated?
 
-    * SuprSend tracking URL added as webhook in your vendor dashboard.
-    * Proper SDK installation for Android Push and iOS Push channels.
-    * For Inbox, Slack, MS Teams, engagement status are automatically tracked.
+Only after the referenced node has executed and vendor feedback has been received. The condition checks actual delivery state, not input data.
 
-    In case all the above conditions met and still the condition is not evaluated, it could be due to delay in vendor reporting the status.
-  
+### Why don't my Message Status conditions work?
 
-  ### What's the difference between 'delivery_failed' and 'is_not delivered'?
-    * **`IS delivery_failed`**: Evaluates to true only when the vendor explicitly reports a delivery failure. For multi-channel delivery nodes, this condition is met only if all channels fail.
-    * **`IS_NOT "delivered"`**: Indicates that a successful delivery status has not been received for the channel. This can also occur if the vendor has not yet reported the delivery status by the time the branch condition is evaluated.
-  
+Message Status requires vendor tracking to be setup. Ensure you have:
 
-  ### Where do I find the node reference for Message Status?
-    Each node has a unique slug. You can see node slug below node name in the workflow editor. You can also edit node slug by clicking on navigation icon next to node name and selecting "Edit metadata".
+* SuprSend tracking URL added as webhook in your vendor dashboard.
+* Proper SDK installation for Android Push and iOS Push channels.
+* For Inbox, Slack, MS Teams, engagement status are automatically tracked.
 
-    
+In case all the above conditions met and still the condition is not evaluated, it could be due to delay in vendor reporting the status.
 
-    
+### What's the difference between 'delivery_failed' and 'is_not delivered'?
 
-    
+* **`IS delivery_failed`**: Evaluates to true only when the vendor explicitly reports a delivery failure. For multi-channel delivery nodes, this condition is met only if all channels fail.
+* **`IS_NOT "delivered"`**: Indicates that a successful delivery status has not been received for the channel. This can also occur if the vendor has not yet reported the delivery status by the time the branch condition is evaluated.
 
-    
-  
+### Where do I find the node reference for Message Status?
+
+Each node has a unique slug. You can see node slug below node name in the workflow editor. You can also edit node slug by clicking on navigation icon next to node name and selecting "Edit metadata".
 
 
 ***
-
-
-This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 
 ## Branch Structure
 

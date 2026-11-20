@@ -69,17 +69,19 @@ The pairing is enforced: `body_type: "card"` forces `templating_language: "jsonn
 The MS Teams editor supports two modes: a **Markdown** editor for simple text messages, and a **JSONNET** editor for rich [Adaptive Card](https://adaptivecards.io/) layouts with buttons, images, and structured data. Each mode uses a different variable syntax.
 
 
-> **Note:**
-  To send MS Teams notifications, start from [Microsoft Teams](/docs/microsoft-teams) and set up the vendor from [Create a Teams app](/docs/microsoft-teams-create-app).
+MS Teams editor with Markdown and JSONNET tabs
 
+> **Note:**
+>
+> To send MS Teams notifications, start from [Microsoft Teams](https://docs.suprsend.com/docs/microsoft-teams.md) and set up the vendor from [Create a Teams app](https://docs.suprsend.com/docs/microsoft-teams-create-app.md).
 
 > **Warning:**
-  **Sending through a [webhook](/docs/microsoft-teams-incoming-webhook)?** Use the JSONNET editor with card version `1.4` or `1.5`. A webhook doesn't show Markdown messages, and cards at `1.6` show "We're sorry, this card couldn't be displayed". Logs still show the message as delivered in both cases.
-
+>
+> **Sending through a [webhook](https://docs.suprsend.com/docs/microsoft-teams-incoming-webhook.md)?** Use the JSONNET editor with card version `1.4` or `1.5`. A webhook doesn't show Markdown messages, and cards at `1.6` show "We're sorry, this card couldn't be displayed". Logs still show the message as delivered in both cases.
 
 ## MS Teams fields
 
-**Markdown mode** - a text editor with Markdown formatting support. Variables use [Handlebars](/docs/handlebars-helpers) syntax (`{{variable_name}}`). Supported formatting:
+**Markdown mode** - a text editor with Markdown formatting support. Variables use [Handlebars](https://docs.suprsend.com/docs/handlebars-helpers.md) syntax (`{{variable_name}}`). Supported formatting:
 
 | Format | Syntax |
 | - | - |
@@ -89,23 +91,23 @@ The MS Teams editor supports two modes: a **Markdown** editor for simple text me
 | Link | `[label](url)` |
 | Blockquote | `> text` |
 
-**JSONNET mode** - a code editor that outputs [Adaptive Card](https://adaptivecards.io/) JSON. Variables use `data.key` syntax (not Handlebars). Design visually in the [Adaptive Cards Designer](https://adaptivecards.io/designer/) first, then adapt the JSON into JSONNET. Use `FactSet` for key-value data and `Action.OpenUrl` for link buttons. See the full [JSONNET reference](/docs/jsonnet-templates) for syntax, examples, and debugging.
+**JSONNET mode** - a code editor that outputs [Adaptive Card](https://adaptivecards.io/) JSON. Variables use `data.key` syntax (not Handlebars). Design visually in the [Adaptive Cards Designer](https://adaptivecards.microsoft.com/designer) first, then adapt the JSON into JSONNET. Use `FactSet` for key-value data and `Action.OpenUrl` for link buttons. See the full [JSONNET reference](https://docs.suprsend.com/docs/jsonnet-templates.md) for syntax, examples, and debugging.
 
-<Tip>
-  **AI prompt - convert to Adaptive Card:** *"Convert this notification into a Teams Adaptive Card JSON: \[paste message]. Variables: \[list]. Actions: \[describe buttons]. Return valid Adaptive Card JSON (v1.4+) I can adapt into JSONNET for SuprSend."*
-</Tip>
+> **Tip:**
+>
+> **AI prompt - convert to Adaptive Card:** *"Convert this notification into a Teams Adaptive Card JSON: \[paste message]. Variables: \[list]. Actions: \[describe buttons]. Return valid Adaptive Card JSON (v1.4+) I can adapt into JSONNET for SuprSend."*
 
-<Tip>
-  **AI prompt - debug JSONNET:** *"Fix this JSONNET error from the SuprSend Teams editor. Error: \[paste error]. Code: \[paste JSONNET]. Variables are accessed as data.key or data\['\$special_key']."*
-</Tip>
+> **Tip:**
+>
+> **AI prompt - debug JSONNET:** *"Fix this JSONNET error from the SuprSend Teams editor. Error: \[paste error]. Code: \[paste JSONNET]. Variables are accessed as data.key or data\['\$special_key']."*
 
 
 Enter the variables in `JSON` format as shown in the screenshot below. This JSON should be the same as passed in your workflow or event request (it is a part of the `data` field for workflow and `properties` field for event).
 
 
-<Info>
-  You can switch between Markdown and JSONNET at any time. Content is saved independently for each mode.
-</Info>
+> **Note:**
+>
+> You can switch between Markdown and JSONNET at any time. Content is saved independently for each mode.
 
 ## Adding dynamic content
 
@@ -116,13 +118,13 @@ Enter the variables in `JSON` format as shown in the screenshot below. This JSON
 * `{{{tracking_url}}}` - URL (avoid escaping)
 * `{{$recipient.name}}` - recipient property
 
-**In JSONNET mode** - variables use `data.key` syntax. See [JSONNET variable reference](/docs/jsonnet-templates#variable-syntax) for the full table.
+**In JSONNET mode** - variables use `data.key` syntax. See [JSONNET variable reference](https://docs.suprsend.com/docs/jsonnet-templates.md#variable-syntax) for the full table.
 
-For conditionals and helpers in Markdown mode, see [Handlebars Helpers](/docs/handlebars-helpers).
+For conditionals and helpers in Markdown mode, see [Handlebars Helpers](https://docs.suprsend.com/docs/handlebars-helpers.md).
 
 > **Warning:**
-  If a variable cannot be rendered at send time (missing or mismatched data), SuprSend discards the Teams notification for that user. Other channels in the same template group are still sent.
-
+>
+> If a variable cannot be rendered at send time (missing or mismatched data), SuprSend discards the Teams notification for that user. Other channels in the same template group are still sent.
 
 ## Preview and test
 
@@ -130,7 +132,7 @@ For conditionals and helpers in Markdown mode, see [Handlebars Helpers](/docs/ha
 
 **JSONNET mode** - click **Load Preview** to render the Adaptive Card. Syntax errors are displayed in red in the preview panel.
 
-Click **Test** in the top-right corner to send a real Teams message. This uses the **live version** - commit your changes before testing. See [Testing a Template](/docs/templates#test) for the full guide.
+Click **Test** in the top-right corner to send a real Teams message. In the editor this uses the **draft version**; from the live view it uses the **live version**. See [Testing a Template](https://docs.suprsend.com/docs/templates.md#test) for the full guide.
 
 ## Commit
 
@@ -138,49 +140,43 @@ Click **Commit** in the top bar to publish the current draft as a new live versi
 
 ## Common scenarios
 
+### Deployment status alert (Markdown)
 
-  ### Deployment status alert (Markdown)
-    ```text theme={"system"}
-    **Deployment Completed**
+```text theme={"system"}
+**Deployment Completed**
 
-    Service: {{service_name}}
-    Environment: {{environment}}
-    Version: {{version}}
-    Duration: {{duration}}
+Service: {{service_name}}
+Environment: {{environment}}
+Version: {{version}}
+Duration: {{duration}}
 
-    [View Logs]({{log_url}})
-    ```
+[View Logs]({{log_url}})
+```
 
-    Simple and effective for DevOps alerts. Markdown is sufficient when the notification is informational with a single link.
-  
+Simple and effective for DevOps alerts. Markdown is sufficient when the notification is informational with a single link.
 
-  ### Approval request (Adaptive Card)
-    Use `FactSet` for structured data and `Action.OpenUrl` for CTA buttons. See the full [Adaptive Card example](/docs/jsonnet-templates#ms-teams-adaptive-card-examples) in the JSONNET reference.
-  
+### Approval request (Adaptive Card)
 
+Use `FactSet` for structured data and `Action.OpenUrl` for CTA buttons. See the full [Adaptive Card example](https://docs.suprsend.com/docs/jsonnet-templates.md#ms-teams-adaptive-card-examples) in the JSONNET reference.
 
 ## Frequently asked questions
 
+### Markdown or JSONNET - which should I use?
 
-  ### Markdown or JSONNET - which should I use?
-    For a bot, start with Markdown for plain-text messages with links, and switch to JSONNET when you need images, buttons, columns, or structured layouts (FactSets, ActionSets). For a webhook, always use JSONNET.
-  
+For a bot, start with Markdown for plain-text messages with links, and switch to JSONNET when you need images, buttons, columns, or structured layouts (FactSets, ActionSets). For a webhook, always use JSONNET.
 
-  ### What Adaptive Card version should I use?
-    For a bot, use version `1.6` for the widest feature support across Teams desktop and mobile. For a webhook, use `1.4` or `1.5` — `1.6` isn't displayed.
-  
+### What Adaptive Card version should I use?
 
-  ### What's the message size limit?
-    Teams truncates Adaptive Cards larger than 28 KB. Keep payloads lean, especially when iterating over arrays.
-  
+For a bot, use version `1.6` for the widest feature support across Teams desktop and mobile. For a webhook, use `1.4` or `1.5` — `1.6` isn't displayed.
 
-  ### Why does my card look different in Teams vs the designer?
-    Teams has its own rendering engine. The [Adaptive Cards Designer](https://adaptivecards.io/designer/) is an approximation. Always test in an actual Teams chat before committing.
-  
+### What's the message size limit?
 
-  ### What happens if a variable is missing at send time?
-    SuprSend discards the Teams notification for that user. Other channels in the same template group are still sent.
-  
+Teams truncates Adaptive Cards larger than 28 KB. Keep payloads lean, especially when iterating over arrays.
 
+### Why does my card look different in Teams vs the designer?
 
-This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
+Teams has its own rendering engine. The [Adaptive Cards Designer](https://adaptivecards.microsoft.com/designer) is an approximation. Always test in an actual Teams chat before committing.
+
+### What happens if a variable is missing at send time?
+
+SuprSend discards the Teams notification for that user. Other channels in the same template group are still sent.

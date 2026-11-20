@@ -16,13 +16,15 @@ Wait Until is a conditional branch which halts the workflow until either the bra
 
 Wait Until has 2 branches- **Condition** and **Max time**. The user proceeds through the branch that is satisfied first.
 
-1. [Condition:](/docs/wait-until#conditions) User proceeds through this path when a condition is met, such as an event being triggered, user properties, or the event properties that initiated the workflow. In case of payment reminder, condition could be the event trigger of `user completing payment`.
-2. [Max time:](/docs/wait-until#max-time) This is the maximum time the user can wait for the condition to satisfy until the next step should be executed. If a person reaches the maximum wait time without achieving any other conditions, they'll progress through this branch.
+1. [Condition:](https://docs.suprsend.com/docs/wait-until.md#conditions) User proceeds through this path when a condition is met, such as an event being triggered, user properties, or the event properties that initiated the workflow. In case of payment reminder, condition could be the event trigger of `user completing payment`.
+2. [Max time:](https://docs.suprsend.com/docs/wait-until.md#max-time) This is the maximum time the user can wait for the condition to satisfy until the next step should be executed. If a person reaches the maximum wait time without achieving any other conditions, they'll progress through this branch.
 
+
+Wait Until - Payment Reminder example
 
 > **Note:**
-  You can incorporate **multiple Wait Until** nodes in sequence to create a multi-step notification journey, where each notification is sent based on a specific condition being met.
-
+>
+> You can incorporate **multiple Wait Until** nodes in sequence to create a multi-step notification journey, where each notification is sent based on a specific condition being met.
 
 ## Conditions
 
@@ -79,7 +81,7 @@ Dynamic values are evaluated based on the data available at the node input along
 | - | - | - |
 | **Input Payload** | Includes data from your trigger payload and any data modified or added by nodes such as data transform, batch/digest, or webhook/fetch nodes before the branch node. | Directly specify as `key` with no prefix |
 | **Actor** | Actor properties. In the case of an event trigger, `distinct_id` works as both actor and recipient. For an inline workflow trigger, it is the `distinct_id` in the actor object. | Add as `$actor.<property_key>` |
-| **Recipient** | Recipient properties. It is the `distinct_id` in your event trigger or the key value defined in [override recipient](https://docs.suprsend.com/docs/override-recipient-list) field. For an inline workflow trigger, it is the `distinct_id` in the recipient object. | Add as `$recipient.<property_key>` |
+| **Recipient** | Recipient properties. It is the `distinct_id` in your event trigger or the key value defined in [override recipient](https://docs.suprsend.com/docs/override-recipient-list.md) field. For an inline workflow trigger, it is the `distinct_id` in the recipient object. | Add as `$recipient.<property_key>` |
 | **Tenant** | Tenant properties. These include all properties of the `tenant_id` in your workflow trigger. | Add as `$tenant.<property_key>` |
 
 ### Adding conditions on multiple events
@@ -88,7 +90,7 @@ You can add condition on multiple events separated by `OR` operator. Evaluation 
 
 ## Max time
 
-This branch will be executed if none of the condition branches are satisfied. This is where you'll add your send nodes in case of reminder workflows. You can either add a [Fixed delay](/docs/wait-until#fixed-delay) or [Dynamic delay](/docs/wait-until#dynamic-delay) in max time. Dynamic delays are computed using data in your event properties and can vary for each user. A good example of dynamic delay could be reminders where frequency is set by the user.
+This branch will be executed if none of the condition branches are satisfied. This is where you'll add your send nodes in case of reminder workflows. You can either add a [Fixed delay](https://docs.suprsend.com/docs/wait-until.md#fixed-delay) or [Dynamic delay](https://docs.suprsend.com/docs/wait-until.md#dynamic-delay) in max time. Dynamic delays are computed using data in your event properties and can vary for each user. A good example of dynamic delay could be reminders where frequency is set by the user.
 
 ### Fixed delay
 
@@ -100,7 +102,7 @@ Some examples of fixed delay are:
 * Sending multiple payment or activity reminders at predetermined intervals. For instance, sending three payment reminders spaced 2 days apart from the last due date.
 * Implementing conditional sends across multiple channels. for example, sending an approval notification via Inbox and scheduling an email to be sent one hour later if the approval is not received.
 
-  [Smart channel routing](/docs/smart-delivery) is a better approach to solve this use case.
+  [Smart channel routing](https://docs.suprsend.com/docs/smart-delivery.md) is a better approach to solve this use case.
 
 ### Dynamic delay
 
@@ -114,15 +116,13 @@ You can add duration key as a [JQ-expression](https://jqlang.github.io/jq/manual
 1. General format for duration key at parent level is `.duration_key`
 2. If the duration key is a nested event property key like shown below, enter it in the format `.reminder.frequency`
 
-
-  ```json theme={"system"}
-  {
-    "reminder": {
-      "frequency": "6h"
-    }
+```json theme={"system"}
+{
+  "reminder": {
+    "frequency": "6h"
   }
-  ```
-
+}
+```
 
 Your duration key variable can be computed to either:
 
@@ -132,10 +132,8 @@ Your duration key variable can be computed to either:
   * an interval string defined as `**d **h **m **s`, where d = day, h = hour, m = minutes and s = seconds
 
 > **Warning:**
-  When the duration key specified is missing, or resolves to an invalid value, workflow execution will stop and corresponding error will be logged.
-
-
-This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
+>
+> When the duration key specified is missing, or resolves to an invalid value, workflow execution will stop and corresponding error will be logged.
 
 ## Branch Structure
 

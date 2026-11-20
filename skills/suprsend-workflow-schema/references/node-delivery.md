@@ -23,7 +23,7 @@ Send via one specific channel. Each uses a different `node_type`, and only `temp
 
 > Configure single channel delivery nodes for email, SMS, WhatsApp, mobile push, web push, Slack, MS Teams and inbox messages in SuprSend workflows.
 
-You can use single-channel delivery nodes - Email, SMS, WhatsApp, Inbox, Slack, MS Teams, MobilePush and Webpush to send notification on a particular user channel. The content of the notification is designed with [templates](/docs/templates).
+You can use single-channel delivery nodes - Email, SMS, WhatsApp, Inbox, Slack, MS Teams, MobilePush and Webpush to send notification on a particular user channel. The content of the notification is designed with [templates](https://docs.suprsend.com/docs/templates.md).
 
 
 ## How the delivery node is executed?
@@ -31,35 +31,34 @@ You can use single-channel delivery nodes - Email, SMS, WhatsApp, Inbox, Slack, 
 Delivery node is successfully executed if all of the below checks hold true:
 
 1. The channel must be published and live within the template. For WhatsApp and SMS (Indian vendors), templates become live upon approval by the respective provider.
-2. Vendor Configuration is available for the channel. For all out-of-app channels, you need to create an account with the respective [channel provider](/docs/vendors) and add the configuration in the vendor form on SuprSend dashboard. Inbox is an internal offering by SuprSend and doesn't need any third party integration. [Refer Integration guide](/docs/inbox-overview) to setup Inbox Channel.
-3. Channel information should be available in user profile and channel status should be active. A set channel becomes inactive in case the channel is `removed` or `unset` using [SDK or API](/docs/users#via-sdk) or it is marked inactive by SuprSend.
-4. User preference is `opt-in` for the given channel within the preference category (defined in workflow settings). You can check user preference status using [get user preference API](/reference/get-user-category-preferences).
+2. Vendor Configuration is available for the channel. For all out-of-app channels, you need to create an account with the respective [channel provider](https://docs.suprsend.com/docs/vendors.md) and add the configuration in the vendor form on SuprSend dashboard. Inbox is an internal offering by SuprSend and doesn't need any third party integration. [Refer Integration guide](https://docs.suprsend.com/docs/inbox-overview.md) to setup Inbox Channel.
+3. Channel information should be available in user profile and channel status should be active. A set channel becomes inactive in case the channel is `removed` or `unset` using [SDK or API](https://docs.suprsend.com/docs/users.md#creating-users) or it is marked inactive by SuprSend.
+4. User preference is `opt-in` for the given channel within the preference category (defined in workflow settings). You can check user preference status using [get user preference API](https://docs.suprsend.com/reference/get-user-category-preferences.md).
 
 > **Note:**
-  **Category-level opt-out is checked at trigger time.** If a user has opted out of the entire preference category, the workflow is skipped before execution begins — the workflow run does not start. The delivery node only evaluates **channel-level** preferences (whether the user has opted into the specific channel within the category). See [Preference Evaluation](/docs/preference-evaluation) for details.
+>
+> **Category-level opt-out is checked at trigger time.** If a user has opted out of the entire preference category, the workflow is skipped before execution begins — the workflow run does not start. The delivery node only evaluates **channel-level** preferences (whether the user has opted into the specific channel within the category). See [Preference Evaluation](https://docs.suprsend.com/docs/preference-evaluation.md) for details.
 
-
-> **Note:**
-  ### Inactive channel marking by SuprSend
-
-  SuprSend marks the user channel identity inactive for email and WhatsApp in case of hard errors from vendor end, such as bounced email addresses, unregistered WhatsApp numbers.
-
-  This is done to safeguard your email domain authority or WhatsApp rating if you continue to send notifications to users who have reported or marked your email or messages as spam.
-
-  Additionally, this helps in WhatsApp cost saving, as vendor charges for every processed request. Inactive marking period by SuprSend is 15 days for WhatsApp and 90 days for email.
-
+> **Tip:**
+>
+> ### Inactive channel marking by SuprSend
+>
+> SuprSend marks the user channel identity inactive for email and WhatsApp in case of hard errors from vendor end, such as bounced email addresses, unregistered WhatsApp numbers.
+>
+> This is done to safeguard your email domain authority or WhatsApp rating if you continue to send notifications to users who have reported or marked your email or messages as spam.
+>
+> Additionally, this helps in WhatsApp cost saving, as vendor charges for every processed request. Inactive marking period by SuprSend is 15 days for WhatsApp and 90 days for email.
 
 ## Success Metric
 
 Success Metric can be any event which defines the target user activity you aim to drive with your sent notification. for example, if the objective of your notification is to prompt users to open it, such as in the case of newsletters, you can set your success metric as `Notification Status - Seen`. If your goal is for users to perform any custom event, like complete payment in case of payment reminder notification, then you can set that event as your success metric.
 
 
-In the context of single-channel delivery, the success metric is utilized solely to track conversion numbers for display in workflow analytics. However, in the case of [smart channel routing](/docs/smart-delivery), the same success metric serves to halt delivery on further channels once the success metric is achieved.
+Success Metric for payment reminder
+
+In the context of single-channel delivery, the success metric is utilized solely to track conversion numbers for display in workflow analytics. However, in the case of [smart channel routing](https://docs.suprsend.com/docs/smart-delivery.md), the same success metric serves to halt delivery on further channels once the success metric is achieved.
 
 ***
-
-
-This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 
 ## Multi-Channel Node
 
@@ -73,43 +72,43 @@ Sends across multiple channels simultaneously.
 
 > Use the multi-channel delivery node to notify users across email, SMS, push, WhatsApp and chat channels in a single SuprSend workflow step.
 
-You can use multi-channel delivery node to notify users on multiple channels at once. If you want to send multi-channel notifications, we recommend using [smart channel routing](/docs/smart-delivery) to ensure that notifications are delivered sequentially on multiple channels rather than bombarding users on all channels at once.
+You can use multi-channel delivery node to notify users on multiple channels at once. If you want to send multi-channel notifications, we recommend using [smart channel routing](https://docs.suprsend.com/docs/smart-delivery.md) to ensure that notifications are delivered sequentially on multiple channels rather than bombarding users on all channels at once.
 
 
-The content of the notification is designed with [templates](/docs/templates). In SuprSend, you can design the content of multiple channels within a single template group.
+The content of the notification is designed with [templates](https://docs.suprsend.com/docs/templates.md). In SuprSend, you can design the content of multiple channels within a single template group.
 
 ## How the delivery node is executed?
 
 Delivery node is successfully executed if all of the below checks hold true:
 
 1. The channel should be published and live in the template. For WhatsApp and SMS (Indian vendors), templates become live upon approval by the respective provider.
-2. Vendor Configuration is available for the channel. For all out-of-app channels, you need to create an account with the respective [channel provider](/docs/vendors) and add the configuration in the vendor form on SuprSend dashboard. Inbox is an internal offering by SuprSend and doesn't need any third party integration. [Refer Integration guide](/docs/inbox-overview) to setup Inbox Channel.
-3. Channel information should be available in user profile and channel status should be active. Template channels not available in user profile are skipped for delivery. A set channel becomes inactive in case the channel is `removed` or `unset` using [SDK or API](/docs/users#via-sdk) or it is marked inactive by SuprSend.
-4. User preference is `opt-in` for the given channel within the preference category (defined in workflow settings). You can check user preference status using [get user preference API](/reference/get-user-category-preferences).
+2. Vendor Configuration is available for the channel. For all out-of-app channels, you need to create an account with the respective [channel provider](https://docs.suprsend.com/docs/vendors.md) and add the configuration in the vendor form on SuprSend dashboard. Inbox is an internal offering by SuprSend and doesn't need any third party integration. [Refer Integration guide](https://docs.suprsend.com/docs/inbox-overview.md) to setup Inbox Channel.
+3. Channel information should be available in user profile and channel status should be active. Template channels not available in user profile are skipped for delivery. A set channel becomes inactive in case the channel is `removed` or `unset` using [SDK or API](https://docs.suprsend.com/docs/users.md#creating-users) or it is marked inactive by SuprSend.
+4. User preference is `opt-in` for the given channel within the preference category (defined in workflow settings). You can check user preference status using [get user preference API](https://docs.suprsend.com/reference/get-user-category-preferences.md).
 
 > **Note:**
-  **Category-level opt-out is checked at trigger time.** If a user has opted out of the entire preference category, the workflow is skipped before execution begins — the workflow run does not start. The delivery node only evaluates **channel-level** preferences (whether the user has opted into the specific channel within the category). See [Preference Evaluation](/docs/preference-evaluation) for details.
+>
+> **Category-level opt-out is checked at trigger time.** If a user has opted out of the entire preference category, the workflow is skipped before execution begins — the workflow run does not start. The delivery node only evaluates **channel-level** preferences (whether the user has opted into the specific channel within the category). See [Preference Evaluation](https://docs.suprsend.com/docs/preference-evaluation.md) for details.
 
-
-> **Note:**
-  ### Inactive channel marking by SuprSend
-
-  SuprSend marks the user channel identity inactive for email and WhatsApp in case of hard errors from vendor end, such as bounced email addresses, unregistered WhatsApp numbers.
-
-  This is done to safeguard your email domain authority or WhatsApp rating if you continue to send notifications to users who have reported or marked your email or messages as spam.
-
-  Additionally, this helps in WhatsApp cost saving, as vendor charges for every processed request. Inactive marking period by SuprSend is 15 days for WhatsApp and 90 days for email.
-
+> **Tip:**
+>
+> ### Inactive channel marking by SuprSend
+>
+> SuprSend marks the user channel identity inactive for email and WhatsApp in case of hard errors from vendor end, such as bounced email addresses, unregistered WhatsApp numbers.
+>
+> This is done to safeguard your email domain authority or WhatsApp rating if you continue to send notifications to users who have reported or marked your email or messages as spam.
+>
+> Additionally, this helps in WhatsApp cost saving, as vendor charges for every processed request. Inactive marking period by SuprSend is **15 days** for both WhatsApp and email by default; for WhatsApp, an inbound `STOP` reply extends it to **90 days**.
 
 ## Selecting channels for multi-channel delivery
 
-By default, notification is sent on all active channels of the template. You can however choose to send notification on selected channels by manually choosing selected channels in the form or [override channels](/docs/delivery-multi-channel#override-channels) dynamically using data in your event property.
+By default, notification is sent on all active channels of the template. You can however choose to send notification on selected channels by manually choosing selected channels in the form or [override channels](https://docs.suprsend.com/docs/delivery-multi-channel.md#override-channels) dynamically using data in your event property.
 
 ### Override Channels
 
 You can use this field to pass channel list dynamically using data in your event property. This feature comes in handy when user channels are dynamically defined at the user level for each workflow. For instance, when booking an appointment, your users are dynamically defining their preferred channel to receive booking updates for each appointment.
 
-For more consistent channel preferences, like user wanting to receive all communication via email only, or defining preferred communication channel for a notifications category (like booking updates), we recommend updating it using [user preferences](/docs/user-preferences).
+For more consistent channel preferences, like user wanting to receive all communication via email only, or defining preferred communication channel for a notifications category (like booking updates), we recommend updating it using [user preferences](https://docs.suprsend.com/docs/user-preferences.md).
 
 To override channels, include the channels array in event property and add the corresponding key in the override channels field on SuprSend workflow form.
 
@@ -121,32 +120,29 @@ You can add channel array as a [JQ-expression](https://jqlang.github.io/jq/manua
 1. General format for duration key at parent level is`.channels`
 2. If channel is a nested event property key like shown below, enter it in the format`.user.channels`.
 
-
-  ```json Trigger Payload theme={"system"}
-  properties = {
-    "user": {
-      "name": "Steve",
-      "channels": ["email","inbox"]
-    }
-  ```
-
+```json Trigger Payload theme={"system"}
+properties = {
+  "user": {
+    "name": "Steve",
+    "channels": ["email","inbox"]
+  }
+```
 
 > **Warning:**
-  * If both selected channels and override channels key are set in the form, system will prioritize the override channels, even if that channel is not included in the selected channel list.
-  * When the override channel variable in the event data is missing, or resolves to an invalid value, workflow execution will stop and corresponding error will be logged in the logs
-
+>
+> * If both selected channels and override channels key are set in the form, system will prioritize the override channels, even if that channel is not included in the selected channel list.
+> * When the override channel variable in the event data is missing, or resolves to an invalid value, workflow execution will stop and corresponding error will be logged in the logs
 
 ## Success Metric
 
 Success Metric can be any event which defines the target user activity you aim to drive with your sent notification. for example, if the objective of your notification is to prompt users to open it, such as in the case of newsletters, you can set your success metric as `Notification Status - Seen`. If your goal is for users to perform any custom event, like complete payment in case of payment reminder notification, then you can set that event as your success metric.
 
 
-In the context of multi-channel delivery, the success metric is utilized solely to track conversion numbers for display in workflow analytics. However, in the case of [smart channel routing](/docs/smart-delivery), the same success metric serves to halt delivery on further channels once the success metric is achieved.
+Success Metric for payment reminder
+
+In the context of multi-channel delivery, the success metric is utilized solely to track conversion numbers for display in workflow analytics. However, in the case of [smart channel routing](https://docs.suprsend.com/docs/smart-delivery.md), the same success metric serves to halt delivery on further channels once the success metric is achieved.
 
 ***
-
-
-This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 
 ## Smart Channel Routing Node
 
@@ -173,16 +169,16 @@ Smart Channel Routing follows three steps when a workflow is triggered:
 SuprSend checks which channels qualify for delivery by intersecting:
 
 * **Channels active on the template** - published and live. For WhatsApp and SMS (Indian vendors), this means provider approval is complete.
-* **Channels active in the user profile** - not removed, unset, or marked inactive. See [managing user channels](/docs/users#via-sdk).
-* **User opt-in preference** - if you use SuprSend's preference centre, the user must be `opt-in` for the channel within the preference category. Category-level opt-out is checked at trigger time (the workflow won't run for opted-out users), while channel-level preferences are evaluated here at the delivery node. Verify with the [get user preference API](/reference/get-user-category-preferences).
+* **Channels active in the user profile** - not removed, unset, or marked inactive. See [managing user channels](https://docs.suprsend.com/docs/users.md#creating-users).
+* **User opt-in preference** - if you use SuprSend's preference centre, the user must be `opt-in` for the channel within the preference category. Category-level opt-out is checked at trigger time (the workflow won't run for opted-out users), while channel-level preferences are evaluated here at the delivery node. Verify with the [get user preference API](https://docs.suprsend.com/reference/get-user-category-preferences.md).
 
 ### 2. Order outside-app channels
 
 Routing logic **only applies to outside-app channels** - Email, SMS, WhatsApp, Slack, MS teams and Push. SuprSend orders these based on your chosen [optimize-on](#optimize-on) setting (default: lowest to highest cost).
 
 > **Note:**
-  **Inbox is delivered at T+0 only in the default setup** - when neither Must Send To (`mandatory_channels`) nor a channel sequence is set. Then Inbox fires immediately alongside the first outside-app channel and does not count toward the sequence or interval calculation. If either setting is used, Inbox gets no special treatment: it is ordered like any other channel (by cost, or by its position in the sequence) unless you list it in `mandatory_channels`.
-
+>
+> **Inbox is delivered at T+0 only in the default setup** - when neither Must Send To (`mandatory_channels`) nor a channel sequence is set. Then Inbox fires immediately alongside the first outside-app channel and does not count toward the sequence or interval calculation. If either setting is used, Inbox gets no special treatment: it is ordered like any other channel (by cost, or by its position in the sequence) unless you list it in `mandatory_channels`.
 
 ### 3. Deliver sequentially with a delay
 
@@ -213,9 +209,9 @@ If a user sees the in-app notification at T+0, only **SMS and WhatsApp are skipp
 
 Once the success metric is achieved at any point, all remaining channel deliveries are cancelled immediately.
 
-<Info>
-  **Routing is per channel identity, not per channel.** If a user has multiple identities on the same channel (for example, two email addresses), each identity is treated as a separate step in the sequence. SuprSend sends to the first email address, waits for the configured interval, then sends to the second.
-</Info>
+> **Note:**
+>
+> **Routing is per channel identity, not per channel.** If a user has multiple identities on the same channel (for example, two email addresses), each identity is treated as a separate step in the sequence. SuprSend sends to the first email address, waits for the configured interval, then sends to the second.
 
 ***
 
@@ -252,8 +248,8 @@ Defines what counts as "user engaged." Once this is met, SuprSend stops deliveri
 **Custom Event** - any event your platform fires in response to the notification. For example, `invoice_paid` for a payment reminder, or `appointment_confirmed` for a booking flow.
 
 > **Note:**
-  **Vendor routing is independent.** If you have vendor routing enabled, it operates independently of channel routing and does not add to the delay between channels.
-
+>
+> **Vendor routing is independent.** If you have vendor routing enabled, it operates independently of channel routing and does not add to the delay between channels.
 
 ***
 
@@ -261,7 +257,7 @@ Defines what counts as "user engaged." Once this is met, SuprSend stops deliveri
 
 Pass a channel list dynamically at runtime via an event property. Useful when a user's preferred channel changes per workflow trigger - for example, a user selecting their preferred channel when booking an appointment.
 
-> For persistent preferences (for example, a user who always wants email only), use [User Preferences](/docs/user-preferences) instead — it's the more appropriate tool.
+> For persistent preferences (for example, a user who always wants email only), use [User Preferences](https://docs.suprsend.com/docs/user-preferences.md) instead — it's the more appropriate tool.
 
 **Setup:** Add a `channels` array to your event properties, then reference the key in the **Override Channels** field in the workflow form.
 
@@ -287,29 +283,25 @@ You can use a [JQ expression](https://jqlang.github.io/jq/manual/) to map your e
 ```
 
 > **Warning:**
-  If the channel key is missing or resolves to an invalid value, workflow execution stops and the error is logged.
-
+>
+> If the channel key is missing or resolves to an invalid value, workflow execution stops and the error is logged.
 
 ***
 
 ## Frequently Asked Questions
 
+### Why am I receiving Inbox and Email at the same time?
 
-  ### Why am I receiving Inbox and Email at the same time?
-    This is expected in the default setup (no Must Send To, no channel sequence): Inbox then fires at T+0 alongside the first outside-app channel (Email, in this case). The time-to-live delay only applies to the 2nd, 3rd, and subsequent outside-app channels.
+This is expected in the default setup (no Must Send To, no channel sequence): Inbox then fires at T+0 alongside the first outside-app channel (Email, in this case). The time-to-live delay only applies to the 2nd, 3rd, and subsequent outside-app channels.
 
-    So with Inbox + Email + SMS and a 10-minute time-to-live:
+So with Inbox + Email + SMS and a 10-minute time-to-live:
 
-    * **T+0** → Inbox + Email
-    * **T+10min** → SMS (only if success metric not yet met)
-  
+* **T+0** → Inbox + Email
+* **T+10min** → SMS (only if success metric not yet met)
 
-  ### Do I need a 'Wait Until' node before this node?
-    No. The delay between channels is managed by the **Time to Live** setting inside the Smart Channel Routing node. A Wait Until node is not required.
-  
+### Do I need a 'Wait Until' node before this node?
 
-
-This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
+No. The delay between channels is managed by the **Time to Live** setting inside the Smart Channel Routing node. A Wait Until node is not required.
 
 ## Schema Properties
 

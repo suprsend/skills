@@ -261,6 +261,23 @@ describe("resolveDocs", () => {
     });
   });
 
+  describe("replacement errors", () => {
+    it("reports a non-matching replacement without retrying the original URL", async () => {
+      const fetchMock = vi.fn().mockResolvedValue({ ok: true, text: () => Promise.resolve("# Title\n\nNew wording.") });
+      vi.stubGlobal("fetch", fetchMock);
+
+      await expect(
+        resolveDocs("test-skill", {
+          type: "docs",
+          key: "k",
+          urls: ["https://docs.example.com/page"],
+          replacements: [{ find: "Old wording.", replace: "Fixed." }],
+        }),
+      ).rejects.toThrow(/replacement #1 did not match/);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe("error handling", () => {
     it("throws when URL fetch fails with no fallback", async () => {
       vi.mocked(fetch).mockResolvedValue(
@@ -455,6 +472,41 @@ describe("cleanMintlifyMarkdown", () => {
     expect(result).not.toContain("<Frame");
     expect(result).not.toContain("</Frame>");
     expect(result).toContain("Some content inside frame.");
+  });
+
+  it("converts `> [accordion]` blockquotes to headings with unquoted bodies", () => {
+    const input = "> [accordion] Fixed\n>\n> Fixed delay content.\n>\n> | A | B |\n\n> [accordion] Dynamic\n>\n> Dynamic content.\n\nAfter.";
+    const result = cleanMintlifyMarkdown(input);
+    expect(result).toBe("### Fixed\n\nFixed delay content.\n\n| A | B |\n\n### Dynamic\n\nDynamic content.\n\nAfter.");
+  });
+
+  it("converts `> [!WARNING]` style callouts, keeping nesting depth", () => {
+    const input = "> [!WARNING]\n>\n> Careful.\n\n> [accordion] Relative\n>\n> > [!NOTE]\n> >\n> > Nested.\n\n> [!TIP]\n>\n> Handy.";
+    const result = cleanMintlifyMarkdown(input);
+    expect(result).toBe("> **Warning:**\n>\n> Careful.\n\n### Relative\n\n> **Note:**\n>\n> Nested.\n\n> **Tip:**\n>\n> Handy.");
+  });
+
+  it("converts `> [card]` titles to bold", () => {
+    const result = cleanMintlifyMarkdown("> [card] [Translations](https://x/y.md)\n>\n> File setup.");
+    expect(result).toBe("> **[Translations](https://x/y.md)**\n>\n> File setup.");
+  });
+
+  it("removes standalone markdown images but keeps other content", () => {
+    const input = "Before.\n\n![](https://mintcdn.com/a/b.png?fit=max\\&q=85)\n\nAfter `![alt](x)` inline.";
+    const result = cleanMintlifyMarkdown(input);
+    expect(result).not.toContain("mintcdn");
+    expect(result).toContain("Before.");
+    expect(result).toContain("After `![alt](x)` inline.");
+  });
+
+  it("removes the trailing Related topics list and Mintlify footer", () => {
+    const input = "# Page\n\nBody.\n\n\n## Related topics\n\n- [A](https://x/a.md)\n- [B](https://x/b.md)\n\n\nThis documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.\n";
+    expect(cleanMintlifyMarkdown(input)).toBe("# Page\n\nBody.");
+  });
+
+  it("keeps a Related topics section that has prose", () => {
+    const input = "# Page\n\n## Related topics\n\nRead these first.\n\n- [A](https://x/a.md)";
+    expect(cleanMintlifyMarkdown(input)).toContain("## Related topics");
   });
 
   it("converts <Check> to blockquote", () => {

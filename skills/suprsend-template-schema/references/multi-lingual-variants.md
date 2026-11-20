@@ -47,9 +47,9 @@ For most use cases, **Translations** is the right choice. It's simpler, easier t
 
 Before either approach works, each user needs a locale set on their profile. Use any backend SDK or the API:
 
-* [Python SDK](/docs/python-create-user-profile#set-preferred-language)
-* [Node.js SDK](/docs/node-create-user-profile#set-preferred-language)
-* [REST API](/reference/edit-user-profile) - set the `$locale` property
+* [Python SDK](https://docs.suprsend.com/docs/python-create-user-profile.md#set-preferred-language)
+* [Node.js SDK](https://docs.suprsend.com/docs/node-create-user-profile.md#set-preferred-language)
+* [REST API](https://docs.suprsend.com/reference/edit-user-profile.md) - set the `$locale` property
 
 The value should be a standard locale code: `en`, `es`, `fr`, `hi`, `de`, `pt-BR`, etc.
 
@@ -63,19 +63,17 @@ Translations let you keep **one template** and manage all language text in separ
 
 ### How it works
 
-1. **Upload translation files** — JSON files with key-value pairs, one per language (for example, `en.json`, `es.json`, `fr.json`). Upload from the [dashboard](https://app.suprsend.com/en/staging/developers/translations), [CLI](/reference/cli-translation-overview), or [API](/reference/add-translation).
+1. **Upload translation files** — JSON files with key-value pairs, one per language (for example, `en.json`, `es.json`, `fr.json`). Upload from the [dashboard](https://app.suprsend.com/en/staging/developers/translations), [CLI](https://docs.suprsend.com/reference/cli-translation-overview.md), or [API](https://docs.suprsend.com/reference/add-translation.md).
 
 2. **Use translation keys in your template** - instead of writing raw text, use the `t` helper:
 
+```handlebars Handlebars (Email, SMS, Push, Inbox) theme={"system"}
+{{t "order_shipped" order_id=order_id}}
+```
 
-  ```handlebars Handlebars (Email, SMS, Push, Inbox) theme={"system"}
-  {{t "order_shipped" order_id=order_id}}
-  ```
-
-  ```jsonnet JSONNET (Slack, MS Teams) theme={"system"}
-  t("order_shipped", {order_id: data.order_id})
-  ```
-
+```jsonnet JSONNET (Slack, MS Teams) theme={"system"}
+t("order_shipped", {order_id: data.order_id})
+```
 
 3. **SuprSend resolves at send time** - reads the user's locale, finds the matching translation file, and renders the translated text with interpolated variables.
 
@@ -122,7 +120,7 @@ Always maintain an `en.json` as the base fallback — if a key is missing from e
 * You're scaling to many languages and don't want to maintain separate content per language.
 * You want to manage translations outside the template editor (via files, CLI, or API).
 
-For the full reference - managing translation files, pluralization, namespaces, interpolation, and version history - see [Translations](/docs/translations).
+For the full reference - managing translation files, pluralization, namespaces, interpolation, and version history - see [Translations](https://docs.suprsend.com/docs/translations.md).
 
 ***
 
@@ -141,14 +139,14 @@ For cases where the **entire content differs per language** - not just text, but
 1. Open the template editor, click **+** in the Variants panel, and select **New Variant**.
 2. Set the **Locale** to the target language (for example, Spanish).
 3. Give it a descriptive **ID** (for example, `default-es`).
-4. Author the content for that language. Use [Import content](/docs/templates#import-content) to copy the default English variant as a starting point.
+4. Author the content for that language. Use [Import content](https://docs.suprsend.com/docs/templates.md#import-content) to copy the default English variant as a starting point.
 5. Commit.
 
 At send time, SuprSend checks the recipient's locale and sends the matching language variant. If no match, the **default** variant (English) is sent.
 
-<Tip>
-  **AI prompt - translate a template:** *"Translate this notification into \[language]. Channel: \[email/SMS/push/WhatsApp]. Content: \[paste]. Preserve all Handlebars variables exactly as-is. Adapt tone for the locale. Flag anything needing cultural adaptation (dates, currency, idioms). Stay within character limits."*
-</Tip>
+> **Tip:**
+>
+> **AI prompt - translate a template:** *"Translate this notification into \[language]. Channel: \[email/SMS/push/WhatsApp]. Content: \[paste]. Preserve all Handlebars variables exactly as-is. Adapt tone for the locale. Flag anything needing cultural adaptation (dates, currency, idioms). Stay within character limits."*
 
 ### Combining language with tenant
 
@@ -162,22 +160,18 @@ Name these descriptively: `acme-es`, `uber-fr`, `default-hi`.
 
 ## Which approach should I use?
 
+### My notifications are the same structure in every language, just different text
 
-  ### My notifications are the same structure in every language, just different text
-    Use **Translations**. Create translation files per language and use `t` keys in your template. One template, zero variants.
-  
+Use **Translations**. Create translation files per language and use `t` keys in your template. One template, zero variants.
 
-  ### My email has different images, layout, or buttons per language
-    Use **Language variants**. Create a variant per language with its own full content.
-  
+### My email has different images, layout, or buttons per language
 
-  ### Can I use both in the same template?
-    Yes. You can use translation keys inside a variant. For example, a tenant-specific variant for Acme could still use `t` keys for localised text - so Acme's Spanish users get both Acme branding and Spanish text without creating `acme-es` as a separate variant.
-  
+Use **Language variants**. Create a variant per language with its own full content.
 
-  ### I'm scaling to 10+ languages. Which is easier to maintain?
-    Translations, by far. With variants, you'd need to maintain 10+ content versions per channel per template. With translations, you maintain one template and 10 JSON files that can be managed via CLI or API.
-  
+### Can I use both in the same template?
 
+Yes. You can use translation keys inside a variant. For example, a tenant-specific variant for Acme could still use `t` keys for localised text - so Acme's Spanish users get both Acme branding and Spanish text without creating `acme-es` as a separate variant.
 
-This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
+### I'm scaling to 10+ languages. Which is easier to maintain?
+
+Translations, by far. With variants, you'd need to maintain 10+ content versions per channel per template. With translations, you maintain one template and 10 JSON files that can be managed via CLI or API.

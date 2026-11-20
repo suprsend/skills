@@ -19,58 +19,54 @@ for example, if you have to batch your workflow for some users and not for other
 
 ## How data transform works
 
-The Data Transform node generates or modifies variables in your trigger data, which are then merged into the main payload used by the workflow and templates to render dynamic content. You can write these transformations using [Handlebars](/docs/handlebars-helpers) or [JSONNET](https://jsonnet.org/ref/language.html) language. We use a shallow merge strategy where keys with the same name as the input payload will be overridden.
+The Data Transform node generates or modifies variables in your trigger data, which are then merged into the main payload used by the workflow and templates to render dynamic content. You can write these transformations using [Handlebars](https://docs.suprsend.com/docs/handlebars-helpers.md) or [JSONNET](https://jsonnet.org/ref/language.html) language. We use a shallow merge strategy where keys with the same name as the input payload will be overridden.
 
 Example: Given the following trigger data for two users:
 
+```json json theme={"system"}
+// User 1
 
-  ```json json theme={"system"}
-  // User 1
+{
+  "time_period": "4 years",
+  "monthly_bill_amount($)":"1500",
+  "discount":"10%"
+}
 
-  {
-    "time_period": "4 years",
-    "monthly_bill_amount($)":"1500",
-    "discount":"10%"
-  }
+// User 2
 
-  // User 2
-
-  {
-    "time_period": "1 year",
-    "monthly_bill_amount($)":"500",
-    "discount":"10%"
-  }
-  ```
-
+{
+  "time_period": "1 year",
+  "monthly_bill_amount($)":"500",
+  "discount":"10%"
+}
+```
 
 If you want to apply below transformation to give a 15% discount to users whose monthly bill amount exceeds \$1000
 
 
 The transformation would modify the discount for User 1, resulting in
 
+```json json theme={"system"}
+// User 1
 
-  ```json json theme={"system"}
-  // User 1
+{
+  "time_period": "4 years",
+  "monthly_bill_amount($)":"1500",
+  "discount":"15%"     // Updated by Data Transform node
+}
 
-  {
-    "time_period": "4 years",
-    "monthly_bill_amount($)":"1500",
-    "discount":"15%"     // Updated by Data Transform node
-  }
+// User 2
 
-  // User 2
-
-  {
-    "time_period": "1 year",
-    "monthly_bill_amount($)":"500",
-    "discount":"10%"
-  }
-  ```
-
+{
+  "time_period": "1 year",
+  "monthly_bill_amount($)":"500",
+  "discount":"10%"
+}
+```
 
 ## Modifying list of variables in data transform
 
-You can generate up to 25 variables in this step. Each key-value pair represents a variable and its value. You can choose to write transformation in [Handlebars](/docs/handlebars-helpers) or [JSONNET](https://jsonnet.org/ref/language.html) language. Handlebar is a simpler language suitable for simple string outputs, while JSONNET can handle more complex data structures such as arrays or JSON objects.
+You can generate up to 25 variables in this step. Each key-value pair represents a variable and its value. You can choose to write transformation in [Handlebars](https://docs.suprsend.com/docs/handlebars-helpers.md) or [JSONNET](https://jsonnet.org/ref/language.html) language. Handlebar is a simpler language suitable for simple string outputs, while JSONNET can handle more complex data structures such as arrays or JSON objects.
 
 ## Some common notification use cases
 
@@ -85,9 +81,6 @@ You can generate up to 25 variables in this step. Each key-value pair represents
 * Apply batching conditions where some users receive batched notifications and others get immediate alerts. Use the Data Transform node to ensure a consistent data structure in both cases for use in templates.
 
 ***
-
-
-This documentation is built and hosted on [Mintlify](https://mintlify.com), a developer documentation platform.
 
 ## Schema Properties
 

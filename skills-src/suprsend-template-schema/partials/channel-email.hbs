@@ -10,6 +10,23 @@ For variants with `channel: "email"`.
 
 `subject` and `body` are required. `templating_language` is fixed to `handlebars` — use `\{{ variable }}` and standard Handlebars helpers inside string fields. Keep `\{{ }}` in the HTML (safe by default). `subject`, `preheader` and the plain-text part aren't HTML, so escaping isn't needed there: use `\{{{ variable }}}` (`\{{ }}` would deliver `O&#x27;Brien`).
 
+## Custom headers
+
+`headers` is an optional array of up to 5 custom email headers, each a `name` / `value` pair. Use it for things the other fields can't express — most often `In-Reply-To` and `References`, so related emails thread together in Gmail and Outlook.
+
+{{schema-table (get email_schema "properties.headers.items")}}
+
+- `value` is a Handlebars string like `subject` (max 900 characters, single line). It isn't HTML, so use `\{{{ variable }}}`.
+- Header names must be unique (case-insensitive).
+- Reserved names are rejected as a variant error and block commit: `From`, `To`, `Cc`, `Bcc`, `Subject`, `Reply-To`, `Message-ID`, `MIME-Version`, `DKIM-Signature`, and any name starting with `List-Unsubscribe`, `Content-`, `SS-` or `X-SES`. Set sender, reply-to and subject through their own fields.
+
+```json
+"headers": [
+  { "name": "In-Reply-To", "value": "<ticket-\{{{ ticket_id }}}@acme.com>" },
+  { "name": "References", "value": "<ticket-\{{{ ticket_id }}}@acme.com>" }
+]
+```
+
 ## Body
 
 `body` is an object whose shape depends on its `type`:

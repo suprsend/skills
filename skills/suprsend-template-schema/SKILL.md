@@ -133,6 +133,15 @@ For the template syntax used inside content fields, see:
 
 **Escaping:** default to `{{ }}`. It HTML-escapes its output (`&` → `&amp;`, `'` → `&#x27;`, `=` → `&#x3D;`), which keeps HTML outputs (email HTML body, Inbox body) safe from injected markup. Use triple braces `{{{ }}}` only where HTML escaping isn't needed — SMS, push, WhatsApp, Slack text mode, Inbox header / subtext / URLs, and the email subject, preheader and plain-text part. SuprSend never unescapes, so `{{ }}` there delivers `O&#x27;Brien`.
 
+## Validation warnings
+
+Validating content before you save it returns, besides `errors`, a per-variant `warnings` list. Warnings do **not** make the template invalid (they are only returned when there are no errors), but treat each one as something to fix:
+
+- `missing_variables` — `variables` in `field` that the mock data does not resolve (for example `$recipient.coin_balance` when the test recipient has no `coin_balance`). A variable that is missing at send time fails the render — it does not render empty — and that channel's notification is not sent. Supply the value (a `payload` key, or a recipient whose profile has the property) or adjust the content, for example by guarding the variable.
+- `handlebars_syntax` — the Handlebars in `field` does not parse.
+
+Warnings are not produced for WhatsApp, SMS that needs vendor approval, or JSONNET bodies (Slack `block`, MS Teams `card`), so an empty list there does not mean every variable resolves. Give the mock data in the stored shape: plain variables under `payload`, and the test recipient/actor as `recipient_distinct_id` / `actor_distinct_id`.
+
 ## Related skills
 
 - **`suprsend-workflow-schema`** — workflow delivery nodes (`send_email`, `send_multi_channel`, etc.) reference variants by `template` slug. Use it for the workflow shape that wraps these variants.
